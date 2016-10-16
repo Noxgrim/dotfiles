@@ -27,7 +27,7 @@
  set pastetoggle=<F10>
 
  map <silent> <C-S-c> :nohlsearch<CR>
- map <silent> <C-S-s> :let @/=""<CR>
+ map <silent> <C-S-r> :let @/=""<CR>
 
 " create backups and swap files in the .vim directory (the double slashes
 " mean, VIM uses the full path)

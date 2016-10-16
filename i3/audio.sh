@@ -245,7 +245,7 @@ for C in $( echo $COMMAND | grep -o . ); do
             ;;
         x)
             $MPC shuffle
-
+            ;;
         c)
             $MPC clear
             ;;
