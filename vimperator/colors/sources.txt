@@ -1,0 +1,11 @@
+vimperator colors
+by vimpr
+GitHub: https://github.com/vimpr/vimperator-colors
+
+fxdevtools-dark
+by danemacmillan
+GitHub: https://github.com/danemacmillan/vimperator-theme-fxdevtools-dark
+
+vimPgray
+by livibetter
+GitHub: https://github.com/livibetter/dotfiles/blob/b1ec600825e72468146e45a5fcc6a719cbce10fb/vimperator/colors/vimPgray.vimp

@@ -1,0 +1,12 @@
+vim/*
+!vim/colors/
+vimperator/*
+!vimperator/colors/
+
+# Backup files and temporary files
+tmp/
+*.tmp
+*.old
+*.bak
+*.swp
+*~

@@ -1,0 +1,19 @@
+" Temporary fix for loacation bar bug
+js services.services.autoCompleteSearch.class_="@mozilla.org/autocomplete/search;1?name=unifiedcomplete"
+colorscheme fxdevtools-dark
+set animations
+set hintchars=hjklasdfgzuiopqwertnmyxcvb
+set gui=none
+" Try to fix YouTube "bug" with the hits behind the YouTube title bar
+highlight Hint -append z-index:2999999999
+"map -urls https://www\\.youtube\\.com/watch\\?v=.* <C-:> :
+"map -urls https://www\\.youtube\\.com/watch\\?v=.* <C-;> ;
+"map -urls https://www\\.youtube\\.com/watch\\?v=.* : <NULL>
+"map -urls https://www\\.youtube\\.com/watch\\?v=.* ; <NULL>
+
+noremap D d
+noremap d D
+noremap J gT
+noremap K gt
+noremap <C-W> :winclose<CR>
+noremap <C-P> :winopen -private <C-V><CR>
