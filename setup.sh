@@ -3,6 +3,7 @@ echo "Starting setting up..."
 ln -sfr zshrc         $HOME/.zshrc
 ln -sfr bashrc        $HOME/.bashrc
 ln -sfr Xresources    $HOME/.Xresources
+ln -sfr xbindkeysrc   $HOME/.xbindkeysrc
 
 ln -sfr tmux.conf     $HOME/.tmux.conf
 ln -sfr i3            $HOME/.i3
