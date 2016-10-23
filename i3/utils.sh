@@ -1,7 +1,8 @@
 #! /bin/bash
 
 audio_control() {
-    RESULT="$($HOME/.i3/audio.sh $( rofi -dmenu -p 'Audio:' < /dev/null ))"
+    RESULT="$($HOME/.i3/audio.sh $( ! rofi -dmenu -p 'Audio:' < /dev/null\
+        && echo -- ))"
     if [ -n "$RESULT" ]; then
         rofi -e "$RESULT"
     fi
