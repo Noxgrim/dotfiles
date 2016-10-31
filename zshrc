@@ -85,6 +85,8 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 alias gcd1="git clone --depth 1"
+alias vim='\nvim'
+alias lvim='\vim'
 
 #Load autojump
 . /usr/share/autojump/autojump.zsh
@@ -92,3 +94,5 @@ alias gcd1="git clone --depth 1"
 if [ -d "$HOME/.local/bin" ]; then
     PATH="$HOME/.local/bin:$PATH"
 fi
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

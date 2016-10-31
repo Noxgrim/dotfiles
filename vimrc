@@ -52,54 +52,53 @@
 
 " Implement own function to save files as super user
 " to allow no or one argument.
- function SudoWrite(args)
+ function! SudoWrite(args)
      if len(a:args)
          execute "w !sudo tee > /dev/null ".a:args
      else
          w !sudo tee > /dev/null %
      endif
  endfunction
- command -nargs=? -complete=file W call SudoWrite('<args>')
+ command! -nargs=? -complete=file W call SudoWrite('<args>')
 
- filetype off                  " required
-
-" set the runtime path to include Vundle and initialize
- set rtp+=~/.vim/bundle/Vundle.vim
- call vundle#begin()
-" alternatively, pass a path where Vundle should install plugins
-"call vundle#begin('~/some/path/here')
-
-" let Vundle manage Vundle, required
- Plugin 'VundleVim/Vundle.vim'
+ call plug#begin('~/.vim/plugged')
 
 " Sourround.vim
-  Plugin 'tpope/vim-surround'
-  Plugin 'tpope/vim-repeat'
-  Plugin 'tpope/vim-fugitive'
-  Plugin 'jiangmiao/auto-pairs'
-  Plugin 'vim-airline/vim-airline'
-  let g:airline_powerline_fonts = 1 " Activate powerline power
-  Plugin 'vim-airline/vim-airline-themes'
-  let g:airline_theme='base16'
- "Plugin 'scrooloose/syntastic'
-  Plugin 'altercation/vim-colors-solarized'
- "Plugin 'b4winckler/vim-angry'
+  Plug 'tpope/vim-surround'
+  Plug 'tpope/vim-repeat'
+  Plug 'tpope/vim-fugitive'
+  Plug 'junegunn/gv.vim'
+  Plug 'jiangmiao/auto-pairs'
+  Plug 'vim-airline/vim-airline'
+  let  g:airline_powerline_fonts = 1 " Activate powerline power
+  Plug 'vim-airline/vim-airline-themes'
+  let  g:airline_theme='base16'
+ "Plug 'scrooloose/syntastic'
+  Plug 'altercation/vim-colors-solarized'
+  Plug 'b4winckler/vim-angry'
+  Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+  Plug 'junegunn/fzf.vim'
+ "Plug 'sunaku/vim-shortcut'
+  Plug 'scrooloose/nerdtree'
+  Plug 'alvan/vim-closetag', { 'for': ['html', 'xml', 'java']  }
+  Plug 'Valloric/MatchTagAlways', { 'for': ['html', 'xml', 'java']  }
+  Plug 'junegunn/vim-easy-align'
+ "Plug 'junegunn/limelight.vim'
+  Plug 'junegunn/vim-peekaboo'
+  Plug 'junegunn/rainbow_parentheses.vim'
+  Plug 'whatyouhide/vim-lengthmatters'
+ "Plug 'whatyouhide/vim-gotham'
+
+  call plug#end()
+
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+  xmap ga <Plug>(EasyAlign)
+ 
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+  nmap ga <Plug>(EasyAlign)
 
 
-" All of your Plugins must be added before the following line
- call vundle#end()            " required
  filetype plugin indent on    " required
-" To ignore plugin indent changes, instead use:
-"filetype plugin on
-"
-" Brief help
-" :PluginList       - lists configured plugins
-" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-" :PluginSearch foo - searches for foo; append `!` to refresh local cache
-" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-"
-" see :h vundle for more details or wiki for FAQ
-" Put your non-Plugin stuff after this line
 
  syntax enable
 " enable spell checking for certain file types
@@ -115,6 +114,18 @@
  if has('mouse')
      set mouse=a
  endif
+ set t_Co=256
 
+ inoremap <C-H> <NOP>
+ inoremap <C-J> <Down>
+ inoremap <C-K> <Up>
+ inoremap <C-H> <Left>
+ inoremap <C-L> <Right>
+
+ if has('nvim')
+     tnoremap <C-e><C-e> <C-\><C-n>
+     autocmd! TermOpen * setlocal listchars=tab:▸\ ,trail:\ ,precedes:↤,extends:↦
+     highlight TermCursor ctermfg=darkgreen guifg=darkgreen
+     highlight TermCursorNC ctermfg=lightgreen guifg=darkgreen
+ endif
 " Use 256 colours (Use this setting only if your terminal supports 256 colours)
-"set t_Co=256
