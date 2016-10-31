@@ -28,24 +28,72 @@ m_find() {
       fi
   fi
 }
-play_matching() {
+pos_matching() {
     local SEARCH="$*"
+    local OUT=1
+    if echo "$SEARCH" | grep -qP '^\d+:'; then
+        OUT="$( echo "$SEARCH" | grep -oP '^\d+' )"
+        SEARCH="$( echo "$SEARCH" | sed -r 's/^[0-9]+:(.*?$)/\1/' )"
+    fi
     local NUM=1
     mpc playlist | clean_output |\
         while read TRACK; do
-            if [ "$REGARD_CASE" ]; then
-                if echo "$TRACK" | grep -qE "$SEARCH"; then
-                    $MPC play "$NUM"
-                    break
-                fi
-            else
-                if echo "$TRACK" | grep -iqE "$SEARCH"; then
-                    $MPC play "$NUM"
+            if echo "$TRACK" | grep -"$IGNORE_CASE"qP "$SEARCH"; then
+                ((OUT--))
+                if [ "$OUT" -lt 1 ]; then
+                    echo "$NUM"
                     break
                 fi
             fi
             ((NUM++))
         done
+}
+pl_add() {
+  if [ ! "$#" ]; then
+      echo 'Search string cannot be empty!'
+  else
+      local SEARCH="$*"
+      mpc lsplaylists |\
+          while read LIST; do
+            if echo "$LIST" | grep -"$IGNORE_CASE"qP "$SEARCH"; then
+                $MPC load "$LIST" > /dev/null
+                unset LIST
+                break
+            fi
+        done
+        if [ -z "$LIST" ]; then
+            echo "No matching playlist found!"
+        fi
+  fi
+}
+del_num() {
+    echo "$( echo "$*" | sed 's/\./0/g' |\
+       sed "s/\\$/$( mpc playlist | wc -l )/g" )"
+}
+del_phrase() {
+    local OUT=""
+    for ARG in $@; do
+        local RES=""
+        while read TERM; do
+            if echo "$TERM" | grep -qP '^\\(?!\\)'; then
+                TERM=$(echo "$TERM" | sed -r 's/^\\//')
+                RESULT=$( del_num "$TERM" )
+            else
+                TERM=$(echo "$TERM" | sed -r 's/^\\\\/\\/')
+                RESULT="$( pos_matching "$TERM" )"
+            fi
+            if [ -z "$RESULT" ]; then
+                RES="$RES?-"
+            else
+                RES="$RES$RESULT-"
+            fi
+        done < <( echo "$ARG" | grep -oE '(\\-|[^-])*?' | sed 's/\\-/-/g' |\
+                  head -n 2 )
+        # Use 'process substitution' to access variable
+        # outside of loop
+        OUT="$OUT${RES:0:-1} "
+    done
+    echo "$OUT"
 }
 clean_output() {
     sed "s/%\(..\)/\\\\x\1/g" | xargs -0 printf 2> /dev/null
@@ -59,7 +107,7 @@ query_playing() {
         notify-send "<i>$( echo "$CURRENT" | sed -r 's/.*?\/(.*?)$/\1/' )</i>"\
             "$( echo "$CURRENT"  | sed -r 's/.*?:.*?:(.*?)\/.*?$/\1/')"
     else
-        notify-send "$( mpc -f '%title%' current )" \
+        notify-send "$( mpc -f '%title%' current )"\
             "$( mpc -f '%artist% - %album%' current )"
     fi
 }
@@ -79,8 +127,7 @@ change_notify() {
                 notify-send -u critical 'Stopped change notifications!'\
                     "Mpc couldn't connect to Mopidy. Mopidy most likely died."
                 killall mopidy 2> /dev/null
- \
-      rm "$AU_DIR/AUDIO_LOOP_PID"
+                rm "$AU_DIR/AUDIO_LOOP_PID"
                 break
             fi
             if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ]; then
@@ -93,6 +140,7 @@ change_notify() {
 
 ARGS_START=1
 AUTOSTART_MPD=1
+IGNORE_CASE="i"
 
 if [ "$#" = 0 ]; then
     set -- "${@}" "t"; # Special case because most used; Reset to preserve behavior
@@ -113,7 +161,7 @@ for ARG in "$@"; do
                 ;;
             -i) ;&
             --regard-case)
-                REGARD_CASE=1
+                IGNORE_CASE=""
                 ((ARGS_START++))
                 ;;
             --no-change-notifications) ;&
@@ -147,9 +195,9 @@ Commands:
   Y mpc update --wait
 
  Stackable:
-  L mpc next
-  H mpc prev
-  Q Toggle the automatic displaying of a notification if the p, t, h, b, L, H
+  K mpc next
+  J mpc prev
+  Q Toggle the automatic displaying of a notification if the p, t, h, b, J, K
      commands are used
   r mpc repeat
   z mpc random
@@ -165,16 +213,34 @@ Commands:
  Searching: (Must be used with a handle command; Last will be executed)
   s mpc search
   f mpc find
-  P Search for track in the playlist by name and play it. Will be ignored
-     when used with a or l.
+  P Search for track in the playlist by name and play it. To reference the N-th
+     occurrence use 'N:<search term>'. Will be ignored when used with a or l.
+  L Reference a playlists.
 
  Handling:
   a Add results.
     Acts like 'mpc add [search results]' when used with s or f
-    Acts like 'mpc add [args]'           when used alone
+    Acts like 'mpc load [pl name]'       when used with L
+    Acts like 'mpc add [args]'           when used alone or with P
   l List results.
     Acts like 'echo [search results]'    when used with s or f
-    Acts like 'mpc playlist'             when used alone
+    Acts like 'mpc lsplaylists'          when used with L
+    Acts like 'mpc playlist'             when used alone or with P
+  d Delete results
+    Acts like 'mpc del [args]'           when used with P
+     Special values: $  last playlist element
+                     .  current playlist element
+    Behaviour                            when used with s or f
+     Search for each text occurrence of elements (may be separated by '-' to
+      indicate a range). The syntax of 'play matching track P' is used. To
+      behave like 'delete by number P' the element can be preceded by a '\\'.
+      Example:
+        roses-violets forget\\-me\\-not-\\$
+    Acts like 'mpc rm \"[args]\"'        when used with L
+
+  - (No handling operator)
+    Plays matching song                  when P
+    Acts like 'mpc save [new pl name]'   when L
 
 Options:
   -n  --no-autostart do not start mopidy automatically if it is not
@@ -254,13 +320,13 @@ for C in $( echo $COMMAND | grep -o . ); do
             fi
             ;;
 
-        H)
+        K)
             $MPC prev
             if [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
             fi
             ;;
-        L)
+        J)
             $MPC next
             if [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
@@ -325,6 +391,9 @@ for C in $( echo $COMMAND | grep -o . ); do
         l)
             ACTION=2
             ;;
+        d)
+            ACTION=3
+            ;;
 
         s)
             SEARCH_OPTION=1
@@ -335,10 +404,13 @@ for C in $( echo $COMMAND | grep -o . ); do
         P)
             SEARCH_OPTION=3
             ;;
+        L)
+            SEARCH_OPTION=4
+            ;;
 
         *)
             echo "$C is not a valid command."
-            echo 'Valid commands: pthbHLqQikCYrxzycvSalsfP'
+            echo 'Valid commands: abcfhiklpqrstvxyzCJKLPQSY'
             echo 'See -h for more info.'
             exit 1
     esac
@@ -357,6 +429,10 @@ case "$ACTION" in
             2)
                 m_find   "${@:$ARGS_START}" | $MPC add
                 ;;
+            4)
+                pl_add   "${@:$ARGS_START}"
+                ;;
+
             *)
                 $MPC add  "${@:$ARGS_START}"
         esac
@@ -371,14 +447,36 @@ case "$ACTION" in
                 m_find   "${@:$ARGS_START}" |
                 sed "s/%\(..\)/\\\\x\1/g"   | clean_output
                 ;;
+            4)
+                mpc lsplaylists
+                ;;
+
             *)
                 $MPC playlist | clean_output
         esac
         ;;
+    3)
+        case "$SEARCH_OPTION" in
+            1)
+                ;&
+            2)
+                del_phrase "${*:$ARGS_START}" | $MPC del
+                ;;
+            3)
+                del_num "${*:$ARGS_START}" | $MPC del
+                ;;
+            4)
+                mpc rm "${*:$ARGS_START}"
+        esac
+        ;;
+
     *)
         case "$SEARCH_OPTION" in
             3)
-                play_matching "${@:$ARGS_START}"
+                $MPC play "$( pos_matching "${@:$ARGS_START}" )" 2> /dev/null
+                ;;
+            4)
+                mpc save "${*:$ARGS_START}"
                 ;;
         esac
 esac
