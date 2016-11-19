@@ -2,6 +2,7 @@
 
 MPC='mpc -q'
 AU_DIR='/tmp/audio_control/'
+TARGET='Mpd'
 if [ ! -d "$AU_DIR" ]; then
     mkdir "$AU_DIR"
 fi
@@ -61,7 +62,7 @@ pl_add() {
                 break
             fi
         done
-        if [ -z "$LIST" ]; then
+        if [ -n "$LIST" ]; then
             echo "No matching playlist found!"
         fi
   fi
@@ -99,13 +100,13 @@ clean_output() {
     sed "s/%\(..\)/\\\\x\1/g" | xargs -0 printf 2> /dev/null
 }
 query_playing() {
-    sleep 0.1 # Wait until mopidy updates its index
+    sleep 0.1 # Wait until mopidy or mpd update their indices
     if [ -z "$( mpc current )" ]; then
         notify-send -u low 'No track playing'
     elif [ -z "$( mpc -f '%title%' current )" ]; then
         CURRENT="$( mpc current | clean_output )"
         notify-send "<i>$( echo "$CURRENT" | sed -r 's/.*?\/(.*?)$/\1/' )</i>"\
-            "$( echo "$CURRENT"  | sed -r 's/.*?:.*?:(.*?)\/.*?$/\1/')"
+            "$( echo "$CURRENT"  | sed -r 's/(.*?)\/.*?$/\1/')"
     else
         notify-send "$( mpc -f '%title%' current )"\
             "$( mpc -f '%artist% - %album%' current )"
@@ -125,7 +126,7 @@ change_notify() {
             if [[ "$( mpc current --wait 2>&1 >/dev/null )" ==\
                   *"Connection refused"* ]]; then
                 notify-send -u critical 'Stopped change notifications!'\
-                    "Mpc couldn't connect to Mopidy. Mopidy most likely died."
+                    "Mpc couldn't connect to $TARGET. $TARGET most likely died."
                 killall mopidy 2> /dev/null
                 rm "$AU_DIR/AUDIO_LOOP_PID"
                 break
@@ -139,7 +140,7 @@ change_notify() {
 }
 
 ARGS_START=1
-AUTOSTART_MPD=1
+AUTOSTART=1
 IGNORE_CASE="i"
 
 if [ "$#" = 0 ]; then
@@ -151,18 +152,20 @@ for ARG in "$@"; do
         case "$ARG" in
             --no-autostart) ;&
             -n)
-                AUTOSTART_MPD=0
-                ((ARGS_START++))
+                AUTOSTART=0
+                ;;
+            -m) ;&
+            --mopidy)
+                MOPIDY=1
+                TARGET='Mopidy'
                 ;;
             --specify-type) ;&
             -s)
                 SPECIFY_TYPE=1
-                ((ARGS_START++))
                 ;;
             -i) ;&
             --regard-case)
                 IGNORE_CASE=""
-                ((ARGS_START++))
                 ;;
             --no-change-notifications) ;&
             -c)
@@ -177,7 +180,7 @@ $0 [OPTION]... COMMANDS
 
 Commands:
  Commands control what tasks the script performs. Multiple commands must
- be written in a string (e.g. LLp) with the arguments following after that.
+ be written in a string (e.g. JJp) with the arguments following after that.
  The arguments will be associated with the commands that accessed them
  accordingly. The search query commands (s, f) will always accept the
  remaining arguments.
@@ -243,8 +246,9 @@ Commands:
     Acts like 'mpc save [new pl name]'   when L
 
 Options:
-  -n  --no-autostart do not start mopidy automatically if it is not
+  -n  --no-autostart do not start mpd or mopidy automatically if they are not
                       running
+  -m  --mopidy       start mopidy instead of mpd
   -c  --no-change-notifications
                      Do not automatically activate the change notifications.
                       Can be reactivated every time with the C command.
@@ -266,27 +270,48 @@ Note: if neither options nor commands are specified the script will execute
                 exit 0
                 ;;
             --)
-                ((ARGS_START++))
                 break 2
                 ;;
         esac
+        ((ARGS_START++))
     else
         break
     fi
 done
 
-if [ ! $( pgrep -f '/usr/sbin/mopidy' ) ]; then
-    if [ "$AUTOSTART_MPD" ]; then
-        mopidy &> "$AU_DIR/mopidy.log"&disown
-        echo "Starting Mopidy!"
-        [ ! "$NO_CHANGE_NOTIFY" ] && change_notify
-        while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
-            sleep 0.5 ; done
-    else
-        echo 'Mopidy not running!'
-        exit 1
+if [ "$MOPIDY" ]; then
+    if [ ! $( pgrep -f '/usr/sbin/mopidy' ) ]; then
+        if [ "$AUTOSTART" ]; then
+            mopidy &> "$AU_DIR/mopidy.log"&disown
+            echo "Starting $TARGET!"
+            [ ! "$NO_CHANGE_NOTIFY" ] && change_notify
+            while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
+                sleep 0.5 ; done
+        else
+            echo "$TARGET not running!"
+            exit 1
+        fi
+    fi
+else
+    if [ ! $( pgrep -f '/usr/bin/mpd' ) ]; then
+        if [ "$AUTOSTART" ]; then
+            mpd "$HOME/.mpdconf"
+            echo "Starting $TARGET!"
+            while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
+                sleep 0.5 ; done
+        else
+            echo "$TARGET not running!"
+            exit 1
+        fi
     fi
 fi
+if [ ! "$NO_CHANGE_NOTIFY" -a ! -f "$AU_DIR/ATTEMPTED_LOOP" ]; then
+    change_notify
+fi
+if [ ! -f "$AU_DIR/ATTEMPTED_LOOP" ]; then
+    touch "$AU_DIR/ATTEMPTED_LOOP"
+fi
+
 COMMAND="${!ARGS_START}"
 ((ARGS_START++))
 for C in $( echo $COMMAND | grep -o . ); do
@@ -354,7 +379,7 @@ for C in $( echo $COMMAND | grep -o . ); do
             if [ -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 change_notify
             fi
-            killall mopidy && echo 'Killed Mopidy!'
+            killall mopidy && echo "Killed $TARGET!"
             exit 0
             ;;
         Y)

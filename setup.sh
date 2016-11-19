@@ -17,3 +17,8 @@ ln -sfr vimperatorrc  $HOME/.vimperatorrc
 
 if [ ! -d $HOME/.config/dunst/ ]; then mkdir $HOME/.config/dunst/ fi
 ln -sfr dunstrc       $HOME/.config/dunst/dunstrc
+
+# Configure Mpd
+ln -sfr mpd.conf ../.mpdconf
+mkdir $HOME/.mpd
+mkdir $HOME/.mpd/playlists
