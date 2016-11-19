@@ -65,7 +65,7 @@ my_shutdown() {
 }
 
 my_reboot() {
-    sudo systemctl reboot
+    systemctl reboot
 }
 
 my_suspend() {
