@@ -17,4 +17,6 @@ noremap J gT
 noremap K gt
 noremap <C-W> :winclose<CR>
 noremap <C-P> :winopen -private <C-V><CR>
+
+ignorekeys add -except <C-o>,<C-i>,:,f https://www\\.netflix\\.com/watch/.*
 " vim: ft=vim

@@ -22,12 +22,17 @@
 
 " Set visual mark after 80 characters
  set colorcolumn=81
+ set cursorline "cursorcolumn
 
 " Toggle paste mode
  set pastetoggle=<F10>
 
- map <silent> <C-S-c> :nohlsearch<CR>
- map <silent> <C-S-r> :let @/=""<CR>
+ if has('nvim')
+     nnoremap <silent> <M-c>   :nohlsearch<CR>
+     nnoremap <silent> <M-S-c> :let @/=""<CR>
+ else
+     nnoremap <silent> <C-c>   :nohlsearch<CR>
+ endif
 
 " create backups and swap files in the .vim directory (the double slashes
 " mean, VIM uses the full path)
@@ -35,10 +40,12 @@
  set directory=~/.vim/swp//
 
 " Open lines without entering insert mode
- noremap <C-j> o<ESC>
- noremap <C-k> O<ESC>
- noremap <A-j> o<ESC>k
- noremap <A-k> O<ESC>j
+ nnoremap <C-j> o<ESC>
+ nnoremap <C-k> O<ESC>
+ if has('nvim')
+     nnoremap <A-j> o<ESC>k
+     nnoremap <A-k> O<ESC>j
+ endif
 
 " Indent
  set smartindent
@@ -76,24 +83,33 @@
  "Plug 'scrooloose/syntastic'
   Plug 'altercation/vim-colors-solarized'
   Plug 'b4winckler/vim-angry'
-  Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-  Plug 'junegunn/fzf.vim'
+ "Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+ "Plug 'junegunn/fzf.vim'
  "Plug 'sunaku/vim-shortcut'
   Plug 'scrooloose/nerdtree'
-  Plug 'alvan/vim-closetag', { 'for': ['html', 'xml', 'java']  }
+  Plug 'alvan/vim-closetag'
   Plug 'Valloric/MatchTagAlways', { 'for': ['html', 'xml', 'java']  }
+  let g:closetag_filenames = "*.html,*.xhtml,*.phtml"
   Plug 'junegunn/vim-easy-align'
  "Plug 'junegunn/limelight.vim'
-  Plug 'junegunn/vim-peekaboo'
+ "Plug 'junegunn/vim-peekaboo'
   Plug 'junegunn/rainbow_parentheses.vim'
-  Plug 'whatyouhide/vim-lengthmatters'
+ "Plug 'whatyouhide/vim-lengthmatters'
  "Plug 'whatyouhide/vim-gotham'
+ "Plug 'jaxbot/browserlink.vim', { 'for': ['html', 'javascript', 'css']  }
+ "augroup htmlupdater
+ "    au!
+ "    au TextChanged *.html,*.js,*.css,*.md :write
+ "    au TextChanged *.html,*.js,*.css,*.md :BLReloadPage
+ "    au FileType html,css,javascript,markdown inoremap <buffer> <silent> <ESC> <ESC>:write<CR>:BLReloadPage<CR>
+ "   "au FileType html,xlm inoremap <silent> > ><C-o>:noautocmd normal F<"tyf>f>"tpF<a/hi<CR>
+ "augroup END
 
   call plug#end()
 
 " Start interactive EasyAlign in visual mode (e.g. vipga)
   xmap ga <Plug>(EasyAlign)
- 
+
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
   nmap ga <Plug>(EasyAlign)
 
