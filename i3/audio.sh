@@ -3,6 +3,12 @@
 MPC='mpc -q'
 AU_DIR='/tmp/audio_control/'
 TARGET='Mpd'
+MPD_CONF="$HOME/.mpdconf"
+MUSIC_DIR="$(grep 'music_directory' "$MPD_CONF" | grep -oP '(?<=").*?(?=")' |\
+    sed -r "s/~/$( sed 's/[&/\]/\\&/g' <<<"$HOME"  )/" )"
+ICON_RES='80:80' #Only affects newly created icons
+RADIO_QUERY_RES=5
+
 if [ ! -d "$AU_DIR" ]; then
     mkdir "$AU_DIR"
 fi
@@ -103,16 +109,47 @@ query_playing() {
     sleep 0.1 # Wait until mopidy or mpd update their indices
     if [ -z "$( mpc current )" ]; then
         notify-send -u low 'No track playing'
-    elif [ -z "$( mpc -f '%title%' current )" ]; then
-        CURRENT="$( mpc current | clean_output )"
-        notify-send "<i>$( echo "$CURRENT" | sed -r 's/.*?\/(.*?)$/\1/' )</i>"\
-            "$( echo "$CURRENT"  | sed -r 's/(.*?)\/.*?$/\1/')"
-    else
+    elif [ -z "$( mpc -f '%time%' current )" ]; then # Most probably a radio station
         notify-send "$( mpc -f '%title%' current )"\
-            "$( mpc -f '%artist% - %album%' current )"
+            "$( mpc -f '%name%' current )"
+    else
+        local CURRENT="$( mpc -f "%file%" current | clean_output )"
+        local DIR="$( dirname "$CURRENT" )"
+        local ICON_ARG=()
+        check_icon "$MUSIC_DIR/$DIR"
+        if [ -f "$MUSIC_DIR/$DIR/.cover_mpd.png" ]; then
+            ICON_ARG=( '-i' "$MUSIC_DIR/$DIR/.cover_mpd.png" )
+        else
+            ICON_ARG=( '--' )
+        fi
+        if [ -z "$( mpc -f '%title%' current )" ]; then
+            notify-send "<i>$( basename "$CURRENT" '.mp3'  )</i>"\
+                "$DIR" "${ICON_ARG[@]}"
+        else
+            notify-send "$( mpc -f '%title%' current )"\
+                "$( mpc -f '[[%artist% - ][%album%]|[<i>Unknown</i>]]|[<i>Unknown</i>]' current )" "${ICON_ARG[@]}"
+        fi
     fi
 }
+check_icon() {
+    (
+        cd "$1"
+        local FILES=
+        shopt -s nullglob
+        if [ -f ".cover_mpd.png" -o -f ".no_cover_found" ]; then
+            return
+        elif [ -f cover.png -o -f cover.jpg -o -f cover.jpeg ]; then
+            FILES=( cover.png* cover.jpg* cover.jpeg* )
+        else
+            FILES=( *.mp3 )
+        fi
+        if ! ffmpeg -i "${FILES[0]}" -vf scale="$ICON_RES" ".cover_mpd.png" &> /dev/null; then
+            touch ".no_cover_found"
+        fi
+    )
+}
 change_notify() {
+    local LAST=
     if [ -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
         cat "$AU_DIR/AUDIO_LOOP_PID" | xargs kill -SIGKILL
         echo 'Stopped change notifications!'
@@ -122,8 +159,23 @@ change_notify() {
         while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
             sleep 0.5; done
         echo 'Started change notifications!'
+
         while true; do
-            if [[ "$( mpc current --wait 2>&1 >/dev/null )" ==\
+            if [ -z "$( mpc -f '%time%' current )" ]; then #Stream
+                sleep "$RADIO_QUERY_RES"
+                if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" -a\
+                     "$( mpc -f '%title%' current )" != "$LAST" ]; then
+                    query_playing
+                    LAST="$( mpc -f '%title%' current )"
+                fi
+            else
+                mpc current --wait &> /dev/null
+                if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ]; then
+                    query_playing
+                fi
+            fi
+
+            if [[ "$( mpc current &>/dev/null )" ==\
                   *"Connection refused"* ]]; then
                 notify-send -u critical 'Stopped change notifications!'\
                     "Mpc couldn't connect to $TARGET. $TARGET most likely died."
@@ -131,9 +183,7 @@ change_notify() {
                 rm "$AU_DIR/AUDIO_LOOP_PID"
                 break
             fi
-            if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ]; then
-                query_playing
-            fi
+
         done
         ) & disown && echo $! > "$AU_DIR/AUDIO_LOOP_PID"
     fi
