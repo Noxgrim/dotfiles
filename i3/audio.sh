@@ -100,7 +100,7 @@ del_phrase() {
         # outside of loop
         OUT="$OUT${RES:0:-1} "
     done
-    echo "$OUT"
+    echo "${OUT:0:-1}"
 }
 clean_output() {
     sed "s/%\(..\)/\\\\x\1/g" | xargs -0 printf 2> /dev/null
@@ -320,6 +320,7 @@ Note: if neither options nor commands are specified the script will execute
                 exit 0
                 ;;
             --)
+                ((ARGS_START++))
                 break 2
                 ;;
         esac
