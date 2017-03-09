@@ -1,4 +1,4 @@
-keystate_capslock = disable
+keystate_capslock = enable
 
 "$HOME/.i3/audio.sh t"
    XF86AudioPlay
