@@ -1,7 +1,7 @@
 #! /bin/bash
 
 MPC='mpc -q'
-AU_DIR='/tmp/audio_control/'
+AU_DIR='/tmp/audio_control'
 TARGET='Mpd'
 MPD_CONF="$HOME/.mpdconf"
 MUSIC_DIR="$(grep 'music_directory' "$MPD_CONF" | grep -oP '(?<=").*?(?=")' |\
@@ -21,6 +21,9 @@ m_search() {
           $MPC search "${@}"
       else
           $MPC search any "$*"
+          if [  ! "$MOPIDY" ]; then
+              $MPC search filename "$*"
+          fi
       fi
   fi
 }
@@ -32,8 +35,21 @@ m_find() {
           $MPC find "${@}"
       else
           $MPC find any "$*"
+          if [  ! "$MOPIDY" ]; then
+              $MPC find filename "$*"
+          fi
       fi
   fi
+}
+filter() {
+    if [ "$NO_UNIQUE" ]; then
+        sort -u
+    else
+        TEMP="$(sort -u)"
+        $MPC -f '%file%' playlist | sort -o "$AU_DIR/CURR_PL"
+        echo "$TEMP" | comm -23 - "$AU_DIR/CURR_PL"
+        rm "$AU_DIR/CURR_PL"
+    fi
 }
 pos_matching() {
     local SEARCH="$*"
@@ -127,7 +143,7 @@ query_playing() {
                 "$DIR" "${ICON_ARG[@]}"
         else
             notify-send "$( mpc -f '%title%' current )"\
-                "$( mpc -f '[[%artist% - ][%album%]|[<i>Unknown</i>]]|[<i>Unknown</i>]' current )" "${ICON_ARG[@]}"
+                "$( mpc -f '[[%artist% • ][%album%]|[<i>Unknown</i>]]|[<i>Unknown</i>]' current )" "${ICON_ARG[@]}"
         fi
     fi
 }
@@ -216,6 +232,10 @@ for ARG in "$@"; do
             -i) ;&
             --regard-case)
                 IGNORE_CASE=""
+                ;;
+            -U) ;&
+            --no-unique)
+                NO_UNIQUE=1
                 ;;
             --no-change-notifications) ;&
             -c)
@@ -311,6 +331,8 @@ Options:
                        date      disc      filename  genre     name
                        performer title     track
   -I, --regard-case  do not ignore case when searching with 'P'
+  -U, --no-unique    also add titles if they are already in the current
+                      playlist
   -h, --help         display this help and exit
   --                 stop arguments
 
@@ -497,13 +519,13 @@ if [ "$UPDATE" ]; then
     mpc update --wait
 fi
 case "$ACTION" in
-    1)
+    1) # Add
         case "$SEARCH_OPTION" in
             1)
-                m_search "${@:$ARGS_START}" | $MPC add
+                m_search "${@:$ARGS_START}" | filter | $MPC add
                 ;;
             2)
-                m_find   "${@:$ARGS_START}" | $MPC add
+                m_find   "${@:$ARGS_START}" | filter | $MPC add
                 ;;
             4)
                 pl_add   "${@:$ARGS_START}"
@@ -513,25 +535,23 @@ case "$ACTION" in
                 $MPC add  "${@:$ARGS_START}"
         esac
         ;;
-    2)
+    2) # List
         case "$SEARCH_OPTION" in
             1)
-                m_search "${@:$ARGS_START}" |
-                sed "s/%\(..\)/\\\\x\1/g"   | clean_output
+                m_search "${@:$ARGS_START}" | filter | clean_output
                 ;;
             2)
-                m_find   "${@:$ARGS_START}" |
-                sed "s/%\(..\)/\\\\x\1/g"   | clean_output
+                m_find   "${@:$ARGS_START}" | filter | clean_output
                 ;;
             4)
                 mpc lsplaylists
                 ;;
 
             *)
-                $MPC playlist | clean_output
+                $MPC playlist -f '%position%. %artist% • %title%' | clean_output
         esac
         ;;
-    3)
+    3) # Delete
         case "$SEARCH_OPTION" in
             1)
                 ;&
