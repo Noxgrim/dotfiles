@@ -6,7 +6,7 @@
 
 " Search
  set hlsearch
- set smartcase
+ set ignorecase smartcase
 
 " Settings for Eclim
  set nocompatible
@@ -97,6 +97,12 @@
  "Plug 'whatyouhide/vim-lengthmatters'
  "Plug 'whatyouhide/vim-gotham'
  "Plug 'jaxbot/browserlink.vim', { 'for': ['html', 'javascript', 'css']  }
+  Plug 'christoomey/vim-titlecase'
+  let g:titlecase_map_keys = 0
+  nmap <leader>gt <Plug>Titlecase
+  vmap <leader>gt <Plug>Titlecase
+  nmap <leader>gT <Plug>TitlecaseLine
+
  "augroup htmlupdater
  "    au!
  "    au TextChanged *.html,*.js,*.css,*.md :write
@@ -132,11 +138,10 @@
  endif
  set t_Co=256
 
- inoremap <C-H> <NOP>
- inoremap <C-J> <Down>
- inoremap <C-K> <Up>
- inoremap <C-H> <Left>
- inoremap <C-L> <Right>
+ inoremap <C-G><BS> <Left>
+ inoremap <C-G>h     <Left>
+ inoremap <C-G><C-L> <Right>
+ inoremap <C-G>l     <Right>
 
  if has('nvim')
      tnoremap <C-e><C-e> <C-\><C-n>
