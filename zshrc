@@ -91,6 +91,7 @@ source $ZSH/oh-my-zsh.sh
 alias gcd1="git clone --depth 1"
 alias vim='\nvim'
 alias lvim='\vim'
+alias audio="$HOME/.i3/audio.sh"
 
 #Load autojump
 . /usr/share/autojump/autojump.zsh
@@ -100,3 +101,24 @@ if [ -d "$HOME/.local/bin" ]; then
 fi
 
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+function fat32copy {
+    NUM=0
+    TOTAL="$( find "$1" -type f | wc -l )"
+    AC_DIR="$( dirname "$1" )"
+
+    find "$1" -type f -print0 | while IFS= read -r -d $'\0' F; do
+        ((NUM++))
+        DEST="$(echo "$F" | sed -e 's/:/ -/g' | sed -e 's/"/'\''/g' | sed -e 's/[|\?*]/_/g')"
+        DIR="$(dirname "$DEST")"
+        DIR="$2${DIR#$AC_DIR}"
+        FILE="$(basename "$DEST")"
+        printf "\r\e[0K%3.2f%% (%d/%d): '%s'" "$(echo "scale=4; $NUM/$TOTAL*100" | bc)" $NUM $TOTAL "$FILE"
+        if [ ! -d "$DIR" ]; then
+            mkdir -p "$DIR"
+        fi
+        #echo Copy from "'$F'" to "'$DEST'"
+        cp "$F" "$DIR/$FILE"
+    done
+    echo
+}
