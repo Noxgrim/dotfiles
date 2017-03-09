@@ -19,6 +19,7 @@ if [ ! -d $HOME/.config/dunst/ ]; then mkdir $HOME/.config/dunst/ fi
 ln -sfr dunstrc       $HOME/.config/dunst/dunstrc
 
 # Configure Mpd
-ln -sfr mpd.conf ../.mpdconf
+ln -sfr mpd.conf $HOME/.mpdconf
 mkdir $HOME/.mpd
 mkdir $HOME/.mpd/playlists
+ln -sfr ncmpcpp $HOME/.ncmpcpp

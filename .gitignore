@@ -6,6 +6,7 @@ vimperator/*
 # Backup files and temporary files
 tmp/
 *.tmp
+*.log
 *.old
 *.bak
 *.swp
