@@ -2,6 +2,7 @@
 " js services.services.autoCompleteSearch.class_="@mozilla.org/autocomplete/search;1?name=unifiedcomplete"
 colorscheme fxdevtools-dark
 set animations
+set tabnumbers
 set hintchars=hjklasdfgzuiopqwertnmyxcvb
 set gui=none
 " Try to fix YouTube "bug" with the hits behind the YouTube title bar
@@ -18,5 +19,54 @@ noremap K gt
 noremap <C-W> :winclose<CR>
 noremap <C-P> :winopen -private <C-V><CR>
 
-ignorekeys add -except <C-o>,<C-i>,:,f https://www\\.netflix\\.com/watch/.*
+ignorekeys add -except <C-o>,<C-i>,:,s,f https://www\\.netflix\\.com/watch/.*
+
+" Shamelessly inspired by https://github.com/5hir0kur0
+" youtube "fullscreen" mode (open videos in embed mode)
+
+" open current youtube video or playlist in embedded mode in current tab
+noremap -urls '^https?:\/\/(?:[^.]+.)?youtube.com\/watch\?.*v=.+' <silent> ge :js open_yt_embedded(liberator.CURRENT_TAB)<CR>
+" open current youtube video or playlist in embedded mode in new tab
+noremap -urls '^https?:\/\/(?:[^.]+.)?youtube.com\/watch\?.*v=.+' <silent> gE :js open_yt_embedded(liberator.NEW_TAB)<CR>
+" open current embedded youtube video or playlist to normal youtube page in current tab
+noremap -urls '^https?:\/\/(?:[^.]+.)?youtube.com\/embed\/.+' <silent> ge :js yt_embedded_to_normal()<CR>
+
+:js << EOF
+function open_yt_embedded(open_arg_where) {
+    var base = "https://www.youtube.com/embed/";
+    var current_id = liberator.modules.buffer.URL;
+    var regex = /^https?:\/\/(?:[^.]+.)?youtube.com\/watch\?.*v=([^&]+)(?:&index=\d+)?((&list=[^&]+)?)(?:&index=\d+)?(?:[?&]t=[^&]+)?/;
+    if (current_id.match(regex)) {
+        // playlists need '&' and normal videos '?' to autoplay correctly
+        var end = (regex.exec(current_id)[3] ? "?" : "&") + "autoplay=true";
+        var new_url = current_id.replace(regex, base + "$1$2" + end);
+        // in playlists, we need to replace & with ?
+        if (new_url.indexOf("&") >= 0) new_url = new_url.replace("&", "?");
+        liberator.open(new_url, { "where": open_arg_where });
+    }
+}
+EOF
+
+" Toogle gui elements
+noremap <silent> sa :set gui=invaddons<CR>
+noremap <silent> sb :js toggle_bottombar()<CR>
+noremap <silent> sB :set gui=invbookmarks<CR>
+noremap <silent> sm :set gui=invmenu<CR>
+noremap <silent> sn :set gui=invnavigation<CR>
+noremap <silent> st :set gui=invtabs<CR>
+
+noremap <silent> sN :set gui=none<CR>
+noremap <silent> sA :set gui=all<CR>
+" stolen from http://superuser.com/a/706543
+:js << EOF
+function toggle_bottombar() {
+    var bb = document.getElementById('liberator-bottombar');
+    if (!bb)
+        return;
+    bb.style.height = (bb.style.height == '') ? '0px' : '';
+    bb.style.overflow = (bb.style.height == '') ? '' : 'hidden';
+}
+EOF
+ignorekeys add -except=:,d,D,x,f,g,s,<C-o>,<C-i> '^https?://www.youtube.com/embed/.+'
+
 " vim: ft=vim
