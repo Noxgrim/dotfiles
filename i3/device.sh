@@ -4,7 +4,8 @@
 THIS="`dirname $0`/$0" # path to script
 # X clients that should be ignored
 WHITELIST=(ibus-x11 ibus-ui-gtk3 unity-settings-daemon notify-osd \
-    gnome-screensaver mozc_renderer redshift-gtk skype )
+    gnome-screensaver mozc_renderer redshift-gtk skype udiskie)
+KILLLIST=( steam )
 HOSTNAME=`hostname`
 
 lock() {
@@ -48,6 +49,7 @@ killapps() {
     i3-msg '[class=".*"] kill' # close all windows
     while pgrep -f '/usr/bin/anki'; do sleep '0.1'; done # wait for anki to sync
     sleep '1' # Wait because my sytem is SO slow
+    killall "${KILLLIST[@]}"
     if [ `countclients` -gt 0 ]; then # there are clients that refuse to die
         i3-nagbar -t warning \
             -m "The following clients refused to close: `listclients`" \
@@ -141,6 +143,15 @@ case "$1" in
     screen_off)
         sleep 1 &&
         xset dpms force off
+        ;;
+    dpms_toggle)
+        if [ xset q | grep -q "DPMS is Enabled" ]; then
+            xset s off -dpms
+            notify-send -t 2 -u low "Disabled DPMS"
+        else
+            xset s on  +dpms
+            notify-send -t 2 -u low "Enabled DPMS"
+        fi
         ;;
     mouse_off)
         xdotool mousemove 9001 9001 &&

@@ -1,5 +1,5 @@
 #! /bin/bash
-feh --bg-fill '/home/noxgrim/.wallpaper'
+feh --bg-scale "$HOME/.wallpaper"
 numlockx on
 dunst &
 # Try to schedule the execution of the command to

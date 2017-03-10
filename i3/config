@@ -149,7 +149,7 @@ bindsym $mod+c move position center
 
 bindsym $mod+m exec source $HOME/.i3/utils.sh && audio_control
 
-set $device device [sSlLhHrF][mMnN❖s]❖[dh]
+set $device device [sSlLhHrF][mMnN]❖[dh]❖[se]
 set $force device.force [SRL]
 bindsym $mod+Shift+x mode "$device"
 mode "$device" {
@@ -166,6 +166,7 @@ mode "$device" {
         bindsym Shift+n exec $HOME/.i3/device.sh notify_resume, mode "default"
 
         bindsym $mod+s  exec $HOME/.i3/device.sh screen_off,    mode "default"
+        bindsym $mod+e  exec $HOME/.i3/device.sh dpms_toggle,   mode "default"
 
         # Mouse
         bindsym m       exec $HOME/.i3/device.sh mouse_off,     mode "default"
@@ -258,6 +259,8 @@ bar {
         status_command i3blocks
         position top
         font pango:Source Code Pro for Powerline 9
+        tray_output primary
+        #tray_output LVDS-1-1
         mode hide
 
         colors {
@@ -304,6 +307,8 @@ bindsym $mod+XF86AudioMute exec pactl set-sink-mute 0 toggle
 # Fix a bug in gnome-settings-daemon: http://feeding.cloud.geek.nz/posts/creating-a-modern-tiling-desktop-environment-using-i3/
 #exec --no-startup-id dconf write /org/gnome/settings-daemon/plugins/cursor/active false
 
+#workspace "$ws1" output LVDS-1-1
+#workspace "$ws2" output VGA-1-1
 
 assign [class="Skype"] $ws1
 for_window [class="Gnome-terminal"] border pixel 1
