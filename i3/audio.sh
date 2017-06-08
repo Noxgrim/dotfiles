@@ -1,6 +1,7 @@
 #! /bin/bash
 
 MPC='mpc -q'
+BROWSER=( rofi -dmenu --only-match -i -multi-select -p 'Browse: ')
 AU_DIR='/tmp/audio_control'
 TARGET='Mpd'
 MPD_CONF="$HOME/.mpdconf"
@@ -8,6 +9,7 @@ MUSIC_DIR="$(grep 'music_directory' "$MPD_CONF" | grep -oP '(?<=").*?(?=")' |\
     sed -r "s/~/$( sed 's/[&/\]/\\&/g' <<<"$HOME"  )/" )"
 ICON_RES='80:80' #Only affects newly created icons
 RADIO_QUERY_RES=5
+PLAYLIST_FORMAT='%position%. %artist% • %title%'
 
 if [ ! -d "$AU_DIR" ]; then
     mkdir "$AU_DIR"
@@ -41,6 +43,111 @@ m_find() {
       fi
   fi
 }
+
+m_browse() {
+    local DIR
+    if [ -f "$AU_DIR/LAST_BROWSE_DIR" ]; then
+        DIR="$(cat "$AU_DIR/LAST_BROWSE_DIR")"
+    else
+        DIR="$MUSIC_DIR"
+    fi
+    (
+        cd "$DIR" || return
+        while true; do
+            local RESULT
+            RESULT="$(
+            (
+            echo .
+            if [ "$DIR" != "$MUSIC_DIR" ]; then
+                echo ..
+            fi
+            find . -maxdepth 1 \( -type d -o -type l -o -type f \( -iname '*.mp3' \
+                -o -iname '*.flac' -o -iname '*.wma' \) \) -a -not -path '*/\.*' |\
+                sed 's/^\.\///' | sed '/^\.$/d' | sort
+            echo '. (no subdirectories)'
+            echo '. (only subdirectories)'
+            echo '. (all but specify excluded)'
+            ) | "${BROWSER[@]}" -mesg "$( pwd )" || echo '' )"
+
+            if [ -z "$RESULT" ]; then
+                break;
+            else
+                if [ "$( echo "$RESULT" | wc -l )" -gt 1 ]; then
+                    RESULT="$( echo "$RESULT" | sed '/^\..*/d' )"
+                    while read -r LINE; do
+                        echo  "$DIR/$LINE"
+                    done <<< "$RESULT"
+                    break
+                else
+                    if [ "$RESULT" = '.' ]; then
+                        pwd
+                        break
+
+                    elif [ "$RESULT" = '. (no subdirectories)' ]; then
+                        find "$(pwd)" -maxdepth 1 \( -type f -o -type l -xtype f \)\
+                            -not -path '*/\.*' \(\
+                            -iname '*.mp3' -o -iname '*.wma' -o -iname '*.flac' \)
+                        break
+
+                    elif [ "$RESULT" = '. (only subdirectories)' ]; then
+                        find "$(pwd)" -maxdepth 1 \( -type d -o -type l -xtype d \)\
+                            -not -path '*/\.*' -not -path "$(pwd)"
+                        break
+
+                    elif [ "$RESULT" = '. (all but specify excluded)' ]; then
+                        local ALL
+                        ALL="$( (
+                        find . \( -type d -o -type l -xtype d \) -not -path '*/\.*' | sort
+                        find . \( -type f -o -type l -xtype f \)\
+                            -not -path '*/\.*' \(\
+                            -iname '*.mp3' -o -iname '*.wma' -o -iname '*.flac' \) | sort
+                        ) | sed 's/^\.\///' | sed '/^\.$/d')"
+
+                        while read -r LINE; do
+                            # FORGIVE ME
+                            LINE="$(escape_regex "$LINE")"
+                            if [ -d "$LINE" ]; then # forgive me...
+                                ALL="$( echo "$ALL" | sed "/^$LINE\\//d")"
+                            fi
+                            ALL="$( echo "$ALL" | sed "/^$LINE$/d")"
+                        done <<< "$( echo "$ALL" |\
+                            "${BROWSER[@]}" -mesg "Select all but... ($(pwd))"\
+                            || echo '')"
+
+                        while read -r LINE; do
+                            echo  "$DIR/$LINE"
+                        done <<< "$ALL"
+                        break
+                    elif [ -d "$RESULT" ]; then
+                        cd "$RESULT" || return
+                        DIR="$(pwd)"
+                    else
+                        echo "$DIR/$RESULT"
+                        break
+                    fi
+                fi
+            fi
+        done
+
+        pwd > "$AU_DIR/LAST_BROWSE_DIR"
+    ) | sed "s/^$( escape_regex "$MUSIC_DIR/" )//"
+}
+pl_browse() {
+    local CURRENT_PL
+    CURRENT_PL="$( $MPC playlist -f "$PLAYLIST_FORMAT" )"
+    local SELECTED
+    SELECTED="$( echo "$CURRENT_PL" | "${BROWSER[@]}" -mesg 'Playlist' || echo '' )"
+    local NUM=1
+    while read -r LINE; do
+        if echo "$SELECTED" | grep -qFx "$LINE"; then
+            echo $NUM
+        fi
+        ((NUM++))
+    done <<< "$CURRENT_PL"
+}
+escape_regex() {
+    sed -e 's/[]\/()$*.^|[]/\\&/g' <<< "$1"
+}
 filter() {
     if [ "$NO_UNIQUE" ]; then
         sort -u
@@ -60,7 +167,7 @@ pos_matching() {
     fi
     local NUM=1
     mpc playlist | clean_output |\
-        while read TRACK; do
+        while read -r TRACK; do
             if echo "$TRACK" | grep -"$IGNORE_CASE"qP "$SEARCH"; then
                 ((OUT--))
                 if [ "$OUT" -lt 1 ]; then
@@ -76,28 +183,23 @@ pl_add() {
       echo 'Search string cannot be empty!'
   else
       local SEARCH="$*"
-      mpc lsplaylists |\
-          while read LIST; do
-            if echo "$LIST" | grep -"$IGNORE_CASE"qP "$SEARCH"; then
-                $MPC load "$LIST" > /dev/null
-                unset LIST
-                break
-            fi
-        done
-        if [ -n "$LIST" ]; then
-            echo "No matching playlist found!"
+      while read -r LIST; do
+        if echo "$LIST" | grep -"$IGNORE_CASE"qP "$SEARCH"; then
+            $MPC load "$LIST" > /dev/null
+            return
         fi
+        done  < <( $MPC lsplaylists )
+        notify-send -u low 'No matching playlist found!'
   fi
 }
 del_num() {
-    echo "$( echo "$*" | sed 's/\./0/g' |\
-       sed "s/\\$/$( mpc playlist | wc -l )/g" )"
+    echo "$*" | sed 's/\./0/g' | sed "s/\\$/$( mpc playlist | wc -l )/g"
 }
 del_phrase() {
     local OUT=""
-    for ARG in $@; do
+    for ARG in "$@"; do
         local RES=""
-        while read TERM; do
+        while -r read TERM; do
             if echo "$TERM" | grep -qP '^\\(?!\\)'; then
                 TERM=$(echo "$TERM" | sed -r 's/^\\//')
                 RESULT=$( del_num "$TERM" )
@@ -118,43 +220,79 @@ del_phrase() {
     done
     echo "${OUT:0:-1}"
 }
+play_all() {
+    local RESULT
+    RESULT="$(pl_browse || sort -n)"
+    local NUM=0
+    local PLAY
+    if [ -n "$RESULT" ]; then
+        while read -r LINE; do
+            if [ $NUM = 0 ]; then
+                PLAY=$LINE
+            else
+                $MPC move "$LINE" $((PLAY+NUM))
+            fi
+            ((NUM++))
+        done <<< "$RESULT"
+        $MPC play "$PLAY"
+    fi
+}
 clean_output() {
-    sed "s/%\(..\)/\\\\x\1/g" | xargs -0 printf 2> /dev/null
+    local OUT
+    OUT="$(sed 's/%\(..\)/\\x\1/g')"
+    echo -e "$OUT"
 }
 query_playing() {
     sleep 0.1 # Wait until mopidy or mpd update their indices
     if [ -z "$( mpc current )" ]; then
         notify-send -u low 'No track playing'
     elif [ -z "$( mpc -f '%time%' current )" ]; then # Most probably a radio station
-        notify-send "$( mpc -f '%title%' current )"\
-            "$( mpc -f '%name%' current )"
+        notify-send "$( mpc -f '%title%' current | clean_html )"\
+            "$( mpc -f '%name%' current | clean_html )"
     else
-        local CURRENT="$( mpc -f "%file%" current | clean_output )"
-        local DIR="$( dirname "$CURRENT" )"
+        local CURRENT
+        CURRENT="$( mpc -f "%file%" current | clean_output )"
+        local DIR
+        DIR="$( dirname "$CURRENT" )"
         local ICON_ARG=()
         check_icon "$MUSIC_DIR/$DIR"
         if [ -f "$MUSIC_DIR/$DIR/.cover_mpd.png" ]; then
-            ICON_ARG=( '-i' "$MUSIC_DIR/$DIR/.cover_mpd.png" )
+            ln -sfr "$MUSIC_DIR/$DIR/.cover_mpd.png" "$AU_DIR/current_cover"
+            ICON_ARG=( '-i' "$AU_DIR/current_cover" )
         else
             ICON_ARG=( '--' )
         fi
+
+        local SUMMARY
+        local BODY
         if [ -z "$( mpc -f '%title%' current )" ]; then
-            notify-send "<i>$( basename "$CURRENT" '.mp3'  )</i>"\
-                "$DIR" "${ICON_ARG[@]}"
+            SUMMARY="<i>$( basename "$CURRENT" '.mp3')</i>"
+            BODY="$DIR"
         else
-            notify-send "$( mpc -f '%title%' current )"\
-                "$( mpc -f '[[%artist% • ][%album%]|[<i>Unknown</i>]]|[<i>Unknown</i>]' current )" "${ICON_ARG[@]}"
+            SUMMARY="$( mpc -f '%title%' current )"
+            BODY="$( mpc -f '[[%artist% • ][%album%]|[<i>Unknown</i>]]|[<i>Unknown</i>]' \
+                current )"
         fi
+
+        SUMMARY="$(echo "$SUMMARY" | clean_html)"
+        BODY="$(echo "$BODY" | clean_html)"
+
+        notify-send "$SUMMARY" "$BODY" "${ICON_ARG[@]}"
     fi
+}
+clean_html() {
+    sed 's/&/&amp;/g' |\
+    sed 's/</\&lt;/g' | sed -r 's/&lt;(\/?\w+>)/<\1/g' |\
+    sed 's/>/\&gt;/g' | sed -r 's/(<\/?\w+)&gt;/\1>/g'
 }
 check_icon() {
     (
-        cd "$1"
+        cd "$1" || return
         local FILES=
         shopt -s nullglob
-        if [ -f ".cover_mpd.png" -o -f ".no_cover_found" ]; then
+        if [ -f ".cover_mpd.png" ] || [ -f ".no_cover_found" ]; then
             return
-        elif [ -f cover.png -o -f cover.jpg -o -f cover.jpeg ]; then
+        elif [ -f cover.png ] || [ -f cover.jpg ] || [ -f cover.jpeg ]; then
             FILES=( cover.png* cover.jpg* cover.jpeg* )
         else
             FILES=( *.mp3 )
@@ -167,20 +305,20 @@ check_icon() {
 change_notify() {
     local LAST=
     if [ -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
-        cat "$AU_DIR/AUDIO_LOOP_PID" | xargs kill -SIGKILL
-        echo 'Stopped change notifications!'
+        xargs kill -SIGKILL < "$AU_DIR/AUDIO_LOOP_PID"
+        notify-send -u low 'Stopped change notifications!'
         rm "$AU_DIR/AUDIO_LOOP_PID"
     else
         (
         while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
             sleep 0.5; done
-        echo 'Started change notifications!'
+        notify-send -u low 'Started change notifications!'
 
         while true; do
             if [ -z "$( mpc -f '%time%' current )" ]; then #Stream
                 sleep "$RADIO_QUERY_RES"
-                if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" -a\
-                     "$( mpc -f '%title%' current )" != "$LAST" ]; then
+                if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ] &&\
+                     [ "$( mpc -f '%title%' current )" != "$LAST" ]; then
                     query_playing
                     LAST="$( mpc -f '%title%' current )"
                 fi
@@ -193,7 +331,7 @@ change_notify() {
 
             if [[ "$( mpc current &>/dev/null )" ==\
                   *"Connection refused"* ]]; then
-                notify-send -u critical 'Stopped change notifications!'\
+                notify-send -u critical 'Stopped change notifications!' \
                     "Mpc couldn't connect to $TARGET. $TARGET most likely died."
                 killall mopidy 2> /dev/null
                 rm "$AU_DIR/AUDIO_LOOP_PID"
@@ -216,34 +354,28 @@ fi
 for ARG in "$@"; do
     if [[ "$ARG" =~ ^-.+$ ]]; then
         case "$ARG" in
-            --no-autostart) ;&
-            -n)
+            --no-autostart|-n)
                 AUTOSTART=0
                 ;;
-            -m) ;&
-            --mopidy)
+            --mopidy|-m)
                 MOPIDY=1
                 TARGET='Mopidy'
                 ;;
-            --specify-type) ;&
-            -s)
+            --specify-type|-s)
                 SPECIFY_TYPE=1
                 ;;
-            -i) ;&
-            --regard-case)
+            --regard-case|-I)
                 IGNORE_CASE=""
                 ;;
-            -U) ;&
-            --no-unique)
+            --no-unique|-U)
                 NO_UNIQUE=1
                 ;;
-            --no-change-notifications) ;&
-            -c)
+            --no-change-notifications|-C)
                 NO_CHANGE_NOTIFY=1
                 ;;
-            --help) ;&
-            -h)
-                echo "$0 Help
+            --help|-h)
+                cat << EOF
+$0 Help
 A simple wrapper script that makes the use of mopidy and mpc easier
 and allows multitasking.
 $0 [OPTION]... COMMANDS
@@ -255,15 +387,18 @@ Commands:
  accordingly. The search query commands (s, f) will always accept the
  remaining arguments.
 
- Non-stackable: (Last will be executed if mutually exclusive;
+ Non-stackable: (Last specified will be executed if mutually exclusive;
                  Last to be executed)
   p mpc play
   t mpc toggle
-  h mpc stop
-  P mpc pause
+  h mpc stop (mnemonic Halt)
+  b mpc pause (mnemonic Break)
   q Display a notification with the current title, artist and album; will
      also be displayed if automatic notifications are disabled
   i mpc status
+  # mpc stats
+  d [args]
+    mpc [args] (mnemonic mpc Do; Executes a mpc query; Overrides a search/handler)
   k killall mopidy (executed immediately)
   Y mpc update --wait
 
@@ -283,24 +418,26 @@ Commands:
     mpc seek [arg]
   C Toggle change notifier loop
 
- Searching: (Must be used with a handle command; Last will be executed)
+ Searching: (Can be used with a handle command; Always uses all remaining arguments;
+  Last specified will be executed)
   s mpc search
   f mpc find
   P Search for track in the playlist by name and play it. To reference the N-th
      occurrence use 'N:<search term>'. Will be ignored when used with a or l.
-  L Reference a playlists.
+  L Reference a playlist.
+  B Browse the music directory or current playlist.
 
  Handling:
   a Add results.
-    Acts like 'mpc add [search results]' when used with s or f
+    Acts like 'mpc add [search results]' when used with s, f or B
     Acts like 'mpc load [pl name]'       when used with L
     Acts like 'mpc add [args]'           when used alone or with P
   l List results.
-    Acts like 'echo [search results]'    when used with s or f
+    Acts like 'echo [search results]'    when used with s, f or B
     Acts like 'mpc lsplaylists'          when used with L
     Acts like 'mpc playlist'             when used alone or with P
   d Delete results
-    Acts like 'mpc del [args]'           when used with P
+    Acts like 'mpc del [args]'           when used with P or B
      Special values: $  last playlist element
                      .  current playlist element
     Behaviour                            when used with s or f
@@ -313,15 +450,20 @@ Commands:
 
   - (No handling operator)
     Plays matching song                  when P
+    Plays first matching song            when B
+     and moves all other matches beneath
+     the current song
     Acts like 'mpc save [new pl name]'   when L
 
 Options:
-  -n  --no-autostart do not start mpd or mopidy automatically if they are not
-                      running
-  -m  --mopidy       start mopidy instead of mpd
-  -c  --no-change-notifications
+  -C --no-change-notifications
                      Do not automatically activate the change notifications.
                       Can be reactivated every time with the C command.
+  -h, --help         display this help and exit
+  -I, --regard-case  do not ignore case when searching with 'P'
+  -m  --mopidy       start mopidy instead of mpd
+  -n  --no-autostart do not start mpd or mopidy automatically if they are not
+                      running
   -s, --specify-type Specify the type of search queries yourself.
                       The type is set to 'any' if this parameter is
                       omitted and all subsequent arguments will be
@@ -330,21 +472,22 @@ Options:
                        album     any       artist    comment   composer
                        date      disc      filename  genre     name
                        performer title     track
-  -I, --regard-case  do not ignore case when searching with 'P'
   -U, --no-unique    also add titles if they are already in the current
                       playlist
-  -h, --help         display this help and exit
   --                 stop arguments
 
 Note: if neither options nor commands are specified the script will execute
       't'.
-"
+EOF
                 exit 0
                 ;;
             --)
                 ((ARGS_START++))
                 break 2
                 ;;
+            *)
+                echo "Unknown option: $ARG"
+                exit 1
         esac
         ((ARGS_START++))
     else
@@ -353,7 +496,7 @@ Note: if neither options nor commands are specified the script will execute
 done
 
 if [ "$MOPIDY" ]; then
-    if [ ! $( pgrep -f '/usr/sbin/mopidy' ) ]; then
+    if [ ! "$( pgrep -f '/usr/sbin/mopidy' )" ]; then
         if [ "$AUTOSTART" ]; then
             mopidy &> "$AU_DIR/mopidy.log"&disown
             echo "Starting $TARGET!"
@@ -366,7 +509,7 @@ if [ "$MOPIDY" ]; then
         fi
     fi
 else
-    if [ ! $( pgrep -f '/usr/bin/mpd' ) ]; then
+    if [ ! "$( pgrep -f '/usr/bin/mpd' )" ]; then
         if [ "$AUTOSTART" ]; then
             mpd "$HOME/.mpdconf"
             echo "Starting $TARGET!"
@@ -378,7 +521,7 @@ else
         fi
     fi
 fi
-if [ ! "$NO_CHANGE_NOTIFY" -a ! -f "$AU_DIR/ATTEMPTED_LOOP" ]; then
+if [ ! "$NO_CHANGE_NOTIFY" ] && [ ! -f "$AU_DIR/ATTEMPTED_LOOP" ]; then
     change_notify
 fi
 if [ ! -f "$AU_DIR/ATTEMPTED_LOOP" ]; then
@@ -391,29 +534,29 @@ for C in $( echo $COMMAND | grep -o . ); do
     case "$C" in
         p)
             PLAY_ACTION=1
-            if [ "$( mpc status | wc -l )" -gt 1 -o\
-                 ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
+            if [ "$( mpc status | wc -l )" -gt 1 ] ||\
+                 [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
             fi
             ;;
         t)
             PLAY_ACTION=2
-            if [ "$( mpc status | wc -l )" -gt 1 -o\
-                 ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
+            if [ "$( mpc status | wc -l )" -gt 1 ] ||\
+                 [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
             fi
             ;;
         h)
             PLAY_ACTION=3
-            if [ "$( mpc status | wc -l )" = 1 -o\
-                 ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
+            if [ "$( mpc status | wc -l )" = 1 ] ||\
+                 [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
             fi
             ;;
         b)
             PLAY_ACTION=4
-            if [ "$( mpc status | wc -l )" -gt 1 -o\
-                 ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
+            if [ "$( mpc status | wc -l )" -gt 1 ] ||\
+                 [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
             fi
             ;;
@@ -444,6 +587,12 @@ for C in $( echo $COMMAND | grep -o . ); do
             ;;
         i)
             INFORM=1
+            ;;
+        d)
+            ACTION=4
+            ;;
+        '#')
+            STATS=1
             ;;
         C)
             change_notify
@@ -505,10 +654,13 @@ for C in $( echo $COMMAND | grep -o . ); do
         L)
             SEARCH_OPTION=4
             ;;
+        B)
+            SEARCH_OPTION=5
+            ;;
 
         *)
             echo "$C is not a valid command."
-            echo 'Valid commands: abcfhiklpqrstvxyzCJKLPQSY'
+            echo 'Valid commands: abcdfhiklpqrstvxyzBCJKLPQSY#'
             echo 'See -h for more info.'
             exit 1
     esac
@@ -521,57 +673,83 @@ fi
 case "$ACTION" in
     1) # Add
         case "$SEARCH_OPTION" in
-            1)
-                m_search "${@:$ARGS_START}" | filter | $MPC add
+            1) # Search
+                RESULT="$( m_search "${@:$ARGS_START}" | filter )"
+                if [ -n "$RESULT" ]; then
+                    echo "$RESULT" | $MPC add
+                else
+                    notify-send -u low 'Nothing found.'
+                fi
                 ;;
-            2)
-                m_find   "${@:$ARGS_START}" | filter | $MPC add
+            2) # Find
+                RESULT="$( m_find "${@:$ARGS_START}" | filter )"
+                if [ -n "$RESULT" ]; then
+                    echo "$RESULT" | $MPC add
+                else
+                    notify-send -u low 'Nothing found.'
+                fi
                 ;;
-            4)
+            5) # Browse
+                RESULT="$( m_browse "${@:$ARGS_START}" | filter )"
+                if [ -n "$RESULT" ]; then
+                    echo "$RESULT" | $MPC add
+                fi
+                ;;
+            4) # Playlist
                 pl_add   "${@:$ARGS_START}"
                 ;;
 
-            *)
+            *) # Play or nothing
                 $MPC add  "${@:$ARGS_START}"
         esac
         ;;
     2) # List
         case "$SEARCH_OPTION" in
-            1)
+            1) # Search
                 m_search "${@:$ARGS_START}" | filter | clean_output
                 ;;
-            2)
+            2) # Find
                 m_find   "${@:$ARGS_START}" | filter | clean_output
                 ;;
-            4)
+            5) # Browse
+                m_browse "${@:$ARGS_START}" | filter | clean_output
+                ;;
+            4) # Playlist
                 mpc lsplaylists
                 ;;
 
-            *)
-                $MPC playlist -f '%position%. %artist% • %title%' | clean_output
+            *) # Play or nothing
+                $MPC playlist -f "$PLAYLIST_FORMAT" | clean_output
         esac
         ;;
     3) # Delete
         case "$SEARCH_OPTION" in
-            1)
-                ;&
-            2)
+            1|2) # Search and find
                 del_phrase "${*:$ARGS_START}" | $MPC del
                 ;;
-            3)
+            5) # Browse
+                pl_browse | $MPC del 2> /dev/null
+                ;;
+            3) # Play
                 del_num "${*:$ARGS_START}" | $MPC del
                 ;;
-            4)
+            4) # Playlist
                 mpc rm "${*:$ARGS_START}"
         esac
         ;;
+    4) # Execute
+        mpc "${@:$ARGS_START}"
+    ;;
 
     *)
         case "$SEARCH_OPTION" in
-            3)
+            3) # Play
                 $MPC play "$( pos_matching "${@:$ARGS_START}" )" 2> /dev/null
                 ;;
-            4)
+            5) # Browse
+                play_all
+                ;;
+            4) # Playlist
                 mpc save "${*:$ARGS_START}"
                 ;;
         esac
@@ -593,8 +771,11 @@ esac
 if [ "$INFORM" ]; then
     mpc status
 fi
-if [ -n "$QUERY" -a ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY"\
-     -o "$QUERY" = 2 ]; then
+if [ "$STATS" ]; then
+    mpc stats
+fi
+if [ -n "$QUERY" ] && [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ] ||\
+    [ "$QUERY" = 2 ]; then
     query_playing
 fi
 
