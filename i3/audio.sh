@@ -52,11 +52,11 @@ m_browse() {
         DIR="$MUSIC_DIR"
     fi
     (
+        local SELECTED
         cd "$DIR" || return
         while true; do
-            local RESULT
-            RESULT="$(
-            (
+            local DIR_LISTING
+            DIR_LISTING="$( (
             echo .
             if [ "$DIR" != "$MUSIC_DIR" ]; then
                 echo ..
@@ -67,7 +67,16 @@ m_browse() {
             echo '. (no subdirectories)'
             echo '. (only subdirectories)'
             echo '. (all but specify excluded)'
-            ) | "${BROWSER[@]}" -mesg "$( pwd )" || echo '' )"
+            ) )"
+            local SEL_LINE=0
+            if [ -n "$SELECTED" ]; then
+                SEL_LINE="$(echo "$DIR_LISTING" | grep -nFx "$SELECTED" |\
+                    grep -oP '^\d+')"
+                ((SEL_LINE--))
+            fi
+            local RESULT
+            RESULT="$(echo "$DIR_LISTING" | "${BROWSER[@]}" -mesg "$( pwd )"\
+                -selected-row "$SEL_LINE" || echo '' )"
 
             if [ -z "$RESULT" ]; then
                 break;
@@ -119,6 +128,11 @@ m_browse() {
                         done <<< "$ALL"
                         break
                     elif [ -d "$RESULT" ]; then
+                        if [ "$RESULT" = '..' ]; then
+                            SELECTED="$(basename "$DIR")"
+                        else
+                            SELECTED=''
+                        fi
                         cd "$RESULT" || return
                         DIR="$(pwd)"
                     else
@@ -193,18 +207,18 @@ pl_add() {
   fi
 }
 del_num() {
-    echo "$*" | sed 's/\./0/g' | sed "s/\\$/$( mpc playlist | wc -l )/g"
+    echo "$@" | sed "s/\./$( mpc -f '%position%' current)/g" |\
+        sed "s/\\$/$( mpc playlist | wc -l )/g" | sed -r 's/\s+/\n/g'
 }
 del_phrase() {
-    local OUT=""
     for ARG in "$@"; do
         local RES=""
-        while -r read TERM; do
+        while read -r TERM; do
             if echo "$TERM" | grep -qP '^\\(?!\\)'; then
-                TERM=$(echo "$TERM" | sed -r 's/^\\//')
+                TERM=$(echo "$TERM" | sed -r 's/\\(.)/\1/g')
                 RESULT=$( del_num "$TERM" )
             else
-                TERM=$(echo "$TERM" | sed -r 's/^\\\\/\\/')
+                TERM=$(echo "$TERM" | sed -r 's/\\(.)/\1/g')
                 RESULT="$( pos_matching "$TERM" )"
             fi
             if [ -z "$RESULT" ]; then
@@ -212,13 +226,12 @@ del_phrase() {
             else
                 RES="$RES$RESULT-"
             fi
-        done < <( echo "$ARG" | grep -oE '(\\-|[^-])*?' | sed 's/\\-/-/g' |\
-                  head -n 2 )
+        done < <( echo "$ARG" | grep -oE '(\\(?!\\)-|[^-])*?' |\
+            sed 's/\\-/-/g' | head -n 2 )
         # Use 'process substitution' to access variable
         # outside of loop
-        OUT="$OUT${RES:0:-1} "
+        echo "${RES:0:-1}"
     done
-    echo "${OUT:0:-1}"
 }
 play_all() {
     local RESULT
@@ -444,6 +457,9 @@ Commands:
      Search for each text occurrence of elements (may be separated by '-' to
       indicate a range). The syntax of 'play matching track P' is used. To
       behave like 'delete by number P' the element can be preceded by a '\\'.
+      Every '\\' escapes the character in front of it, so it is possible to
+      escape the range meaning of '-'. It is not possible to use whitespace in
+      the patterns in the current implementation. :(
       Example:
         roses-violets forget\\-me\\-not-\\$
     Acts like 'mpc rm \"[args]\"'        when used with L
@@ -452,7 +468,7 @@ Commands:
     Plays matching song                  when P
     Plays first matching song            when B
      and moves all other matches beneath
-     the current song
+     the first matching song
     Acts like 'mpc save [new pl name]'   when L
 
 Options:
@@ -588,7 +604,7 @@ for C in $( echo $COMMAND | grep -o . ); do
         i)
             INFORM=1
             ;;
-        d)
+        D)
             ACTION=4
             ;;
         '#')
@@ -660,7 +676,7 @@ for C in $( echo $COMMAND | grep -o . ); do
 
         *)
             echo "$C is not a valid command."
-            echo 'Valid commands: abcdfhiklpqrstvxyzBCJKLPQSY#'
+            echo 'Valid commands: abcdfhiklpqrstvxyzBCDJKLPQSY#'
             echo 'See -h for more info.'
             exit 1
     esac
@@ -725,7 +741,7 @@ case "$ACTION" in
     3) # Delete
         case "$SEARCH_OPTION" in
             1|2) # Search and find
-                del_phrase "${*:$ARGS_START}" | $MPC del
+                del_phrase "${@:$ARGS_START}" | $MPC del
                 ;;
             5) # Browse
                 pl_browse | $MPC del 2> /dev/null
