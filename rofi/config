@@ -20,7 +20,7 @@
 ! "X-offset relative to location" Set from: Default
 ! rofi.xoffset:                        0
 ! "Always show number of lines" Set from: Default
-! rofi.fixed-num-lines:                true
+  rofi.fixed-num-lines:                false
 ! "Terminal to use" Set from: Default
 ! rofi.terminal:                       rofi-sensible-terminal
 ! "Ssh client to use" Set from: Default
@@ -56,7 +56,7 @@
 ! "Set the modi to combine in combi mode" Set from: Default
 ! rofi.combi-modi:                     window,run
 ! "Set the matching algorithm. (normal, regex, glob, fuzzy)" Set from: Default
-  rofi.matching:                       fuzzy
+  rofi.matching:                       normal
 ! "Tokenize input string" Set from: Default
 ! rofi.tokenize:                       true
 ! "Monitor id to show on" Set from: Default
@@ -74,7 +74,7 @@
 ! "Fullscreen" Set from: Default
 ! rofi.fullscreen:                     false
 ! "Fake transparency" Set from: Default
-  rofi.fake-transparency:              true
+! rofi.fake-transparency:              true
 ! "DPI" Set from: Default
 ! rofi.dpi:                            -1
 ! "Threads to use for string matching" Set from: Default
@@ -155,7 +155,7 @@
 ! "Go to the last entry" Set from: Default
   rofi.kb-row-last:                    Shift+Page_Down
 ! "Set selected item as input text" Set from: Default
-  rofi.kb-row-select:                  Control+space,Tab
+  rofi.kb-row-select:                  Control+space
 ! "Take a screenshot of the rofi window" Set from: Default
 ! rofi.kb-screenshot:                  Alt+S
 ! "Toggle case sensitivity" Set from: Default
@@ -229,3 +229,4 @@ rofi.color-active: #002b37, #008ed4, #002b37, #003642, #008ed4
 rofi.color-urgent: #002b37, #da4281, #002b37, #003642, #da4281
 
 ! vim: ft=xdefaults
+rofi.theme: /usr/share/rofi/themes/sidetab.rasi

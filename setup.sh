@@ -15,10 +15,10 @@ ln -sfr vimrc         $HOME/.vimrc
 ln -sfr vimperator    $HOME/.vimperator
 ln -sfr vimperatorrc  $HOME/.vimperatorrc
 
-if [ ! -d $HOME/.config ]; then mkdir $HOME/.config fi
+if [ ! -d $HOME/.config ]; then mkdir $HOME/.config; fi
 ln -sfr rofi $HOME/.config/rofi
 
-if [ ! -d $HOME/.config/dunst/ ]; then mkdir $HOME/.config/dunst/ fi
+if [ ! -d $HOME/.config/dunst/ ]; then mkdir $HOME/.config/dunst/; fi
 ln -sfr dunstrc       $HOME/.config/dunst/dunstrc
 
 # Configure Mpd

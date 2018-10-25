@@ -1,17 +1,19 @@
 #!/bin/bash
 
 
-THIS="`dirname $0`/$0" # path to script
+THIS="$(dirname "$0")/$0" # path to script
 # X clients that should be ignored
 WHITELIST=(ibus-x11 ibus-ui-gtk3 unity-settings-daemon notify-osd \
-    gnome-screensaver mozc_renderer redshift-gtk skype udiskie)
+    gnome-screensaver mozc_renderer redshift-gtk skype skypeforlinux udiskie \
+    nm-applet discord)
 KILLLIST=( steam )
-HOSTNAME=`hostname`
+HOSTNAME=$(hostname)
 
 lock() {
+    true
     #gnome-screensaver-command -l
-    ~/.i3/lock.sh
-    numlockx on
+    #~/.i3/lock.sh
+    #numlockx on
 }
 
 # the ugliest implementation of join you have ever seen...
@@ -86,14 +88,46 @@ my_suspend() {
 #}
 
 hibernate() {
-    sudo systemctl hibernate
+    systemctl hibernate
 }
 
 hybrid() {
-    sudo systemctl hybrid-sleep
+    systemctl hybrid-sleep
 }
 
-case "$1" in
+screen_off() {
+    sleep 1 &&
+    xset dpms force off
+}
+
+mon_rotate() {
+    ACTIVE_MON="$(i3-msg -t get_workspaces | grep -Po '"focused":true.*?"output":"[^"]*' | grep -o '[^"]*$')"
+    ACTIVE_WKS="$(i3-msg -t get_outputs |  grep -Po 'name":"'"$ACTIVE_MON"'".*?"current_workspace":"[^"]*' | grep -o '[^"]*$')"
+    xrandr --output "$ACTIVE_MON" --rotate "$1"
+    mon_relayout
+    i3-msg workspace "$ACTIVE_WKS"
+}
+
+mon_relayout() {
+    ~/.output-layout.sh layout
+    source ~/.wallpaper_command.sh
+}
+
+mon_toggle1() {
+    ~/.output-layout.sh 1
+    source ~/.wallpaper_command.sh
+}
+mon_toggle2() {
+    ~/.output-layout.sh 2
+    source ~/.wallpaper_command.sh
+}
+mon_kill() {
+    ~/.output-layout.sh kill
+    source ~/.wallpaper_command.sh
+}
+
+for ARG in "$@"; do
+case "$ARG" in
     lock)
         lock
         ;;
@@ -104,13 +138,13 @@ case "$1" in
         i3-msg exit
         ;;
     suspend)
-        lock; my_suspend
+        my_suspend
         ;;
     hibernate)
-        lock; hibernate
+        hibernate
         ;;
     hybrid)
-        lock; hybrid
+        hybrid
         ;;
     reboot)
         killapps; my_reboot
@@ -141,16 +175,36 @@ case "$1" in
         notify-send -t 2 -u low "Resumed notifications"
         ;;
     screen_off)
-        sleep 1 &&
-        xset dpms force off
+        screen_off
+        ;;
+    output-right)
+        mon_rotate left
+        ;;
+    output-left)
+        mon_rotate right
+        ;;
+    output-down)
+        mon_rotate normal
+        ;;
+    output-up)
+        mon_rotate inverted
+        ;;
+    output-1)
+        mon_toggle1
+        ;;
+    output-2)
+        mon_toggle2
+        ;;
+    output-kill)
+        mon_kill
         ;;
     dpms_toggle)
-        if [ xset q | grep -q "DPMS is Enabled" ]; then
+        if xset q | grep -q "DPMS is Enabled"; then
             xset s off -dpms
-            notify-send -t 2 -u low "Disabled DPMS"
+            notify-send -u low "Disabled DPMS"
         else
             xset s on  +dpms
-            notify-send -t 2 -u low "Enabled DPMS"
+            notify-send -u low "Enabled DPMS"
         fi
         ;;
     mouse_off)
@@ -166,5 +220,6 @@ case "$1" in
         echo "Usage: $0 {lock|logout|suspend|reboot|shutdown}"
         exit 2
 esac
+done
 
 exit 0

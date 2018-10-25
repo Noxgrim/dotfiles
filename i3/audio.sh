@@ -3,13 +3,18 @@
 MPC='mpc -q'
 BROWSER=( rofi -dmenu --only-match -i -multi-select -p 'Browse: ')
 AU_DIR='/tmp/audio_control'
-TARGET='Mpd'
+PROVIDER='mpd'
 MPD_CONF="$HOME/.mpdconf"
+MPD_HOST="$(grep -Po '(?<=^password ")[^@]*' "$MPD_CONF")@localhost"
+export MPD_HOST
 MUSIC_DIR="$(grep 'music_directory' "$MPD_CONF" | grep -oP '(?<=").*?(?=")' |\
     sed -r "s/~/$( sed 's/[&/\]/\\&/g' <<<"$HOME"  )/" )"
 ICON_RES='80:80' #Only affects newly created icons
 RADIO_QUERY_RES=5
-PLAYLIST_FORMAT='%position%. %artist% • %title%'
+#PLAYLIST_FORMAT='%position%. %artist% • %title%'
+PLAYLIST_FORMAT='%position%. [[%artist% • ][%title%]|[%filename%]]'
+FIND_AUDIO_EXTENSIONS=( -iname "*.mp3" -o -iname "*.flac" -o -iname "*.wma" -o -iname "*.wav" -o -iname "*.ogg" )
+EMPTY_EXECUTE=( 't' )
 
 if [ ! -d "$AU_DIR" ]; then
     mkdir "$AU_DIR"
@@ -89,13 +94,13 @@ m_browse() {
                     break
                 else
                     if [ "$RESULT" = '.' ]; then
-                        pwd
+                        find "$(pwd)" \( -type f -o -type l -xtype f \)\
+                            -not -path '*/\.*' \( "${FIND_AUDIO_EXTENSIONS[@]}" \)
                         break
 
                     elif [ "$RESULT" = '. (no subdirectories)' ]; then
                         find "$(pwd)" -maxdepth 1 \( -type f -o -type l -xtype f \)\
-                            -not -path '*/\.*' \(\
-                            -iname '*.mp3' -o -iname '*.wma' -o -iname '*.flac' \)
+                            -not -path '*/\.*' \( "${FIND_AUDIO_EXTENSIONS[@]}" \)
                         break
 
                     elif [ "$RESULT" = '. (only subdirectories)' ]; then
@@ -108,8 +113,7 @@ m_browse() {
                         ALL="$( (
                         find . \( -type d -o -type l -xtype d \) -not -path '*/\.*' | sort
                         find . \( -type f -o -type l -xtype f \)\
-                            -not -path '*/\.*' \(\
-                            -iname '*.mp3' -o -iname '*.wma' -o -iname '*.flac' \) | sort
+                            -not -path '*/\.*' \( "${FIND_AUDIO_EXTENSIONS[@]}" \) | sort
                         ) | sed 's/^\.\///' | sed '/^\.$/d')"
 
                         while read -r LINE; do
@@ -308,7 +312,7 @@ check_icon() {
         elif [ -f cover.png ] || [ -f cover.jpg ] || [ -f cover.jpeg ]; then
             FILES=( cover.png* cover.jpg* cover.jpeg* )
         else
-            FILES=( *.mp3 )
+            FILES=( *.mp3 *.flac *.wma *.wav *.ogg )
         fi
         if ! ffmpeg -i "${FILES[0]}" -vf scale="$ICON_RES" ".cover_mpd.png" &> /dev/null; then
             touch ".no_cover_found"
@@ -345,8 +349,8 @@ change_notify() {
             if [[ "$( mpc current &>/dev/null )" ==\
                   *"Connection refused"* ]]; then
                 notify-send -u critical 'Stopped change notifications!' \
-                    "Mpc couldn't connect to $TARGET. $TARGET most likely died."
-                killall mopidy 2> /dev/null
+                    "Mpc couldn't connect to $PROVIDER_NAME. $PROVIDER_NAME most likely died."
+                kill "$(pgrep $PROVIDER)" && echo "Killed $PROVIDER_NAME!"
                 rm "$AU_DIR/AUDIO_LOOP_PID"
                 break
             fi
@@ -361,7 +365,7 @@ AUTOSTART=1
 IGNORE_CASE="i"
 
 if [ "$#" = 0 ]; then
-    set -- "${@}" "t"; # Special case because most used; Reset to preserve behavior
+    set -- "${@}" "${EMPTY_EXECUTE[@]}"; # Special case because most used; Reset to preserve behavior
 fi
 
 for ARG in "$@"; do
@@ -370,9 +374,8 @@ for ARG in "$@"; do
             --no-autostart|-n)
                 AUTOSTART=0
                 ;;
-            --mopidy|-m)
-                MOPIDY=1
-                TARGET='Mopidy'
+            --provider|-p)
+                PROVIDER_PENDING=1
                 ;;
             --specify-type|-s)
                 SPECIFY_TYPE=1
@@ -383,14 +386,19 @@ for ARG in "$@"; do
             --no-unique|-U)
                 NO_UNIQUE=1
                 ;;
-            --no-change-notifications|-C)
+            --deactivate-change-notifications|-C)
                 NO_CHANGE_NOTIFY=1
+                ;;
+            --ignore-change-notifications|-c)
+                NO_CHANGE_NOTIFY=1
+                SKIP_CHANGE_NOTIFY=1
                 ;;
             --help|-h)
                 cat << EOF
 $0 Help
-A simple wrapper script that makes the use of mopidy and mpc easier
-and allows multitasking.
+A simple wrapper script that makes the use of mpd or mopidy and mpc easier
+and allows multitasking. Because the script can work with either mpd or
+mopidy they will be refered to by the name 'provider'.
 $0 [OPTION]... COMMANDS
 
 Commands:
@@ -410,14 +418,14 @@ Commands:
      also be displayed if automatic notifications are disabled
   i mpc status
   # mpc stats
-  d [args]
+  D [args]
     mpc [args] (mnemonic mpc Do; Executes a mpc query; Overrides a search/handler)
-  k killall mopidy (executed immediately)
+  k kill PROVIDER (executed immediately)
   Y mpc update --wait
 
  Stackable:
-  K mpc next
-  J mpc prev
+  K mpc prev
+  J mpc next
   Q Toggle the automatic displaying of a notification if the p, t, h, b, J, K
      commands are used
   r mpc repeat
@@ -471,15 +479,23 @@ Commands:
      the first matching song
     Acts like 'mpc save [new pl name]'   when L
 
-Options:
-  -C --no-change-notifications
-                     Do not automatically activate the change notifications.
-                      Can be reactivated every time with the C command.
+Options: [these only accepted before the commands!]
+  -c  --skip-change-notifications
+                     Do not automatically activate change notifications this
+                      time. The next time the command is issued without this
+                      switch do automatically enable them again. Usefull for
+                      use in scripts or key bindings.
+  -C --deactivate-change-notifications
+                     Disable automatic activation of change notifications
+                      on first startup and deactivate them like using the 'C'
+                      command. Use the 'C' command to enable them agian.
   -h, --help         display this help and exit
   -I, --regard-case  do not ignore case when searching with 'P'
-  -m  --mopidy       start mopidy instead of mpd
   -n  --no-autostart do not start mpd or mopidy automatically if they are not
                       running
+  -p  --provider [provider]
+                     specify the provider. Supported: mpd, mopidy; default: $PROVIDER
+                      
   -s, --specify-type Specify the type of search queries yourself.
                       The type is set to 'any' if this parameter is
                       omitted and all subsequent arguments will be
@@ -493,7 +509,7 @@ Options:
   --                 stop arguments
 
 Note: if neither options nor commands are specified the script will execute
-      't'.
+      '${EMPTY_EXECUTE[@]}'.
 EOF
                 exit 0
                 ;;
@@ -507,42 +523,55 @@ EOF
         esac
         ((ARGS_START++))
     else
-        break
+        if [ $PROVIDER_PENDING ]; then
+            PROVIDER_PENDING=
+            PROVIDER="$ARG"
+            ((ARGS_START++))
+        else
+            break
+        fi
     fi
 done
 
-if [ "$MOPIDY" ]; then
-    if [ ! "$( pgrep -f '/usr/sbin/mopidy' )" ]; then
-        if [ "$AUTOSTART" ]; then
-            mopidy &> "$AU_DIR/mopidy.log"&disown
-            echo "Starting $TARGET!"
-            [ ! "$NO_CHANGE_NOTIFY" ] && change_notify
-            while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
-                sleep 0.5 ; done
-        else
-            echo "$TARGET not running!"
-            exit 1
-        fi
-    fi
-else
-    if [ ! "$( pgrep -f '/usr/bin/mpd' )" ]; then
-        if [ "$AUTOSTART" ]; then
+case "$PROVIDER" in
+    mpd)
+        PROVIDER_NAME='MPD'
+        ;;
+    mopidy)
+        PROVIDER_NAME='Mopidy'
+        ;;
+    *)
+        echo "Unknown provider: $PROVIDER"
+        exit 1
+        ;;
+esac
+
+if [ ! "$( pgrep "$PROVIDER" )" ] && [ ! "$AUTOSTART" ]; then
+    echo "$PROVIDER_NAME not running!"
+    exit 1
+elif [ ! "$( pgrep "$PROVIDER" )" ]; then
+    notify-send "Starting $PROVIDER_NAME!"
+    case "$PROVIDER" in
+        mpd)
             mpd "$HOME/.mpdconf"
-            echo "Starting $TARGET!"
-            while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
-                sleep 0.5 ; done
-        else
-            echo "$TARGET not running!"
-            exit 1
-        fi
-    fi
+            ;;
+        mopidy)
+            mopidy &> "$AU_DIR/mopidy.log"&disown
+            # [ ! "$NO_CHANGE_NOTIFY" ] && change_notify # Do we really need this?
+            ;;
+    esac
+    while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
+        sleep 0.5 ; done # Wait for provider to respond properly.
 fi
+
 if [ ! "$NO_CHANGE_NOTIFY" ] && [ ! -f "$AU_DIR/ATTEMPTED_LOOP" ]; then
     change_notify
 fi
-if [ ! -f "$AU_DIR/ATTEMPTED_LOOP" ]; then
+if [ ! -f "$AU_DIR/ATTEMPTED_LOOP" ] && [ ! "$SKIP_CHANGE_NOTIFY" ]; then
     touch "$AU_DIR/ATTEMPTED_LOOP"
 fi
+
+# The juicy stuff
 
 COMMAND="${!ARGS_START}"
 ((ARGS_START++))
@@ -617,7 +646,7 @@ for C in $( echo $COMMAND | grep -o . ); do
             if [ -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 change_notify
             fi
-            killall mopidy && echo "Killed $TARGET!"
+            kill "$(pgrep "$PROVIDER")" && echo "Killed $PROVIDER_NAME!"
             exit 0
             ;;
         Y)
@@ -641,6 +670,8 @@ for C in $( echo $COMMAND | grep -o . ); do
             ;;
         v)
             $MPC volume ${!ARGS_START}
+            notify-send -a 'noxgrim:volume' -u low -h "int:value:$($MPC volume | grep -oP '\d+')"\
+                "$PROVIDER_NAME volume " '%'
             ((ARGS_START++))
             ;;
         S)
@@ -684,7 +715,8 @@ done
 
 # Non-stackable commands
 if [ "$UPDATE" ]; then
-    mpc update --wait
+    $MPC update --wait
+    notify-send -u low 'Updated database.'
 fi
 case "$ACTION" in
     1) # Add

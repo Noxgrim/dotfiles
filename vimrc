@@ -7,6 +7,10 @@
 " Search
  set hlsearch
  set ignorecase smartcase
+ set incsearch
+ if has('nvim')
+     set inccommand=nosplit
+ endif
 
 " Settings for Eclim
  set nocompatible
@@ -27,12 +31,7 @@
 " Toggle paste mode
  set pastetoggle=<F10>
 
- if has('nvim')
-     nnoremap <silent> <M-c>   :nohlsearch<CR>
-     nnoremap <silent> <M-S-c> :let @/=""<CR>
- else
-     nnoremap <silent> <C-c>   :nohlsearch<CR>
- endif
+ nnoremap <silent> <C-l> :nohlsearch<CR>:syntax sync fromstart<CR><c-l>
 
 " create backups and swap files in the .vim directory (the double slashes
 " mean, VIM uses the full path)
@@ -52,10 +51,15 @@
  set expandtab
  set shiftwidth=4
  set softtabstop=4
+ set ts=4
 " Show command in the staus bar.
  set showcmd
  set showmode
  set laststatus=2
+
+ set undofile
+ autocmd BufWinLeave ?* mkview
+ autocmd BufWinEnter ?* silent! loadview
 
 " Implement own function to save files as super user
 " to allow no or one argument.
@@ -66,7 +70,7 @@
          w !sudo tee > /dev/null %
      endif
  endfunction
- command! -nargs=? -complete=file W call SudoWrite('<args>')
+ command! -nargs=? -complete=file Swrite call SudoWrite('<args>')
 
  call plug#begin('~/.vim/plugged')
 
@@ -78,6 +82,7 @@
   Plug 'jiangmiao/auto-pairs'
   Plug 'vim-airline/vim-airline'
   let  g:airline_powerline_fonts = 1 " Activate powerline power
+  let g:airline#extensions#tabline#enabled = 1
   Plug 'vim-airline/vim-airline-themes'
   let  g:airline_theme='base16'
  "Plug 'scrooloose/syntastic'
@@ -98,10 +103,18 @@
  "Plug 'whatyouhide/vim-gotham'
  "Plug 'jaxbot/browserlink.vim', { 'for': ['html', 'javascript', 'css']  }
   Plug 'christoomey/vim-titlecase'
+  Plug 'w0rp/ale'
   let g:titlecase_map_keys = 0
   nmap <leader>gt <Plug>Titlecase
   vmap <leader>gt <Plug>Titlecase
   nmap <leader>gT <Plug>TitlecaseLine
+  Plug 'lervag/vimtex'
+  Plug 'neovimhaskell/haskell-vim'
+  "let $success_cmd = 'latexmk -c;'
+  let g:vimtex_view_method = 'zathura'
+  if has('nvim')
+    let g:vimtex_compiler_progname = "nvr"
+  endif
 
  "augroup htmlupdater
  "    au!
@@ -148,5 +161,9 @@
      autocmd! TermOpen * setlocal listchars=tab:▸\ ,trail:\ ,precedes:↤,extends:↦
      highlight TermCursor ctermfg=darkgreen guifg=darkgreen
      highlight TermCursorNC ctermfg=lightgreen guifg=darkgreen
+
+     set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
+       \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
+       \,sm:block-blinkwait175-blinkoff150-blinkon175
  endif
 " Use 256 colours (Use this setting only if your terminal supports 256 colours)

@@ -11,7 +11,7 @@
     # <http://developer.gnome.org/pango/stable/PangoMarkupFormat.html>.
     # If markup is not allowed, those tags will be stripped out of the
     # message.
-    allow_markup = yes
+    markup = yes
     
     # The format of the message.  Possible variables are:
     #   %a  appname
@@ -37,7 +37,7 @@
     # window allows bounces back and forth.
     # This option conflicts with "word_wrap".
     # Set to 0 to disable.
-    bounce_freq = 0
+    bounce_freq = 9
     
     # Show age of message if message is older than show_age_threshold
     # seconds.
@@ -47,7 +47,7 @@
     # Split notifications into multiple lines if they don't fit into
     # geometry.
     word_wrap = yes
-    
+
     # Ignore newlines '\n' in notifications.
     ignore_newline = no
     
@@ -145,11 +145,11 @@
     icon_position = left
 
     # Paths to default icons.
-    icon_folders = /usr/share/icons/gnome/16x16/status/:/usr/share/icons/gnome/16x16/devices/
+    icon_path = /usr/share/icons/gnome/16x16/status/:/usr/share/icons/gnome/16x16/devices/
+    max_icon_size = 150
 
-[frame]
-    width = 1
-    color = "#666f7f"
+    frame_width = 1
+    frame_color = "#666f7f"
 
 [shortcuts]
 
@@ -209,37 +209,13 @@
 # NOTE: It might be helpful to run dunst -print in a terminal in order
 # to find fitting options for rules.
 
-#[espeak]
-#    summary = "*"
-#    script = dunst_espeak.sh
-
-#[script-test]
-#    summary = "*script*"
-#    script = dunst_test.sh
-
-#[ignore]
-#    # This notification will not be displayed
-#    summary = "foobar"
-#    format = ""
-
-#[signed_on]
-#    appname = Pidgin
-#    summary = "*signed on*"
-#    urgency = low
-#
-#[signed_off]
-#    appname = Pidgin
-#    summary = *signed off*
-#    urgency = low
-#
-#[says]
-#    appname = Pidgin
-#    summary = *says*
-#    urgency = critical
-#
-#[twitter]
-
-#    summary = *twitter.com*
-#    urgency = normal
-#
-# vim: ft=cfg
+[volume]
+    appname="noxgrim:volume"
+    format="%s%n%b"
+    history_ignore=yes
+    hide_duplicate_count=yes
+[volume_mute]
+    appname="noxgrim:volume:mute_action"
+    format="%s%b"
+    history_ignore=yes
+    hide_duplicate_count=yes
