@@ -1,7 +1,7 @@
 #! /bin/bash
 
 MPC='mpc -q'
-BROWSER=( rofi -dmenu -only-match -i -multi-select -p 'Browse: ')
+BROWSER=( rofi -theme solarized_alpha -dmenu -i -multi-select -p 'Browse')
 AU_DIR='/tmp/noxgrim/audio_control'
 PROVIDER='mpd'
 MPD_CONF="$HOME/.mpdconf"
@@ -85,6 +85,8 @@ m_browse() {
 
             if [ -z "$RESULT" ]; then
                 break;
+            elif [ "$(wc -l <<< "$RESULT")" -le 1 ] &&  ! grep -q "^$RESULT"'$' <<< "$DIR_LISTING"; then
+                continue
             else
                 if [ "$( echo "$RESULT" | wc -l )" -gt 1 ]; then
                     RESULT="$( echo "$RESULT" | sed '/^\..*/d' )"

@@ -12,12 +12,12 @@ for ARG in "$@"; do
     fi
 done
 
-read -ra INPUT <<< "$( rofi -theme sidebar -dmenu -p 'Audio' -lines 1 -filter "$*" < /dev/null || echo -- )"
+read -ra INPUT <<< "$( rofi -theme solarized_alpha -dmenu -p 'Audio' -lines 1 -filter "$*" < /dev/null || echo -- )"
 RESULT="$( "$HOME/dotfiles/audioscripts/audio.sh" "${ARGS[@]}" "${INPUT[@]}" 2>&1 )"
 if [ -n "$RESULT" ]; then
     LINES="$(echo "$RESULT" | wc -l)"
     if [ "$LINES" -gt 38 ]; then
         LINES=38
     fi
-    echo "$RESULT" | rofi -theme sidebar i -dmenu -p 'Results' -lines "$LINES"
+    echo "$RESULT" | rofi -theme solarized_alpha i -dmenu -p 'Results' -lines "$LINES"
 fi
