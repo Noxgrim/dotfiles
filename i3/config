@@ -156,10 +156,6 @@ bindsym $mod+s       scratchpad show
 bindsym $mod+Shift+s move container to scratchpad
 
 
-# reload the configuration file or reset i3
-bindsym $mod+Shift+c reload
-bindsym $mod+Shift+r restart
-
 # toggle window borders [none > pixel 1 > normal > …]
 bindsym $mod+b border toggle
 
@@ -169,7 +165,7 @@ bindsym $mod+c move position center
 bindsym $mod+m exec $mscriptdir/rofi_audio.sh
 bindsym $mod+p exec passmenu --type
 
-set $device device [+][sSlLhHrF][mMnN]❖[dh]❖[se]
+set $device device [+][sSlLhHrF][mMnN]❖[dh]❖[se] [rR]
 set $force device.force [SRL]
 set $schedule device.schedule [sSlLhHr][mMnN]❖[se]
 bindsym $mod+Shift+x mode "$device"
@@ -196,6 +192,11 @@ mode "$device" {
         # bar
         bindsym $mod+d  bar mode dock, mode "default"
         bindsym $mod+h  bar mode hide, mode "default"
+
+        # reload the configuration file or reset i3
+        bindsym r reload
+        bindsym R restart
+
 
         bindsym Shift+f mode "$force"
         bindsym plus mode "$schedule"
