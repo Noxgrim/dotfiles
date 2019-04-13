@@ -106,6 +106,12 @@ function rqbg() {
 }
 
 function mvln() {
-    mv "$1" "$2"
-    ln -sr "$2" "$1"
+    if [ -d "$2" ]; then
+        NAME="$(basename "$1")"
+        mv "$1" "$2"
+        ln -sr "$2/$NAME" "$1"
+    else
+        mv "$1" "$2"
+        ln -sr "$2" "$1"
+    fi
 }
