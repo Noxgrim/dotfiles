@@ -169,8 +169,9 @@ bindsym $mod+c move position center
 bindsym $mod+m exec $mscriptdir/rofi_audio.sh
 bindsym $mod+p exec passmenu --type
 
-set $device device [sSlLhHrF][mMnN]❖[dh]❖[se]
+set $device device [+][sSlLhHrF][mMnN]❖[dh]❖[se]
 set $force device.force [SRL]
+set $schedule device.schedule [sSlLhHr][mMnN]❖[se]
 bindsym $mod+Shift+x mode "$device"
 mode "$device" {
         # power control
@@ -197,6 +198,7 @@ mode "$device" {
         bindsym $mod+h  bar mode hide, mode "default"
 
         bindsym Shift+f mode "$force"
+        bindsym plus mode "$schedule"
         bindsym Return  mode "default"
         bindsym Escape  mode "default"
 
@@ -207,6 +209,30 @@ mode "$force" {
         bindsym Shift+r exec $scriptdir/exit.sh reboot_force     mode "default"
 
         bindsym Escape mode "$device"
+}
+mode "$schedule" {
+        # power control
+        bindsym Shift+l exec $scriptdir/device.sh schedule "logout",          mode "default"
+        bindsym l       exec $scriptdir/device.sh schedule "lock screen_off", mode "default"
+        bindsym s       exec $scriptdir/device.sh schedule "shutdown",        mode "default"
+        bindsym Shift+s exec $scriptdir/device.sh schedule "lock suspend",    mode "default"
+        bindsym h       exec $scriptdir/device.sh schedule "lock hibernate",  mode "default"
+        bindsym Shift+h exec $scriptdir/device.sh schedule "lock hybrid",     mode "default"
+        bindsym r       exec $scriptdir/device.sh schedule "reboot",          mode "default"
+
+        bindsym n       exec $scriptdir/device.sh schedule "notify_pause",    mode "default"
+        bindsym Shift+n exec $scriptdir/device.sh schedule "notify_resume",   mode "default"
+
+        bindsym $mod+s  exec $scriptdir/device.sh schedule "screen_off",      mode "default"
+        bindsym $mod+e  exec $scriptdir/device.sh schedule "dpms_toggle",     mode "default"
+
+        # mouse
+        bindsym m       exec $scriptdir/device.sh schedule "mouse_off",       mode "default"
+        bindsym Shift+m exec $scriptdir/device.sh schedule "mouse_on",        mode "default"
+
+        bindsym Return  mode "$device"
+        bindsym Escape  mode "$device"
+
 }
 
 # rsize mode
