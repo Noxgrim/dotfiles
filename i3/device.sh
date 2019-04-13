@@ -137,6 +137,7 @@ case "$ARG" in
     logout_force)
         i3-msg exit
         ;;
+    sleep);&
     suspend)
         my_suspend
         ;;
@@ -166,13 +167,13 @@ case "$ARG" in
         ;;
 
     notify_pause)
-        notify-send -t 2 -u low "Paused notifications"
+        notify-send -t 2000 -u low "Paused notifications"
         sleep 3
         killall -SIGUSR1 dunst
         ;;
     notify_resume)
         killall -SIGUSR2 dunst
-        notify-send -t 2 -u low "Resumed notifications"
+        notify-send -t 2000 -u low "Resumed notifications"
         ;;
     screen_off)
         screen_off
@@ -217,7 +218,8 @@ case "$ARG" in
         xinput set-prop 10 "Device Enabled" 1
         ;;
     *)
-        echo "Usage: $0 {lock|logout|suspend|reboot|shutdown}"
+        echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}"
+        echo "Usage: $0 {notify_pause|notify_resume|screen_off|output-{right|left|up|down|kill|1|2}|dpms_toggle|mouse_off|mouse_on}"
         exit 2
 esac
 done

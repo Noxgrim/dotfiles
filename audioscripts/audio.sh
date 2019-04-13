@@ -1,8 +1,8 @@
 #! /bin/bash
 
 MPC='mpc -q'
-BROWSER=( rofi -dmenu --only-match -i -multi-select -p 'Browse: ')
-AU_DIR='/tmp/audio_control'
+BROWSER=( rofi -dmenu -only-match -i -multi-select -p 'Browse: ')
+AU_DIR='/tmp/noxgrim/audio_control'
 PROVIDER='mpd'
 MPD_CONF="$HOME/.mpdconf"
 MPD_HOST="$(grep -Po '(?<=^password ")[^@]*' "$MPD_CONF")@localhost"
@@ -17,7 +17,7 @@ FIND_AUDIO_EXTENSIONS=( -iname "*.mp3" -o -iname "*.flac" -o -iname "*.wma" -o -
 EMPTY_EXECUTE=( 't' )
 
 if [ ! -d "$AU_DIR" ]; then
-    mkdir "$AU_DIR"
+    mkdir -p "$AU_DIR"
 fi
 
 m_search() {

@@ -26,7 +26,7 @@ fi
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
   HIST_STAMPS="yyyy-mm-dd"
 # ZSH_CUSTOM=/path/to/new-custom-folder
-plugins=(git)
+plugins=(git vi-mode)
 
 # User configuration
 
@@ -38,6 +38,7 @@ source $ZSH/oh-my-zsh.sh
 source /etc/locale.conf
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source "$HOME/.zsh-key-bindings.zsh"
 
 export EDITOR=nvim
 
@@ -45,7 +46,13 @@ export EDITOR=nvim
 alias gcd1="git clone --depth 1"
 alias vim='\nvim'
 alias lvim='\vim'
-alias audio="$HOME/.i3/audio.sh -C"
+alias audio="$HOME/dotfiles/audioscripts/audio.sh -C"
+# uni stuff
+alias pk-cc='gcc -std=c99 -g -Wall -Wextra -Wpedantic -Wbad-function-cast -Wconversion -Wwrite-strings -Wstrict-prototypes'
+
+export EDITOR=nvim
+export MANPAGER="nvim -c 'set ft=man' -"
+
 
 #Load autojump
 . /usr/share/autojump/autojump.zsh
@@ -72,7 +79,7 @@ function fat32copy {
             mkdir -p "$DIR"
         fi
         #echo Copy from "'$F'" to "'$DEST'"
-        cp "$F" "$DIR/$FILE"
+        cp --no-clobber "$F" "$DIR/$FILE"
     done
     echo
 }
@@ -96,4 +103,9 @@ function qbg() {
 }
 function rqbg() {
     "$@"&>/dev/null&disown
+}
+
+function mvln() {
+    mv "$1" "$2"
+    ln -sr "$2" "$1"
 }

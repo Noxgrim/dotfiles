@@ -1,10 +1,10 @@
 keystate_capslock = enable
 
-"$HOME/.i3/audio.sh t"
+"$HOME/dotfiles/audioscripts/audio.sh t"
    XF86AudioPlay
-"$HOME/.i3/audio.sh h"
+"$HOME/dotfiles/audioscripts/audio.sh h"
    XF86AudioStop
-"$HOME/.i3/audio.sh L"
+"$HOME/dotfiles/audioscripts/audio.sh L"
    XF86AudioNext
-"$HOME/.i3/audio.sh H"
+"$HOME/dotfiles/audioscripts/audio.sh H"
    XF86AudioPrev

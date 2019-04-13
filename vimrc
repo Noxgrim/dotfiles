@@ -16,6 +16,8 @@
  set nocompatible
  filetype plugin indent on
 
+ set tabpagemax=100
+
 " Wild menuset colorcolumn=81
  set wildmode=longest,list,full
  set wildmenu
@@ -111,6 +113,7 @@
   Plug 'lervag/vimtex'
   Plug 'neovimhaskell/haskell-vim'
   "let $success_cmd = 'latexmk -c;'
+  let g:tex_flavor = "latex"
   let g:vimtex_view_method = 'zathura'
   if has('nvim')
     let g:vimtex_compiler_progname = "nvr"
@@ -139,6 +142,9 @@
 " enable spell checking for certain file types
  autocmd FileType gitcommit setlocal spell
  autocmd FileType markdown setlocal spell
+ autocmd FileType text setlocal spell
+ autocmd FileType tex setlocal spell
+ autocmd FileType plaintex setlocal spell
  set background=dark
  colorscheme solarized
 

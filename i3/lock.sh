@@ -47,7 +47,7 @@ if [[ -e /dev/fd/${XSS_SLEEP_LOCK_FD:--1} ]]; then
     done
 else
     scrot "$IMG"
-    mogrify -blur 5x5 "$IMG"
+    mogrify -blur 20x20 "$IMG"
     trap 'kill %%' TERM INT
     i3lock -f -i "$IMG"&
     wait

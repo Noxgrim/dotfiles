@@ -11,7 +11,8 @@ set $ws8   8
 set $ws9   9
 set $ws10 10
 
-set $scriptdir $HOME/.i3
+set $scriptdir  $HOME/.i3
+set $mscriptdir $HOME/dotfiles/audioscripts/
 
 # Set font
 font pango:Source Code Pro for Powerline 10
@@ -165,7 +166,7 @@ bindsym $mod+b border toggle
 # center floating window
 bindsym $mod+c move position center
 
-bindsym $mod+m exec $scriptdir/rofi_audio.sh
+bindsym $mod+m exec $mscriptdir/rofi_audio.sh
 bindsym $mod+p exec passmenu --type
 
 set $device device [sSlLhHrF][mMnN]❖[dh]❖[se]
@@ -300,19 +301,19 @@ bindsym $mod+Shift+XF86AudioRaiseVolume exec $scriptdir/volume.sh raise 5
 bindsym $mod+Shift+XF86AudioLowerVolume exec $scriptdir/volume.sh lower 5
 bindsym $mod+Shift+XF86AudioMute        exec $scriptdir/volume.sh set
 #### Update if 'audio' syntax updates
-bindsym Ctrl+XF86AudioRaiseVolume            exec $scriptdir/audio.sh      -c v +1
-bindsym Ctrl+XF86AudioLowerVolume            exec $scriptdir/audio.sh      -c v -1
-bindsym Ctrl+XF86AudioMute                   exec $scriptdir/rofi_audio.sh -c 'v '
-bindsym $mod+Ctrl+XF86AudioRaiseVolume       exec $scriptdir/audio.sh      -c v +1
-bindsym $mod+Ctrl+XF86AudioLowerVolume       exec $scriptdir/audio.sh      -c v -1
-bindsym $mod+Ctrl+XF86AudioMute              exec $scriptdir/rofi_audio.sh -c 'v '
+bindsym Ctrl+XF86AudioRaiseVolume            exec $mscriptdir/audio.sh      -c v +1
+bindsym Ctrl+XF86AudioLowerVolume            exec $mscriptdir/audio.sh      -c v -1
+bindsym Ctrl+XF86AudioMute                   exec $mscriptdir/rofi_audio.sh -c 'v '
+bindsym $mod+Ctrl+XF86AudioRaiseVolume       exec $mscriptdir/audio.sh      -c v +1
+bindsym $mod+Ctrl+XF86AudioLowerVolume       exec $mscriptdir/audio.sh      -c v -1
+bindsym $mod+Ctrl+XF86AudioMute              exec $mscriptdir/rofi_audio.sh -c 'v '
 
-bindsym Shift+Ctrl+XF86AudioRaiseVolume      exec $scriptdir/audio.sh      -c v +5
-bindsym Shift+Ctrl+XF86AudioLowerVolume      exec $scriptdir/audio.sh      -c v -5
-bindsym Shift+Ctrl+XF86AudioMute             exec $scriptdir/rofi_audio.sh -c 'v '
-bindsym $mod+Shift+Ctrl+XF86AudioRaiseVolume exec $scriptdir/audio.sh      -c v +5
-bindsym $mod+Shift+Ctrl+XF86AudioLowerVolume exec $scriptdir/audio.sh      -c v -5
-bindsym $mod+Shift+Ctrl+XF86AudioMute        exec $scriptdir/rofi_audio.sh -c 'v '
+bindsym Shift+Ctrl+XF86AudioRaiseVolume      exec $mscriptdir/audio.sh      -c v +5
+bindsym Shift+Ctrl+XF86AudioLowerVolume      exec $mscriptdir/audio.sh      -c v -5
+bindsym Shift+Ctrl+XF86AudioMute             exec $mscriptdir/rofi_audio.sh -c 'v '
+bindsym $mod+Shift+Ctrl+XF86AudioRaiseVolume exec $mscriptdir/audio.sh      -c v +5
+bindsym $mod+Shift+Ctrl+XF86AudioLowerVolume exec $mscriptdir/audio.sh      -c v -5
+bindsym $mod+Shift+Ctrl+XF86AudioMute        exec $mscriptdir/rofi_audio.sh -c 'v '
 
 #bindsym XF86AudioPlay
 #bindsym XF86AudioPrev

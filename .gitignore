@@ -2,6 +2,8 @@ vim/*
 !vim/colors/
 vimperator/*
 !vimperator/colors/
+.stignore
+.stfolder/
 
 # Backup files and temporary files
 tmp/

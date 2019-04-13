@@ -12,8 +12,8 @@ for ARG in "$@"; do
     fi
 done
 
-INPUT=( $( rofi -theme sidebar -dmenu -p 'Audio' -lines 1 -filter "$*" < /dev/null || echo -- ) )
-RESULT="$( "$HOME/.i3/audio.sh" "${ARGS[@]}" "${INPUT[@]}" 2>&1 )"
+read -ra INPUT <<< "$( rofi -theme sidebar -dmenu -p 'Audio' -lines 1 -filter "$*" < /dev/null || echo -- )"
+RESULT="$( "$HOME/dotfiles/audioscripts/audio.sh" "${ARGS[@]}" "${INPUT[@]}" 2>&1 )"
 if [ -n "$RESULT" ]; then
     LINES="$(echo "$RESULT" | wc -l)"
     if [ "$LINES" -gt 38 ]; then
