@@ -26,6 +26,8 @@ ln -sfr dunstrc       $HOME/.config/dunst/dunstrc
 
 ln -sfr passmenu "$HOME/.local/bin/"
 
+ln -sfr .git-precommit '.git/hooks/pre-commit' # The censorer
+
 # Configure Mpd
 ln -sfr mpd.conf $HOME/.mpdconf
 mkdir $HOME/.mpd

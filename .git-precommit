@@ -1,0 +1,9 @@
+#!/bin/bash
+# backup mpd password
+PASS="$(grep '^password' mpd.conf | head -n1 | grep -Po '(?<=")[^@]*')"
+(
+    tail --pid="$PPID" -f /dev/null; # wait for git to finish
+    sed -i "s/password1/$PASS/g" mpd.conf
+)& disown
+sed -i "s/$PASS/password1/g" mpd.conf
+git add mpd.conf
