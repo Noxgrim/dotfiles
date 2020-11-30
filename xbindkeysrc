@@ -2,9 +2,14 @@ keystate_capslock = enable
 
 "$HOME/dotfiles/audioscripts/audio.sh t"
    XF86AudioPlay
+"$HOME/dotfiles/audioscripts/audio.sh t"
+   XF86AudioPause
+"$HOME/dotfiles/audioscripts/audio.sh t"
+   m:0x10 + c:208
+   Mod2 + XF86AudioPlay
 "$HOME/dotfiles/audioscripts/audio.sh h"
    XF86AudioStop
-"$HOME/dotfiles/audioscripts/audio.sh L"
+"$HOME/dotfiles/audioscripts/audio.sh J"
    XF86AudioNext
-"$HOME/dotfiles/audioscripts/audio.sh H"
+"$HOME/dotfiles/audioscripts/audio.sh K"
    XF86AudioPrev

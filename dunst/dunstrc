@@ -219,3 +219,6 @@
     format="%s%b"
     history_ignore=yes
     hide_duplicate_count=yes
+[audio_unknown]
+    appname="noxgrim:audio:unknown"
+    format = "<b><i>%s</i></b>\n%b\n"

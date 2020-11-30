@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+shopt -s nullglob globstar
+
+typeit=0
+if [[ $1 == "--type" ]]; then
+    typeit=1
+    shift
+fi
+
+prefix=${PASSWORD_STORE_DIR-~/.password-store}
+password_files=( "$prefix"/**/*.gpg )
+password_files=( "${password_files[@]#"$prefix"/}" )
+password_files=( "${password_files[@]%.gpg}" )
+
+password=$(printf '%s\n' "${password_files[@]}" | dmenu "$@")
+
+[[ -n $password ]] || exit
+
+if [[ $typeit -eq 0 ]]; then
+    pass show -c "$password" 2>/dev/null
+else
+    delay=48 # in ms
+    typecmd='\x00type\x00--clearmodifiers\x00--delay\x00'"$delay"'\x00'
+    keycmd='\x00sleep\x00'"$(printf 'scale=3;%s/1000\n' "$delay"| bc)"'\x00key\x00--clearmodifiers\x00'
+    pass show "$password" | { IFS= read -r pass; printf %s "$pass"; } |
+        sed 's/[^`^´~]\+/'"$typecmd"'&/g
+             s/\^/'"$keycmd"'asciicircum/g
+             s/`/'"$keycmd"'grave/g
+             s/´/'"$keycmd"'acute/g
+             s/~/'"$keycmd"'asciitilde/g' |
+        sed 's/^\x00*//' |
+        xargs -0 -n 5 xdotool
+fi

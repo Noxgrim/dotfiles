@@ -1,7 +1,7 @@
 #! /bin/bash
 
 MPC='mpc -q'
-BROWSER=( rofi -theme solarized_alpha -dmenu -i -multi-select -p 'Browse')
+BROWSER=( rofi -theme solarized -dmenu -i -multi-select -p 'Browse')
 AU_DIR='/tmp/noxgrim/audio_control'
 PROVIDER='mpd'
 MPD_CONF="$HOME/.mpdconf"
@@ -12,7 +12,7 @@ MUSIC_DIR="$(grep 'music_directory' "$MPD_CONF" | grep -oP '(?<=").*?(?=")' |\
 ICON_RES='80:80' #Only affects newly created icons
 RADIO_QUERY_RES=5
 #PLAYLIST_FORMAT='%position%. %artist% • %title%'
-PLAYLIST_FORMAT='%position%. [[%artist% • ][%title%]|[%filename%]]'
+PLAYLIST_FORMAT='%position%. [[[%artist% • ][%album% • ][%title%]]|[%file%]]'
 FIND_AUDIO_EXTENSIONS=( -iname "*.mp3" -o -iname "*.flac" -o -iname "*.wma" -o -iname "*.wav" -o -iname "*.ogg" )
 EMPTY_EXECUTE=( 't' )
 
@@ -241,7 +241,7 @@ del_phrase() {
 }
 play_all() {
     local RESULT
-    RESULT="$(pl_browse || sort -n)"
+    RESULT="$(pl_browse | sort -n)"
     local NUM=0
     local PLAY
     if [ -n "$RESULT" ]; then
@@ -266,7 +266,7 @@ query_playing() {
     if [ -z "$( mpc current )" ]; then
         notify-send -u low 'No track playing'
     elif [ -z "$( mpc -f '%time%' current )" ]; then # Most probably a radio station
-        notify-send "$( mpc -f '%title%' current | clean_html )"\
+        notify-send "$( mpc -f '%title%' current)"\
             "$( mpc -f '%name%' current | clean_html )"
     else
         local CURRENT
@@ -284,35 +284,40 @@ query_playing() {
 
         local SUMMARY
         local BODY
+        local APP
         if [ -z "$( mpc -f '%title%' current )" ]; then
-            SUMMARY="<i>$( basename "$CURRENT" '.mp3')</i>"
+            SUMMARY="$( basename "$CURRENT" | sed 's/\.[^.]*$//')"
             BODY="$DIR"
+            APP='noxgrim:audio:unknown'
         else
             SUMMARY="$( mpc -f '%title%' current )"
             BODY="$( mpc -f '[[%artist% • ][%album%]|[<i>Unknown</i>]]|[<i>Unknown</i>]' \
                 current )"
         fi
 
-        SUMMARY="$(echo "$SUMMARY" | clean_html)"
         BODY="$(echo "$BODY" | clean_html)"
 
-        notify-send "$SUMMARY" "$BODY" "${ICON_ARG[@]}"
+        notify-send -a "$APP" "$SUMMARY" "$BODY" "${ICON_ARG[@]}"
     fi
 }
 clean_html() {
-    sed 's/&/&amp;/g' |\
-    sed 's/</\&lt;/g' | sed -r 's/&lt;(\/?\w+>)/<\1/g' |\
-    sed 's/>/\&gt;/g' | sed -r 's/(<\/?\w+)&gt;/\1>/g'
+    sed 's/&/&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 }
 check_icon() {
     (
         cd "$1" || return
         local FILES=
+        local UNSORTED=
+        local REST=
+        local FILE_REGEX='./\(cover\|folder\|titel\|album.*\).\(png\|jpe?g\|bmp\)'
         shopt -s nullglob
         if [ -f ".cover_mpd.png" ] || [ -f ".no_cover_found" ]; then
             return
-        elif [ -f cover.png ] || [ -f cover.jpg ] || [ -f cover.jpeg ]; then
-            FILES=( cover.png* cover.jpg* cover.jpeg* )
+        elif [ "$(find . -maxdepth 1 -iregex "$FILE_REGEX" | wc -l)" -ge 1 ]; then
+            UNSORTED="$(find . -maxdepth 1 -iregex "$FILE_REGEX" )"
+            readarray -t FILES < <(grep  -iE 'cover.(png|jpe?g)$' <<< "$UNSORTED")
+            readarray -t REST  < <(grep -viE 'cover.(png|jpe?g)$' <<< "$UNSORTED")
+            FILES+=( "${REST[@]}" )
         else
             FILES=( *.mp3 *.flac *.wma *.wav *.ogg )
         fi
@@ -558,7 +563,7 @@ elif [ ! "$( pgrep "$PROVIDER" )" ]; then
             mpd "$HOME/.mpdconf"
             ;;
         mopidy)
-            mopidy &> "$AU_DIR/mopidy.log"&disown
+            mopidy &> "$AU_DIR/mopidy.log"& disown
             # [ ! "$NO_CHANGE_NOTIFY" ] && change_notify # Do we really need this?
             ;;
     esac

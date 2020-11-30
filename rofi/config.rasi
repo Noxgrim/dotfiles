@@ -1,0 +1,40 @@
+configuration {
+	font: "Source Code Pro for Powerline 10";
+	location: 2;
+	padding: 4;
+	fixed-num-lines: false;
+	show-icons: true;
+	sidebar-mode: true;
+	matching: "normal";
+	scrollbar-width: 4;
+	scroll-method: 1;
+	fake-background: "screenshot";
+	color-normal: "#002b37, #819396, #002b37, #003642, #819396";
+	color-urgent: "#002b37, #da4281, #002b37, #003642, #da4281";
+	color-active: "#002b37, #008ed4, #002b37, #003642, #008ed4";
+	color-window: "#002b37, #002b37, #003642";
+	display-window: "Window";
+	display-run: "Execute";
+	display-drun: "Activate";
+	kb-clear-line: "Control+c";
+	kb-move-front: "Home";
+	kb-move-end: "End";
+	kb-move-word-back: "Control+Left,Control+H";
+	kb-move-word-forward: "Control+Right,Control+L";
+	kb-move-char-back: "Left,Control+b,Control+h";
+	kb-move-char-forward: "Right,Control+f,Control+l";
+	kb-remove-word-back: "Control+Alt+h,Control+BackSpace,Control+w";
+	kb-remove-word-forward: "Control+Alt+d,Control+Delete,Control+W";
+	kb-remove-char-forward: "Delete";
+	kb-remove-char-back: "BackSpace";
+	kb-remove-to-eol: "Control+k";
+	kb-remove-to-sol: "Control+u";
+	kb-page-prev: "Page_Up";
+	kb-page-next: "Page_Down";
+	kb-row-first: "Shift+Page_Up";
+	kb-row-last: "Shift+Page_Down";
+	kb-row-select: "Control+space";
+	kb-toggle-case-sensitivity: "grave,dead_grave,Control+i";
+	kb-toggle-sort: "Alt+grave,Control+s";
+}
+@import "/usr/share/rofi/themes/solarized_alternate.rasi"

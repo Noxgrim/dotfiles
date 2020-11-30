@@ -6,7 +6,7 @@ export ZSH=/home/noxgrim/.oh-my-zsh
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
 if [[ "$TTY" != /dev/tty[0-9] ]]; then
-    ZSH_THEME="powerlevel9k/powerlevel9k"
+    ZSH_THEME="powerlevel10k/powerlevel10k"
 
     POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs)
     POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status root_indicator background_jobs vi_mode command_execution_time)
@@ -43,12 +43,48 @@ source "$HOME/.zsh-key-bindings.zsh"
 export EDITOR=nvim
 
 
-alias gcd1="git clone --depth 1"
+alias gcd1="\git clone --depth 1"
 alias vim='\nvim'
 alias lvim='\vim'
+alias vimdiff='\nvim -d'
 alias audio="$HOME/dotfiles/audioscripts/audio.sh -C"
+alias ncmpcpp='\ncmpcpp --host=$MPD_HOST'
 # uni stuff
-alias pk-cc='gcc -std=c99 -g -Wall -Wextra -Wpedantic -Wbad-function-cast -Wconversion -Wwrite-strings -Wstrict-prototypes'
+alias pk-cc='\gcc -std=c99 -g -Wall -Wextra -Wpedantic -Wbad-function-cast -Wconversion -Wwrite-strings -Wstrict-prototypes'
+function makesmallmkv() {
+    for F in "$@"; do
+        FILENAME="$(basename "$F")"
+        FILENAME="${FILENAME%.*}"
+        mv "$F" "___temp___$F"
+        ffmpeg -i "___temp___$F" -vf scale=480:-2,setsar=1:1,fps=fps=1\
+            -c:v  libx265 -crf 28 -strict -2 -c:a opus -b:a 20k\
+            "$FILENAME".mkv &&
+            rm "___temp___$F"
+        # ffmpeg -i "___temp___$F" -vf scale=720:-2,setsar=1:1,fps=fps=1\
+    done
+}
+function pdfc() {
+    gs\
+      -q -dNOPAUSE -dBATCH -dSAFER \
+      -sDEVICE=pdfwrite \
+      -dCompatibilityLevel=1.3 \
+      -dPDFSETTINGS=/screen \
+      -dEmbedAllFonts=true \
+      -dSubsetFonts=true \
+      -dColorImageDownsampleType=/Bicubic \
+      -dColorImageResolution="$1" \
+      -dGrayImageDownsampleType=/Bicubic \
+      -dGrayImageResolution="$1" \
+      -dMonoImageDownsampleType=/Bicubic \
+      -dMonoImageResolution="$1" \
+      -sOutputFile="$3" \
+      "$2"
+}
+function mkpdf() {
+    latexmk -pdf "$1"
+    latexmk -c
+}
+
 
 export EDITOR=nvim
 export MANPAGER="nvim -c 'set ft=man' -"
@@ -70,9 +106,9 @@ function fat32copy {
 
     find "$1" -type f -print0 | while IFS= read -r -d $'\0' F; do
         ((NUM++))
-        DEST="$(echo "$F" | sed -e 's/:/ -/g' | sed -e 's/"/'\''/g' | sed -e 's/[|\?*]/_/g')"
+        DEST="$(echo "$F" | sed -e 's/:/ -/g' -e 's/"/'\''/g' -e 's/>/›/g' -e 's/</‹/g' -e 's/[|\?*]/_/g' -e 's,\.\+\(/\|$\),\1,g' -e 's,\s*\+\(/\|$\),\1,g')"
         DIR="$(dirname "$DEST")"
-        DIR="$2${DIR#$AC_DIR}"
+        DIR="$2/${DIR#$AC_DIR}"
         FILE="$(basename "$DEST")"
         printf "\r\e[0K%3.2f%% (%d/%d): '%s'" "$(echo "scale=4; $NUM/$TOTAL*100" | bc)" $NUM $TOTAL "$FILE"
         if [ ! -d "$DIR" ]; then
@@ -83,7 +119,7 @@ function fat32copy {
     done
     echo
 }
- 
+
 function audiolength() {
 #http://www.commandlinefu.com/commands/view/13459/get-the-total-length-of-all-videos-in-the-current-dir-in-hms
     [ -z "$1" ] && 1='.'
@@ -93,16 +129,25 @@ function audiolength() {
         tail -n 1
 }
 
-function mkpdf() {
-    latexmk -pdf "$1"
-    latexmk -c
-}
-
 function qbg() {
     "$@">/dev/null&disown
 }
 function rqbg() {
     "$@"&>/dev/null&disown
+}
+
+function qbgz() {
+    zathura "$@">/dev/null&disown
+}
+function rqbgz() {
+    zathura "$@"&>/dev/null&disown
+}
+
+function qbgx() {
+    xournalpp "$@">/dev/null&disown
+}
+function rqbgx() {
+    xournalpp "$@"&>/dev/null&disown
 }
 
 function mvln() {

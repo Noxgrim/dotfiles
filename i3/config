@@ -1,7 +1,7 @@
 # some variables
 set $mod Mod4
-set $ws1   1: 📩
-set $ws2   2: 🌐
+set $ws1   1
+set $ws2   2
 set $ws3   3
 set $ws4   4
 set $ws5   5
@@ -11,7 +11,8 @@ set $ws8   8
 set $ws9   9
 set $ws10 10
 
-set $scriptdir  $HOME/.i3
+set $scriptdir $HOME/.i3
+set $tmpdir /tmp/$USER/i3
 set $mscriptdir $HOME/dotfiles/audioscripts/
 
 # Set font
@@ -136,19 +137,42 @@ bindsym $mod+Mod1+Left  move workspace to output left
 bindsym $mod+Mod1+Down  move workspace to output down
 bindsym $mod+Mod1+Up    move workspace to output up
 
-# output control
-bindsym $mod+Ctrl+Mod1+l     exec $scriptdir/device.sh output-right
-bindsym $mod+Ctrl+Mod1+h     exec $scriptdir/device.sh output-left
-bindsym $mod+Ctrl+Mod1+j     exec $scriptdir/device.sh output-down
-bindsym $mod+Ctrl+Mod1+k     exec $scriptdir/device.sh output-up
-bindsym $mod+Ctrl+Mod1+Right exec $scriptdir/device.sh output-right
-bindsym $mod+Ctrl+Mod1+Left  exec $scriptdir/device.sh output-left
-bindsym $mod+Ctrl+Mod1+Down  exec $scriptdir/device.sh output-down
-bindsym $mod+Ctrl+Mod1+Up    exec $scriptdir/device.sh output-up
+# quick output control
+bindsym $mod+Ctrl+Mod1+l           exec $scriptdir/device.sh output rotate . right
+bindsym $mod+Ctrl+Mod1+h           exec $scriptdir/device.sh output rotate . left
+bindsym $mod+Ctrl+Mod1+j           exec $scriptdir/device.sh output rotate . normal
+bindsym $mod+Ctrl+Mod1+k           exec $scriptdir/device.sh output rotate . inverted
+bindsym $mod+Ctrl+Mod1+Right       exec $scriptdir/device.sh output rotate . right
+bindsym $mod+Ctrl+Mod1+Left        exec $scriptdir/device.sh output rotate . left
+bindsym $mod+Ctrl+Mod1+Down        exec $scriptdir/device.sh output rotate . normal
+bindsym $mod+Ctrl+Mod1+Up          exec $scriptdir/device.sh output rotate . inverted
+bindsym $mod+Ctrl+Mod1+Shift+l     exec $scriptdir/device.sh output mirror . normal
+bindsym $mod+Ctrl+Mod1+Shift+h     exec $scriptdir/device.sh output mirror . x
+bindsym $mod+Ctrl+Mod1+Shift+j     exec $scriptdir/device.sh output mirror . normal
+bindsym $mod+Ctrl+Mod1+Shift+k     exec $scriptdir/device.sh output mirror . y
+bindsym $mod+Ctrl+Mod1+Shift+Right exec $scriptdir/device.sh output mirror . normal
+bindsym $mod+Ctrl+Mod1+Shift+Left  exec $scriptdir/device.sh output mirror . x
+bindsym $mod+Ctrl+Mod1+Shift+Down  exec $scriptdir/device.sh output mirror . normal
+bindsym $mod+Ctrl+Mod1+Shift+Up    exec $scriptdir/device.sh output mirror . y
 
-bindsym $mod+Ctrl+Mod1+1    exec $scriptdir/device.sh output-1
-bindsym $mod+Ctrl+Mod1+2    exec $scriptdir/device.sh output-2
-bindsym $mod+Ctrl+Mod1+x    exec $scriptdir/device.sh output-kill
+bindsym $mod+Ctrl+Mod1+1 exec $scriptdir/device.sh output toggle 1
+bindsym $mod+Ctrl+Mod1+2 exec $scriptdir/device.sh output toggle 2
+bindsym $mod+Ctrl+Mod1+3 exec $scriptdir/device.sh output toggle 3
+bindsym $mod+Ctrl+Mod1+4 exec $scriptdir/device.sh output toggle 4
+bindsym $mod+Ctrl+Mod1+5 exec $scriptdir/device.sh output toggle 5
+bindsym $mod+Ctrl+Mod1+6 exec $scriptdir/device.sh output toggle 6
+bindsym $mod+Ctrl+Mod1+7 exec $scriptdir/device.sh output toggle 7
+bindsym $mod+Ctrl+Mod1+8 exec $scriptdir/device.sh output toggle 8
+bindsym $mod+Ctrl+Mod1+9 exec $scriptdir/device.sh output toggle 9
+bindsym $mod+Ctrl+Mod1+0 exec $scriptdir/device.sh output toggle 10
+bindsym $mod+Ctrl+Mod1+x exec $scriptdir/device.sh output off    .
+bindsym $mod+Ctrl+Mod1+o exec $scriptdir/device.sh output on     . #This is a little bit nonsensical
+bindsym $mod+Ctrl+Mod1+t exec $scriptdir/device.sh output toggle .
+
+bindsym $mod+Ctrl+Mod1+d       exec $scriptdir/device.sh output default
+bindsym $mod+Ctrl+Mod1+a       exec $scriptdir/device.sh output all-on
+bindsym $mod+Ctrl+Mod1+p       exec $scriptdir/device.sh output primary .
+bindsym $mod+Ctrl+Mod1+Shift+p exec $scriptdir/device.sh output pack
 
 
 # scratch pad
@@ -164,11 +188,30 @@ bindsym $mod+c move position center
 
 bindsym $mod+m exec $mscriptdir/rofi_audio.sh
 bindsym $mod+p exec passmenu --type
+bindsym $mod+Shift+p exec passmenu
 
-set $device device [+][sSlLhHrF][mMnN]❖[dh]❖[se] [rR]
+mode "setnumber [0123456789][Return]" {
+    bindsym 1 exec printf 1 >> "$tmpdir/number"
+    bindsym 2 exec printf 2 >> "$tmpdir/number"
+    bindsym 3 exec printf 3 >> "$tmpdir/number"
+    bindsym 4 exec printf 4 >> "$tmpdir/number"
+    bindsym 5 exec printf 5 >> "$tmpdir/number"
+    bindsym 6 exec printf 6 >> "$tmpdir/number"
+    bindsym 7 exec printf 7 >> "$tmpdir/number"
+    bindsym 8 exec printf 8 >> "$tmpdir/number"
+    bindsym 9 exec printf 9 >> "$tmpdir/number"
+    bindsym 0 exec printf 0 >> "$tmpdir/number"
+
+    bindsym Escape exec printf '\n' >> "$tmpdir/number", mode "default"
+    bindsym Return exec printf '\n' >> "$tmpdir/number", mode "default"
+}
+
+set $device device [+][x][sSlLhHrF][mMnN][d]❖[dh]❖[se] ❖[rR]
 set $force device.force [SRL]
-set $schedule device.schedule [sSlLhHr][mMnN]❖[se]
+set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
+set $discord device.discord status: [o]nline (a)idle [d]nd [i]nvisible | actions: [g]o [c]ome | call: [j]oin [r]eject [l]eave | audio [M]ute [D]eafen | [u]pdate
 bindsym $mod+Shift+x mode "$device"
+bindsym $mod+y mode "setnumber [0123456789][Return]"
 mode "$device" {
         # power control
         bindsym Shift+l exec $scriptdir/device.sh logout,          mode "default"
@@ -189,25 +232,28 @@ mode "$device" {
         bindsym m       exec $scriptdir/device.sh mouse_off,       mode "default"
         bindsym Shift+m exec $scriptdir/device.sh mouse_on,        mode "default"
 
+        bindsym x       exec $scriptdir/device.sh execute_what,    mode "default"
+
         # bar
         bindsym $mod+d  bar mode dock, mode "default"
         bindsym $mod+h  bar mode hide, mode "default"
 
         # reload the configuration file or reset i3
-        bindsym r reload
-        bindsym R restart
+        bindsym $mod+r       reload
+        bindsym $mod+Shift+r restart
 
 
         bindsym Shift+f mode "$force"
-        bindsym plus mode "$schedule"
+        bindsym plus    mode "$schedule"
+        bindsym d       mode "$discord"
         bindsym Return  mode "default"
         bindsym Escape  mode "default"
 
 }
 mode "$force" {
-        bindsym Shift+l exec $scriptdir/exit.sh logout_force     mode "default"
-        bindsym Shift+s exec $scriptdir/exit.sh shutdown_force   mode "default"
-        bindsym Shift+r exec $scriptdir/exit.sh reboot_force     mode "default"
+        bindsym Shift+l exec $scriptdir/device.sh logout_force     mode "default"
+        bindsym Shift+s exec $scriptdir/device.sh shutdown_force   mode "default"
+        bindsym Shift+r exec $scriptdir/device.sh reboot_force     mode "default"
 
         bindsym Escape mode "$device"
 }
@@ -231,9 +277,33 @@ mode "$schedule" {
         bindsym m       exec $scriptdir/device.sh schedule "mouse_off",       mode "default"
         bindsym Shift+m exec $scriptdir/device.sh schedule "mouse_on",        mode "default"
 
+        bindsym plus    exec $scriptdir/device.sh schedule_what,              mode "default"
+        bindsym x       exec $scriptdir/device.sh schedule "execute_what",    mode "default"
+
         bindsym Return  mode "$device"
         bindsym Escape  mode "$device"
+}
+mode "$discord" {
+        # online status
+        bindsym o       exec $scriptdir/discord.sh "online",         mode "default"
+        bindsym a       exec $scriptdir/discord.sh "idle",           mode "default"
+        bindsym d       exec $scriptdir/discord.sh "do-not-disturb", mode "default"
+        bindsym i       exec $scriptdir/discord.sh "invisible",      mode "default"
+        # calls
+        bindsym j       exec $scriptdir/discord.sh "join",           mode "default"
+        bindsym r       exec $scriptdir/discord.sh "reject",         mode "default"
+        bindsym l       exec $scriptdir/discord.sh "leave",          mode "default"
+        # combined actions
+        bindsym g       exec $scriptdir/discord.sh "go-away",        mode "default"
+        bindsym c       exec $scriptdir/discord.sh "come-back",      mode "default"
+        # audio
+        bindsym Shift+m exec $scriptdir/discord.sh "mute",           mode "default"
+        bindsym Shift+D exec $scriptdir/discord.sh "deafen",         mode "default"
+        # misc
+        bindsym u       exec $scriptdir/discord.sh "update",         mode "default"
 
+        bindsym Return  mode "$device"
+        bindsym Escape  mode "$device"
 }
 
 # rsize mode
@@ -294,7 +364,7 @@ client.background       $color_bgr
 bar {
         status_command i3blocks
         position top
-        font pango:Source Code Pro for Powerline 9
+        font pango:Source Code Pro for Powerline Nerd Font 9
         tray_output primary
         #tray_output LVDS-1-1
         mode hide
@@ -351,11 +421,12 @@ bindsym $mod+Shift+Ctrl+XF86AudioMute        exec $mscriptdir/rofi_audio.sh -c '
 #workspace "$ws2" output VGA-1-1
 
 # window specific settings
-assign [class="Skype"] $ws1
 for_window [class="terminal"] border pixel 1
 for_window [class="Pinentry"] floating enable
-for_window [class="graphics.Reversi"] floating enable
+for_window [class="discord"] move container to scratchpad
 
 
 # setup environment
+exec--no-startup-id $HOME/.i3/output_layout.sh default
 exec_always --no-startup-id $HOME/.i3/environment.sh
+exec_always --no-startup-id sh -c "[ -d $tmpdir ] || mkdir -p $tmpdir"
