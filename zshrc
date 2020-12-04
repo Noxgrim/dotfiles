@@ -87,7 +87,7 @@ function mkpdf() {
 
 
 export EDITOR=nvim
-export MANPAGER="nvim -c 'set ft=man' -"
+export MANPAGER="nvim  --cmd 'let g:is_manpage=1' -c 'set ft=man' -"
 
 
 #Load autojump

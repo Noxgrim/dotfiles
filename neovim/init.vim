@@ -12,24 +12,29 @@ let g:noxgrim_coc_extensions = [
             \ 'coc-rls', 'coc-sh', 'coc-snippets', 'coc-tsserver', 'coc-vimlsp',
             \ 'coc-vimtex', 'coc-yank', 'coc-julia' ]
 
-source $HOME/.config/nvim/plug-config/coc.vim
-source $HOME/.config/nvim/plug-config/coc-snippets.vim
 source $HOME/.config/nvim/plug-config/vim-airline.vim
-source $HOME/.config/nvim/plug-config/vimtex.vim
-source $HOME/.config/nvim/plug-config/vim-easy-align.vim
-source $HOME/.config/nvim/plug-config/vim-titlecase.vim
-source $HOME/.config/nvim/plug-config/vim-closetag.vim
-source $HOME/.config/nvim/plug-config/vim-which-key.vim
+
 source $HOME/.config/nvim/plug-config/vim-sneak.vim
+if ! exists('g:is_manpage') || ! g:is_manpage
+    source $HOME/.config/nvim/plug-config/coc.vim
+    source $HOME/.config/nvim/plug-config/coc-snippets.vim
+    source $HOME/.config/nvim/plug-config/vimtex.vim
+    source $HOME/.config/nvim/plug-config/vim-easy-align.vim
+    source $HOME/.config/nvim/plug-config/vim-titlecase.vim
+    source $HOME/.config/nvim/plug-config/vim-closetag.vim
+    source $HOME/.config/nvim/plug-config/vim-which-key.vim
+endif
 " source $HOME/.config/nvim/plug-config/browserlink.vim
 
 
 
 function! s:PostLoad()
-    "source $HOME/.config/nvim/plug-config/auto-pairs.post-load.vim
-    source $HOME/.config/nvim/plug-config/lexima.post-load.vim
-    source $HOME/.config/nvim/plug-config/vim-which-key.post-load.vim
-    source $HOME/.config/nvim/plug-config/coc.post-load.vim
+    if ! exists('g:is_manpage') || ! g:is_manpage
+        "source $HOME/.config/nvim/plug-config/auto-pairs.post-load.vim
+        source $HOME/.config/nvim/plug-config/lexima.post-load.vim
+        source $HOME/.config/nvim/plug-config/vim-which-key.post-load.vim
+        source $HOME/.config/nvim/plug-config/coc.post-load.vim
+    endif
 endfunction
 augroup noxgrim_setting_post_load_plugins
     autocmd!

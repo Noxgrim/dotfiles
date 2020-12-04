@@ -79,7 +79,7 @@ augroup noxgrim_setting_spell
     " enable spell checking for certain file types
     autocmd FileType gitcommit setlocal spell
     autocmd FileType markdown setlocal spell
-    autocmd FileType text setlocal spell
+    autocmd FileType text setlocal spell textwidth=80
     autocmd FileType tex setlocal spell
     autocmd FileType plaintex setlocal spell
 augroup END
