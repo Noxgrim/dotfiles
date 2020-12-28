@@ -6,7 +6,7 @@ UPDATEPACKAGE="$(readlink -f "${1?"Expected packge containing update as first ar
 [ -f "$UPDATEPACKAGE" ] || { echo "package must exist!" >&2 && exit 1; }
 TARGET_DIR="$(readlink -m "${2?"Expected target dir as second argument."}")"
 [ -d "$TARGET_DIR" ] || mkdir -p "$TARGET_DIR"
-find test -mindepth 1 | grep -qo . || echo 'Directory is empty. You may want to introduce a git repo later.'
+find "$TARGET_DIR" -mindepth 1 | grep -qo . || echo 'Directory is empty. You may want to introduce a git repo later.'
 TEMP_DIR="$(mktemp -d)"
 
 echo 'Unpacking game…'
@@ -72,7 +72,7 @@ if [ -d "$WORKING_DIR/.git" ]; then
             cd "$CURR_DIR" || exit 1
     done
     # If we are versioned, decompile if necessary (git is optimized for plain text)
-    command -v 'unrpyc' > /dev/null && unrpyc "$WORKING_DIR/game" | grep -oE 'Decompilation of [0-9]+( script)? files successful'
+    if command -v 'unrpyc' > /dev/null; then unrpyc "$WORKING_DIR/game" | grep -oE 'Decompilation of [0-9]+( script)? files successful' || true; fi
 
     # Add new files
     git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" add "$WORKING_DIR/."
