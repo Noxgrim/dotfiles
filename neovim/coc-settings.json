@@ -18,5 +18,6 @@
     ],
     "codeLens.enable": true,
     "diagnostic.virtualText": true,
-    "diagnostic.displayByAle": false
+    "diagnostic.displayByAle": false,
+    "yank.highlight.enable": true
 }

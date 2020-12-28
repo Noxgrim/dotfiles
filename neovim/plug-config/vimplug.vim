@@ -49,6 +49,7 @@ if ! exists('g:is_manpage') || ! g:is_manpage
     Plug 'tpope/vim-fugitive'
     Plug 'tpope/vim-repeat'
     Plug 'tpope/vim-surround'
+    Plug 'vim-scripts/gnupg.vim'
     Plug 'w0rp/ale'
 endif
 call plug#end()
