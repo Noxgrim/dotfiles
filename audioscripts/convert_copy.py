@@ -54,7 +54,10 @@ def is_fat_fs(destination):
         file_handler = open(filename, "a")
     except IOError:
         USE_FAT_NAMES = True
-        print("-> Destination is possibly on a FAT file system! Using long FAT names.")
+        print(
+            "-> Destination is possibly on a FAT file system! Using long "
+            + "FAT names."
+        )
     if os.path.exists(filename):
         file_handler.close()
         os.remove(filename)
@@ -102,10 +105,10 @@ def write_cover_opus(afile, cover):
 
 def filter_files(files, extensions, skip_hidden=True):
     ret = []
-    for f in files:
-        if skip_hidden and f.startswith("."):
+    for file in files:
+        if skip_hidden and file.startswith("."):
             continue
-        root, ext = os.path.splitext(f)
+        root, ext = os.path.splitext(file)
         extl = ext.lower()
         for test_ext in extensions:
             if test_ext == extl:
@@ -201,21 +204,21 @@ class Progress:
         else:
             totperc = ""
 
-        if estimated_time_width != None and self.last_time_fmt:
+        if estimated_time_width is not None and self.last_time_fmt:
             esttime = "{:>{width}}".format(
                 self.last_time_fmt, width=estimated_time_width
             )
         else:
             esttime = ""
 
-        if total_steps_width != None and self.total_steps:
+        if total_steps_width is not None and self.total_steps:
             totsteps = "{:>{width}d}/{:>{width}d}".format(
                 self.current_step, self.total_steps, width=total_steps_width
             )
         else:
             totsteps = ""
 
-        if total_content_width != None and self.total_content:
+        if total_content_width is not None and self.total_content:
             totcont = "{:>{width}d}/{:>{width}d}".format(
                 self.current_content, self.total_content, width=total_content_width
             )
@@ -223,15 +226,18 @@ class Progress:
             totcont = ""
 
         prefix = "{name:<{n_w}}".format(name=self.name, n_w=name_width + 1)
-        suffix = "{steps:>{s_w}}{content:>{c_w}}{ert:>{e_w}}{percent:>{p_w}}".format(
-            steps=totsteps,
-            s_w=len(totsteps) + int(totsteps != ""),
-            content=totcont,
-            c_w=len(totcont) + int(totcont != ""),
-            ert=esttime,
-            e_w=len(esttime) + int(esttime != ""),
-            percent=totperc,
-            p_w=len(totperc) + int(totperc != ""),
+        suffix = (
+            "{steps:>{s_w}}{content:>{c_w}}"
+            + "{ert:>{e_w}}{percent:>{p_w}}".format(
+                steps=totsteps,
+                s_w=len(totsteps) + int(totsteps != ""),
+                content=totcont,
+                c_w=len(totcont) + int(totcont != ""),
+                ert=esttime,
+                e_w=len(esttime) + int(esttime != ""),
+                percent=totperc,
+                p_w=len(totperc) + int(totperc != ""),
+            )
         )
 
         bar_length = os.get_terminal_size().columns - len(prefix) - len(suffix) - 2
