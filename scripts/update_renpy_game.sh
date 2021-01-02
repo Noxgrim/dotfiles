@@ -2,9 +2,9 @@
 set -eu -o pipefail
 
 CURR_DIR="$PWD"
-UPDATEPACKAGE="$(readlink -f "${1?"Expected packge containing update as first argument."}")"
+UPDATEPACKAGE="$(readlink -f "${1:?"Expected packge containing update as first argument."}")"
 [ -f "$UPDATEPACKAGE" ] || { echo "package must exist!" >&2 && exit 1; }
-TARGET_DIR="$(readlink -m "${2?"Expected target dir as second argument."}")"
+TARGET_DIR="$(readlink -m "${2:?"Expected target dir as second argument."}")"
 [ -d "$TARGET_DIR" ] || mkdir -p "$TARGET_DIR"
 find "$TARGET_DIR" -mindepth 1 | grep -qo . || echo 'Directory is empty. You may want to introduce a git repo later.'
 TEMP_DIR="$(mktemp -d)"
@@ -43,8 +43,66 @@ case "$(tr '[:upper:]' '[:lower:]' <<< "$UPDATEPACKAGE")" in
                 echo "Unknown architecture: $(uname -m)" >&2
         esac
         ;;
+    *"-win.zip") # probably windows package
+        echo 'Installing a game build for windows. This may not work…'
+        unzip -q "$UPDATEPACKAGE" -d "$TEMP_DIR"
+        WORKING_DIR="$TEMP_DIR/$(basename "$UPDATEPACKAGE" '.zip')"
+        if [ -d "$TARGET_DIR/lib" ]; then
+            rm -r "${WORKING_DIR:?"Temp dir empty?!"}/lib"
+            mv "$TARGET_DIR/lib" "$WORKING_DIR/lib"
+            find "$TARGET_DIR" -maxdepth 1 -type f -iname '*.sh' -exec cp '{}' "$WORKING_DIR" \;
+        elif [ -n "${3:+set}" ]; then
+            # Try to use a reference
+            REFERENCE="$(readlink -f "$3")"
+            if [ -d "$REFERENCE/lib" ]; then
+                OUR_BUILD_NAME="$(find "$WORKING_DIR" -maxdepth 1 -type f -iname '*.exe' -print0 | head -zn 1 | sed -z 's|.*/\([^/]*\)\.exe$|\1|i' | tr -d '\0'; printf '_')"
+                OUR_BUILD_NAME="${OUR_BUILD_NAME%_}"
+                if [ -z "$OUR_BUILD_NAME" ]; then
+                    rm -rf "$TEMP_DIR"
+                    echo "Couldn't determine our build name!" >&2 && exit 1
+                fi
+
+                REF_BUILD_NAME="$(find "$REFERENCE" -maxdepth 1 -type f -iname '*.sh' -print0 | head -zn 1 | sed -z 's|.*/\([^/]*\)\.sh$|\1|i' | tr -d '\0'; printf '_')"
+                REF_BUILD_NAME="${REF_BUILD_NAME%_}"
+                if [ -z "$REF_BUILD_NAME" ]; then
+                    rm -rf "$TEMP_DIR"
+                    echo "Couldn't determine reference build name!" >&2 && exit 1
+                fi
+
+                rm -r "${WORKING_DIR:?"Temp dir empty?!"}/lib"
+                cp -r "$REFERENCE/lib" "$WORKING_DIR/lib"
+                find "$REFERENCE" -maxdepth 1 -type f -name "$REF_BUILD_NAME"'.sh' -exec cp '{}' "$WORKING_DIR/$OUR_BUILD_NAME.sh" \; # This file seems to always have the same content
+                # This tries to rename the binary so it can be found by the start script
+                find "${WORKING_DIR:?"Temp dir enpry?!"}/lib" -type f -name "$REF_BUILD_NAME" -exec bash -c '
+                for FILE do
+                    mv "$FILE" "$(dirname "$FILE")"/'"'${OUR_BUILD_NAME//"'"/"'\\''"}'"'
+                done
+                ' bash '{}' \;
+            else
+                rm -rf "$TEMP_DIR"
+                echo 'Cannot install windows build: reference missing libraries!' >&2 && exit 1
+            fi
+        else
+            rm -rf "$TEMP_DIR"
+            echo 'Cannot install windows build: thrid argument (reference) not a directory!' >&2 && exit 1
+        fi
+        # Remove the files we don't need to save space
+        [ -d  "$WORKING_DIR/lib/windows-i686" ] && rm -r "$WORKING_DIR/lib/windows-i686"
+        find "$WORKING_DIR" -maxdepth 1 -type f -iname '*.exe' -delete
+        case "$(uname -m)" in # Platform specific libraries
+            x86_64)
+                [ -d "$WORKING_DIR/lib/linux-i686" ] && rm -r "$WORKING_DIR/lib/linux-i686"
+                ;;
+            i686)
+                [ -d "$WORKING_DIR/lib/linux-x86_64" ] && rm -r "$WORKING_DIR/lib/linux-x86_64"
+                ;;
+            *)
+                echo "Unknown architecture: $(uname -m)" >&2
+        esac
+        ;;
     *)
         echo "Unknown package type: $1" >&2
+        rm -rf "$TEMP_DIR"
         exit 1
 esac
 
@@ -57,7 +115,14 @@ if [ -d "$TARGET_DIR/game/saves" ]; then # Copy saves
     mv "$TARGET_DIR/game/saves" "$WORKING_DIR/game"
 fi
 
+if [ -d "$TARGET_DIR/icons" ]; then # RDG stuff
+    mv "$TARGET_DIR/icons" "$WORKING_DIR/icons"
+elif [ -d "$TARGET_DIR/.renpydeskgen-icons" ]; then
+    mv "$TARGET_DIR/.renpydeskgen-icons" "$WORKING_DIR/.renpydeskgen-icons"
+fi
+
 find "$TARGET_DIR" -maxdepth 1 -type f -iname 'screenshot[0-9][0-9][0-9][0-9].png' -exec mv  '{}' "$WORKING_DIR" \;
+find "$TARGET_DIR" -maxdepth 1 -type f -iname 'note*' -exec mv  '{}' "$WORKING_DIR" \;
 
 if [ -d "$WORKING_DIR/.git" ]; then
     echo 'Managing git…'
@@ -110,7 +175,7 @@ if [ -d "$WORKING_DIR/.git" ]; then
         head -n "$(bc <<< "${INSERT_BEFORE/%/-1}")" "$TEMP_DIR/COMMIT_FILE"
         echo '# SPOILER{{{'
         echo '# SPOILERBUMPER{{{' # Insert this if vim isn't used, just to be sure
-        set +eu
+        set +eu # For some reason this SIGPIPEs otherwise
         yes '#' | head -n "$(tput lines)"
         set -eu
         echo '# / SPOILERBUMPER}}}'
