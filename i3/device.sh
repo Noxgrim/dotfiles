@@ -141,9 +141,9 @@ print_possible_commands() {
     while grep -q '<' <<< "$OUTPUT_VARIANTS"; do
         OUTPUT_VARIANTS="$(sed '/<[^>]*>/{s/^\([^<]*\)<\([^|>]*\)>\(.*$\)/\1\2\3/;s/^\([^<]*\)<\([^|>]*\)|\([^>]*\)>\(.*\)/\1\2\4\n\1<\3>\4/}' <<< "$OUTPUT_VARIANTS")"$'\n'
     done
-    sed 's/^/volume /' <<< "$OUTPUT_VARIANTS" | head -n-1
+    head -n-1 <<< "${OUTPUT_VARIANTS//^/volume }"
 
-    local OUTPUT_OPTIONS OUTPUT_VARIANTS
+    local OUTPUT_OPTIONS OUTPUT_VARIANTS=''
     OUTPUT_OPTIONS="$("$HOME/.i3/output_layout.sh" usage 2>&1 | tail +3 | cut -d\  -f2-)"$'\n'
     sed '/MHDL/{s/\s*\(MHDL.\|<[^>]*>\)\s*//g;s/$/ /}' <<< "$OUTPUT_OPTIONS" | sed 's/^/output /' | head -n-1
     printf '\n'
@@ -350,8 +350,8 @@ case "$1" in
         ;;
     volume)
         shift 1
-        "$HOME/.i3/volume.sh" "${@:1:2}"
-        shift 1
+        "$HOME/.i3/volume.sh" "${@:1:3}"
+        shift 2
         ;;
     discord)
         "$HOME/.i3/discord.sh" "$2"

@@ -385,19 +385,35 @@ bar {
 
 
 # So mutch volume control
-bindsym XF86AudioRaiseVolume            exec $scriptdir/volume.sh raise
-bindsym XF86AudioLowerVolume            exec $scriptdir/volume.sh lower
-bindsym XF86AudioMute                   exec $scriptdir/volume.sh mute
-bindsym $mod+XF86AudioRaiseVolume       exec $scriptdir/volume.sh raise
-bindsym $mod+XF86AudioLowerVolume       exec $scriptdir/volume.sh lower
-bindsym $mod+XF86AudioMute              exec $scriptdir/volume.sh mute
+bindsym XF86AudioRaiseVolume                 exec $scriptdir/volume.sh raise
+bindsym XF86AudioLowerVolume                 exec $scriptdir/volume.sh lower
+bindsym XF86AudioMute                        exec $scriptdir/volume.sh mute
+bindsym $mod+XF86AudioRaiseVolume            exec $scriptdir/volume.sh raise
+bindsym $mod+XF86AudioLowerVolume            exec $scriptdir/volume.sh lower
+bindsym $mod+XF86AudioMute                   exec $scriptdir/volume.sh mute
 
-bindsym Shift+XF86AudioRaiseVolume      exec $scriptdir/volume.sh raise 5
-bindsym Shift+XF86AudioLowerVolume      exec $scriptdir/volume.sh lower 5
-bindsym Shift+XF86AudioMute             exec $scriptdir/volume.sh set
-bindsym $mod+Shift+XF86AudioRaiseVolume exec $scriptdir/volume.sh raise 5
-bindsym $mod+Shift+XF86AudioLowerVolume exec $scriptdir/volume.sh lower 5
-bindsym $mod+Shift+XF86AudioMute        exec $scriptdir/volume.sh set
+bindsym Shift+XF86AudioRaiseVolume           exec $scriptdir/volume.sh raise 5
+bindsym Shift+XF86AudioLowerVolume           exec $scriptdir/volume.sh lower 5
+bindsym Shift+XF86AudioMute                  exec $scriptdir/volume.sh set
+bindsym $mod+Shift+XF86AudioRaiseVolume      exec $scriptdir/volume.sh raise 5
+bindsym $mod+Shift+XF86AudioLowerVolume      exec $scriptdir/volume.sh lower 5
+bindsym $mod+Shift+XF86AudioMute             exec $scriptdir/volume.sh set
+# Even more volume control…
+bindsym Mod1+XF86AudioRaiseVolume            exec $scriptdir/volume.sh select raise
+bindsym Mod1+XF86AudioLowerVolume            exec $scriptdir/volume.sh select lower
+bindsym Mod1+XF86AudioMute                   exec $scriptdir/volume.sh select mute
+
+bindsym Mod1+Shift+XF86AudioRaiseVolume      exec $scriptdir/volume.sh select raise 5
+bindsym Mod1+Shift+XF86AudioLowerVolume      exec $scriptdir/volume.sh select lower 5
+bindsym Mod1+Shift+XF86AudioMute             exec $scriptdir/volume.sh select set
+
+bindsym $mod+Mod1+XF86AudioRaiseVolume       exec $scriptdir/volume.sh select set   active
+bindsym $mod+Mod1+XF86AudioLowerVolume       exec $scriptdir/volume.sh select unset active
+bindsym $mod+Mod1+XF86AudioMute              exec $scriptdir/volume.sh select unset active
+bindsym $mod+Mod1+Shift+XF86AudioRaiseVolume exec $scriptdir/volume.sh select set   active
+bindsym $mod+Mod1+Shift+XF86AudioLowerVolume exec $scriptdir/volume.sh select unset active
+bindsym $mod+Mod1+Shift+XF86AudioMute        exec $scriptdir/volume.sh select set   active
+
 #### Update if 'audio' syntax updates
 bindsym Ctrl+XF86AudioRaiseVolume            exec $mscriptdir/audio.sh      -c v +1
 bindsym Ctrl+XF86AudioLowerVolume            exec $mscriptdir/audio.sh      -c v -1

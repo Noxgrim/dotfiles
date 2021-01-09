@@ -1,11 +1,49 @@
 #! /bin/bash
 # Set and modify volume
-source $HOME/.device_specific/default_sink.sh
-SINK_DATA="$(pactl list sinks | grep "\\b$SINK\\b" -m1 -A8)"
+
+# This file must contain a array `SINKS` with the name of the sinks to consider
+# in order of priority.
+# shellcheck source=/home/noxgrim/.device_specific/default_sink.sh
+source "$HOME/.device_specific/default_sink.sh"
+
 STEP=2
 MAX=100
-CURRENT="$(grep Volume <<< "$SINK_DATA"| grep -m1 -oP '\d+(?=%)' | head -n 1)"
-MUTE="$(grep Mute <<< "$SINK_DATA" | grep -om1 'yes')"
+
+if [ "${1:?"First should be non-empty!"}" = 'select' ]; then
+    if [ "$2" == 'unset' ] && [ "$3" == 'active' ]; then
+        [ -f '/tmp/noxgrim/volume/active' ] && rm '/tmp/noxgrim/volume/active'
+        exit
+    fi
+
+    readarray -t SINKS < <(pactl list sinks | grep 'device.description\|^\s*Name' | sed 's/^\s*Name: //;s/.*"\(.*\)".*$/\1/')
+    SINK="$(for ((I=1; I < ${#SINKS[@]}; I+=2)); do printf '%s\n' "${SINKS[$I]}"; done | rofi -dmenu -no-custom -i -p\
+            "Select $([ "$2" == 'set' ] && [ "$3" == 'active' ] && echo 'active ' || echo '')sink" -theme solarized)"
+    [ -z "$SINK" ] && exit
+    for ((I=0; I < ${#SINKS[@]}; I+=2)); do
+        if [ "${SINKS[$I+1]}" = "$SINK" ]; then
+            SINKS=( "${SINKS[$I]}" )
+            break
+        fi
+    done
+
+    if [ "$2" == 'set' ] && [ "$3" == 'active' ]; then
+        [ -d '/tmp/noxgrim/volume/' ] || mkdir -p '/tmp/noxgrim/volume/'
+        printf '%s\n' "${SINKS[0]}" > '/tmp/noxgrim/volume/active'
+        exit
+    fi
+    shift 1
+elif [ -f '/tmp/noxgrim/volume/active' ]; then
+    SINKS=( "$(cat '/tmp/noxgrim/volume/active')" )
+fi
+
+for SINK in "${SINKS[@]}"; do
+    SINK_DATA="$(pactl list sinks | sed -n '/^\s*Name: '"$SINK"'/,/^\s*$/p')"
+    if [ -n "$SINK_DATA" ]; then
+        CURRENT="$(grep Volume <<< "$SINK_DATA"| grep -m1 -oP '\d+(?=%)' | head -n 1)"
+        MUTE="$(grep Mute <<< "$SINK_DATA" | grep -om1 'yes')"
+        break
+    fi
+done
 
 NEW=
 USE_MUTE=
@@ -52,9 +90,10 @@ case "$1" in
         {
             echo "Unknown command: ${1:-}"
             echo "Usage:"
-            echo " <raise|raise!|lower> {num}"
-            echo " <set|set!> <mute|[[+-]num]>"
-            echo " mute"
+            echo " <select|> <raise|raise!|lower> {num}"
+            echo " <select|> <set|set!> <mute|[[+-]num]>"
+            echo " <select|> mute"
+            echo " select <set|unset> active"
         } >&2
         exit 1
 esac
