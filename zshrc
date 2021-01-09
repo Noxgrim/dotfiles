@@ -89,6 +89,10 @@ command -v urg > /dev/null || function updaterenpygame() {
     "$HOME/dotfiles/scripts/update_renpy_game.sh" "$@"
 }
 
+function discordstreamHACK() {
+    "$HOME/dotfiles/audioscripts/discord_stream_hack.sh" "$@"
+}
+
 
 export EDITOR=nvim
 export MANPAGER="nvim  --cmd 'let g:is_manpage=1' -c 'set ft=man' -"
