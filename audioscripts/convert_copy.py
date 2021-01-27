@@ -1,10 +1,8 @@
 #!/bin/env python3
 
 import base64
-import fileinput
 import os
 import re
-import shutil
 import sys
 
 import mutagen
@@ -165,7 +163,8 @@ class Progress:
         if last_time:
             self.last_time = last_time
 
-    def format_time(self, time):
+    @staticmethod
+    def format_time(time):
         t = int(time)
         if t >= 3600:
             return "{:d}:{:02d}:{:02d}".format(t // 3600, t % 3600 // 60, t % 60)
@@ -227,8 +226,8 @@ class Progress:
 
         prefix = "{name:<{n_w}}".format(name=self.name, n_w=name_width + 1)
         suffix = (
-            "{steps:>{s_w}}{content:>{c_w}}"
-            + "{ert:>{e_w}}{percent:>{p_w}}".format(
+            ("{steps:>{s_w}}{content:>{c_w}}" +
+             "{ert:>{e_w}}{percent:>{p_w}}").format(
                 steps=totsteps,
                 s_w=len(totsteps) + int(totsteps != ""),
                 content=totcont,
@@ -241,7 +240,7 @@ class Progress:
         )
 
         bar_length = os.get_terminal_size().columns - len(prefix) - len(suffix) - 2
-        if percent != None:
+        if percent is not None:
             arrow = "=" * int(round(percent * bar_length)) + " " * (
                 bar_length - int(round(percent * bar_length))
             )
@@ -302,7 +301,7 @@ class Progress:
 
     @staticmethod
     def clear_progesses(progresses):
-        for i in range(len(progresses)):
+        for _ in range(len(progresses)):
             print("\r\033[2K\033[A", end="")
         print()
 
