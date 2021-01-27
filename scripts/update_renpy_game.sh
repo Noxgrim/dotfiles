@@ -6,7 +6,9 @@ UPDATEPACKAGE="$(readlink -f "${1:?"Expected packge containing update as first a
 [ -f "$UPDATEPACKAGE" ] || { echo "package must exist!" >&2 && exit 1; }
 TARGET_DIR="$(readlink -m "${2:?"Expected target dir as second argument."}")"
 [ -d "$TARGET_DIR" ] || mkdir -p "$TARGET_DIR"
-find "$TARGET_DIR" -mindepth 1 | grep -qo . || echo 'Directory is empty. You may want to introduce a git repo later.'
+( shopt -s nullglob dotglob; f=( "$TARGET_DIR"/* ); ((! ${#f[@]})) ) &&
+    echo 'Directory is empty. You may want to introduce a git repo later.'
+
 TEMP_DIR="$(mktemp -d)"
 
 echo 'Unpacking game…'
@@ -175,9 +177,9 @@ if [ -d "$WORKING_DIR/.git" ]; then
         head -n "$(bc <<< "${INSERT_BEFORE/%/-1}")" "$TEMP_DIR/COMMIT_FILE"
         echo '# SPOILER{{{'
         echo '# SPOILERBUMPER{{{' # Insert this if vim isn't used, just to be sure
-        set +eu # For some reason this SIGPIPEs otherwise
-        yes '#' | head -n "$(tput lines)"
-        set -eu
+        set +o pipefail # For some reason this SIGPIPEs otherwise
+        yes '#' | head -n "$(tput lines || printf 100)"
+        set -o pipefail
         echo '# / SPOILERBUMPER}}}'
         tail -n+"$INSERT_BEFORE" "$TEMP_DIR/COMMIT_FILE"
         echo '# / SPOILER}}}'
@@ -186,7 +188,7 @@ if [ -d "$WORKING_DIR/.git" ]; then
     case "$EDITOR" in
         *vim)
             # force to ignore changes by runtime plugin
-            EDITOR="$EDITOR -c 'set modeline modelines=1 foldmethod=marker' --cmd 'set modeline modelines=1 foldmethod=marker'"\
+            EDITOR="$EDITOR -c 'set foldmethod=marker' --cmd 'set foldmethod=marker'"\
                 git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" commit --no-status -q -t "$TEMP_DIR/COMMIT_EDITMSG" --cleanup=scissors < /dev/tty
             ;;
         *)
