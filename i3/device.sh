@@ -4,7 +4,7 @@ THIS="$0" # path to script
 # X clients that should be ignored
 WHITELIST=(ibus-x11 ibus-ui-gtk3 unity-settings-daemon notify-osd \
     gnome-screensaver mozc_renderer redshift-gtk skype skypeforlinux udiskie \
-    nm-applet DiscordCanary Discord)
+    nm-applet DiscordCanary Discord electron)
 KILLLIST=( steam )
 
 lock() {

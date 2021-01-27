@@ -51,7 +51,7 @@ for ((ARG_NO=0; ARG_NO < $#; ARG_NO++)); do
     fi
 done
 unset MY_ARGS
-I3_WORKSPACE="$(i3-msg -t get_workspaces | jq 'map(select(.focused)) | .[0].name' -r)"
+# I3_WORKSPACE="$(i3-msg -t get_workspaces | jq 'map(select(.focused)) | .[0].name' -r)"
 
 pack() {
     local DATA='{}'
@@ -342,7 +342,7 @@ case "$1" in
     *)
         {
             echo "Unknown arguments: '$1'${2:+" '$2'"}${3:+" '$3'"}"
-            echo "Usage:"
+            echo "Usage (MHDL? number of monitor as defined in '$HOME/.device_specific/monitor_names.sh'):"
             echo " default"
             echo " all-on"
             echo " pack"
