@@ -1,15 +1,26 @@
-keystate_capslock = enable
-
 "$HOME/dotfiles/audioscripts/audio.sh t"
-   XF86AudioPlay
+    XF86AudioPlay
 "$HOME/dotfiles/audioscripts/audio.sh t"
-   XF86AudioPause
+    XF86AudioPause
 "$HOME/dotfiles/audioscripts/audio.sh t"
-   m:0x10 + c:208
-   Mod2 + XF86AudioPlay
+    m:0x10 + c:208
+    Mod2 + XF86AudioPlay
 "$HOME/dotfiles/audioscripts/audio.sh h"
-   XF86AudioStop
+    XF86AudioStop
 "$HOME/dotfiles/audioscripts/audio.sh J"
-   XF86AudioNext
+    XF86AudioNext
 "$HOME/dotfiles/audioscripts/audio.sh K"
-   XF86AudioPrev
+    XF86AudioPrev
+
+"$HOME/dotfiles/i3/dunstctl.sh close"
+    m:0x14 + c:65
+    Control + space + Release
+"$HOME/dotfiles/i3/dunstctl.sh close-all"
+    m:0x15 + c:65
+    Control+Shift + space
+"$HOME/dotfiles/i3/dunstctl.sh history-pop"
+    m:0x14 + c:60
+    Control + period
+"$HOME/dotfiles/i3/dunstctl.sh context"
+    m:0x15 + c:60
+    Control+Shift + period
