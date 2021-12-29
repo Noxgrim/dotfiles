@@ -139,12 +139,12 @@ bindsym $mod+Mod1+Down  move workspace to output down
 bindsym $mod+Mod1+Up    move workspace to output up
 
 # quick output control
-bindsym $mod+Ctrl+Mod1+l           exec $scriptdir/device.sh output rotate . right
-bindsym $mod+Ctrl+Mod1+h           exec $scriptdir/device.sh output rotate . left
+bindsym $mod+Ctrl+Mod1+l           exec $scriptdir/device.sh output rotate . left
+bindsym $mod+Ctrl+Mod1+h           exec $scriptdir/device.sh output rotate . right
 bindsym $mod+Ctrl+Mod1+j           exec $scriptdir/device.sh output rotate . normal
 bindsym $mod+Ctrl+Mod1+k           exec $scriptdir/device.sh output rotate . inverted
-bindsym $mod+Ctrl+Mod1+Right       exec $scriptdir/device.sh output rotate . right
-bindsym $mod+Ctrl+Mod1+Left        exec $scriptdir/device.sh output rotate . left
+bindsym $mod+Ctrl+Mod1+Right       exec $scriptdir/device.sh output rotate . left
+bindsym $mod+Ctrl+Mod1+Left        exec $scriptdir/device.sh output rotate . right
 bindsym $mod+Ctrl+Mod1+Down        exec $scriptdir/device.sh output rotate . normal
 bindsym $mod+Ctrl+Mod1+Up          exec $scriptdir/device.sh output rotate . inverted
 bindsym $mod+Ctrl+Mod1+Shift+l     exec $scriptdir/device.sh output mirror . normal
@@ -210,17 +210,17 @@ mode "setnumber [0123456789][Return]" {
 set $device device [+][x][sSlLhHrF][mMnN][d]❖[dh]❖[se] ❖[rR]
 set $force device.force [SRL]
 set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
-set $discord device.discord status: [o]nline (a)idle [d]nd [i]nvisible | actions: [g]o [c]ome | call: [j]oin [r]eject [l]eave | audio [M]ute [D]eafen | [u]pdate
+set $discord device.discord status: [o]nline (a)idle [d]nd [i]nvisible | actions: [g]o [c]ome | call: [j]oin [r]eject [l]eave | audio: [M]ute [D]eafen | [u]pdate
 bindsym $mod+Shift+x mode "$device"
 bindsym $mod+y mode "setnumber [0123456789][Return]"
 mode "$device" {
         # power control
         bindsym Shift+l exec $scriptdir/device.sh logout,          mode "default"
-        bindsym l       exec $scriptdir/device.sh lock screen_off, mode "default"
+        bindsym l       exec $scriptdir/device.sh screen_off,      mode "default"
         bindsym s       exec $scriptdir/device.sh shutdown,        mode "default"
-        bindsym Shift+s exec $scriptdir/device.sh lock suspend,    mode "default"
-        bindsym h       exec $scriptdir/device.sh lock hibernate,  mode "default"
-        bindsym Shift+h exec $scriptdir/device.sh lock hybrid,     mode "default"
+        bindsym Shift+s exec $scriptdir/device.sh suspend,         mode "default"
+        bindsym h       exec $scriptdir/device.sh hibernate,       mode "default"
+        bindsym Shift+h exec $scriptdir/device.sh hybrid,          mode "default"
         bindsym r       exec $scriptdir/device.sh reboot,          mode "default"
 
         bindsym n       exec $scriptdir/device.sh notify_pause,    mode "default"
@@ -261,11 +261,11 @@ mode "$force" {
 mode "$schedule" {
         # power control
         bindsym Shift+l exec $scriptdir/device.sh schedule "logout",          mode "default"
-        bindsym l       exec $scriptdir/device.sh schedule "lock screen_off", mode "default"
+        bindsym l       exec $scriptdir/device.sh schedule "screen_off",      mode "default"
         bindsym s       exec $scriptdir/device.sh schedule "shutdown",        mode "default"
-        bindsym Shift+s exec $scriptdir/device.sh schedule "lock suspend",    mode "default"
-        bindsym h       exec $scriptdir/device.sh schedule "lock hibernate",  mode "default"
-        bindsym Shift+h exec $scriptdir/device.sh schedule "lock hybrid",     mode "default"
+        bindsym Shift+s exec $scriptdir/device.sh schedule "suspend",         mode "default"
+        bindsym h       exec $scriptdir/device.sh schedule "hibernate",       mode "default"
+        bindsym Shift+h exec $scriptdir/device.sh schedule "hybrid",          mode "default"
         bindsym r       exec $scriptdir/device.sh schedule "reboot",          mode "default"
 
         bindsym n       exec $scriptdir/device.sh schedule "notify_pause",    mode "default"
@@ -299,7 +299,7 @@ mode "$discord" {
         bindsym c       exec $scriptdir/discord.sh "come-back",      mode "default"
         # audio
         bindsym Shift+m exec $scriptdir/discord.sh "mute",           mode "default"
-        bindsym Shift+D exec $scriptdir/discord.sh "deafen",         mode "default"
+        bindsym Shift+d exec $scriptdir/discord.sh "deafen",         mode "default"
         # misc
         bindsym u       exec $scriptdir/discord.sh "update",         mode "default"
 
@@ -441,9 +441,10 @@ bindsym $mod+Shift+Ctrl+XF86AudioMute        exec $mscriptdir/rofi_audio.sh -c '
 for_window [class="terminal"] border pixel 1
 for_window [class="Pinentry"] floating enable
 for_window [class="discord"] move container to scratchpad
+for_window [class="Element"] move container to scratchpad
 
 
 # setup environment
-exec--no-startup-id $HOME/.i3/output_layout.sh default
+exec --no-startup-id $HOME/.i3/output_layout.sh default
 exec_always --no-startup-id $HOME/.i3/environment.sh
 exec_always --no-startup-id sh -c "[ -d $tmpdir ] || mkdir -p $tmpdir"
