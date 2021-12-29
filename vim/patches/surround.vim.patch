@@ -1,0 +1,30 @@
+diff --git a/plugin/surround.vim b/plugin/surround.vim
+index 303bd2b..5d8e24f 100644
+--- a/plugin/surround.vim
++++ b/plugin/surround.vim
+@@ -400,6 +400,12 @@ function! s:dosurround(...) " {{{1
+   let strcount = (scount == 1 ? "" : scount)
+   if char == '/'
+     exe 'norm! '.strcount.'[/d'.strcount.']/'
++  elseif exists('b:surround_custom_target_pairs') && has_key(b:surround_custom_target_pairs, char)
++    exe 'norm! T'.strcharpart(get(b:surround_custom_target_pairs, char), 0, 1)
++    exe 'norm! dt'.strcharpart(get(b:surround_custom_target_pairs, char), 1, 1)
++  elseif exists('g:surround_custom_target_pairs') && has_key(g:surround_custom_target_pairs, char)
++    exe 'norm! T'.strcharpart(get(g:surround_custom_target_pairs, char), 0, 1)
++    exe 'norm! dt'.strcharpart(get(g:surround_custom_target_pairs, char), 1, 1)
+   elseif char =~# '[[:punct:][:space:]]' && char !~# '[][(){}<>"''`]'
+     exe 'norm! T'.char
+     if getline('.')[col('.')-1] == char
+@@ -430,6 +436,12 @@ function! s:dosurround(...) " {{{1
+     norm! "_x
+     call setreg('"','/**/',"c")
+     let keeper = substitute(substitute(keeper,'^/\*\s\=','',''),'\s\=\*$','','')
++  elseif exists('b:surround_custom_target_pairs') && has_key(b:surround_custom_target_pairs, char)
++    exe 'norm! F'.strcharpart(get(b:surround_custom_target_pairs, char), 0, 1)
++    exe 'norm! df'.strcharpart(get(b:surround_custom_target_pairs, char), 1, 1)
++  elseif exists('g:surround_custom_target_pairs') && has_key(g:surround_custom_target_pairs, char)
++    exe 'norm! F'.strcharpart(get(g:surround_custom_target_pairs, char), 0, 1)
++    exe 'norm! df'.strcharpart(get(g:surround_custom_target_pairs, char), 1, 1)
+   elseif char =~# '[[:punct:][:space:]]' && char !~# '[][(){}<>]'
+     exe 'norm! F'.char
+     exe 'norm! df'.char

@@ -49,8 +49,13 @@ if ! exists('g:is_manpage') || ! g:is_manpage
     Plug 'tpope/vim-fugitive'
     Plug 'tpope/vim-repeat'
     Plug 'tpope/vim-surround'
+    Plug 'tpope/vim-unimpaired'
     Plug 'vim-scripts/gnupg.vim'
     Plug 'w0rp/ale'
+    Plug 'godlygeek/tabular'
+    Plug 'plasticboy/vim-markdown'
+    Plug 'junegunn/vim-emoji'
+    Plug 'vim-utilities/emoji-syntax'
 endif
 call plug#end()
 

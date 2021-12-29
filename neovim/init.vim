@@ -8,9 +8,9 @@ source $HOME/.config/nvim/config/functions.vim
 
 source $HOME/.config/nvim/plug-config/vimplug.vim
 let g:noxgrim_coc_extensions = [
-            \ 'coc-clangd', 'coc-git', 'coc-java', 'coc-python', 'coc-json',
+            \ 'coc-clangd', 'coc-git', 'coc-java', 'coc-pyright', 'coc-json',
             \ 'coc-rls', 'coc-sh', 'coc-snippets', 'coc-tsserver', 'coc-vimlsp',
-            \ 'coc-vimtex', 'coc-yank', 'coc-julia' ]
+            \ 'coc-vimtex', 'coc-yank' ]
 
 source $HOME/.config/nvim/plug-config/vim-airline.vim
 
@@ -19,10 +19,12 @@ if ! exists('g:is_manpage') || ! g:is_manpage
     source $HOME/.config/nvim/plug-config/coc.vim
     source $HOME/.config/nvim/plug-config/coc-snippets.vim
     source $HOME/.config/nvim/plug-config/vimtex.vim
+    source $HOME/.config/nvim/plug-config/surround.vim
     source $HOME/.config/nvim/plug-config/vim-easy-align.vim
     source $HOME/.config/nvim/plug-config/vim-titlecase.vim
     source $HOME/.config/nvim/plug-config/vim-closetag.vim
     source $HOME/.config/nvim/plug-config/vim-which-key.vim
+    source $HOME/.config/nvim/plug-config/vim-markdown.vim
 endif
 " source $HOME/.config/nvim/plug-config/browserlink.vim
 
