@@ -17,6 +17,8 @@ ln -sfr vimrc         $HOME/.vimrc
 
 if [ ! -d $HOME/.config ]; then mkdir $HOME/.config; fi
 ln -sfr rofi $HOME/.config/rofi
+ln -sfr paru $HOME/.config/paru
+ln -sfr alacritty/ $HOME/.config/alacritty
 ln -sfr zathura $HOME/.config/zathura
 ln -sfr neovim $HOME/.config/nvim
 ln -sfr latexmkrc $HOME/.latexmkrc
