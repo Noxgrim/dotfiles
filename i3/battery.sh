@@ -8,7 +8,7 @@ acpi -b | awk -F'[,:%]' '{print $2, $3}' | {
             logger "Critical battery threshold"
             notify -u critical "'Critical battery threshold'" "Hibernating..."
             sleep 5
-            systemctl hibernate
+            systemctl hibernate -i
         elif [ "$capacity" -le 15 ]; then
             notify -u critical -a 'noxgrim:volume' -h "int:value:$capacity" "'Low battery level: '" %
         fi

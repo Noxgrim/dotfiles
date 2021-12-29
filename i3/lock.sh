@@ -14,9 +14,20 @@ pre_lock() {
     return
 }
 
+# Prepare the actual locking
+prepare_lock() {
+    if [ -f '/tmp/noxgrim/user_suspended' ] || [ -f '/tmp/noxgrim/user_hibernated' ]; then
+        mpc pause -q
+    fi
+    scrot "$IMG"
+    mogrify -blur 20x20 "$IMG"
+}
+
 # Run after the locker exits
 post_lock() {
     rm "$IMG"
+    [ -f '/tmp/noxgrim/user_suspended' ] && rm '/tmp/noxgrim/user_suspended'
+    [ -f '/tmp/noxgrim/user_hibernated' ] && rm '/tmp/noxgrim/user_hibernated'
     return
 }
 
@@ -35,10 +46,8 @@ if [[ -e /dev/fd/${XSS_SLEEP_LOCK_FD:--1} ]]; then
     trap kill_i3lock TERM INT
 
     # we have to make sure the locker does not inherit a copy of the lock fd
-    mpc pause {XSS_SLEEP_LOCK_FD}<&-
-    scrot "$IMG" {XSS_SLEEP_LOCK_FD}<&-
-    mogrify -blur 20x20 "$IMG" {XSS_SLEEP_LOCK_FD}<&-
-    i3lock -f -i "$IMG" {XSS_SLEEP_LOCK_FD}<&-
+    prepare_lock {XSS_SLEEP_LOCK_FD}<&-
+    i3lock -n -f -i "$IMG" {XSS_SLEEP_LOCK_FD}<&-
 
     # now close our fd (only remaining copy) to indicate we're ready to sleep
     exec {XSS_SLEEP_LOCK_FD}<&-
@@ -47,11 +56,9 @@ if [[ -e /dev/fd/${XSS_SLEEP_LOCK_FD:--1} ]]; then
         sleep 0.5
     done
 else
-    mpc pause
-    scrot "$IMG"
-    mogrify -blur 20x20 "$IMG"
     trap 'kill %%' TERM INT
-    i3lock -f -i "$IMG"&
+    prepare_lock
+    i3lock -n -f -i "$IMG"&
     wait
 fi
 
