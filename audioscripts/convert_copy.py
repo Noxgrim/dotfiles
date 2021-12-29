@@ -5,16 +5,18 @@ import os
 import re
 import sys
 
-import mutagen
 from mutagen.flac import Picture
 from mutagen.flac import error as FLACError
 from mutagen.oggopus import OggOpus
 
 illegal_fat_chars = re.compile("[\\?*|<:>]")
+illegal_fat_ends = re.compile("[. ]+(/|$)")
+dir_up = re.compile("(/|^)\\.\\.(?=(/|$))")
+dir_same = re.compile("(/|^)\\.(?=(/|$))")
 
 
 FFMPEG_LOG = "error"
-FFMPEG_BITRATE = "96k"
+FFMPEG_BITRATE = "60k"
 
 COVER_BASENAME_SEARCH = "cover"
 COVER_BASENAME_SAVE = "cover"
@@ -50,15 +52,15 @@ def is_fat_fs(destination):
 
     try:
         file_handler = open(filename, "a")
+        if os.path.exists(filename):
+            file_handler.close()
+            os.remove(filename)
     except IOError:
         USE_FAT_NAMES = True
         print(
             "-> Destination is possibly on a FAT file system! Using long "
             + "FAT names."
         )
-    if os.path.exists(filename):
-        file_handler.close()
-        os.remove(filename)
 
 
 def is_terminal_connected():
@@ -70,11 +72,14 @@ def is_terminal_connected():
 
 
 def to_target_name(file_name):
-    return (
-        re.sub(illegal_fat_chars, "_", file_name.replace(": ", " - ").replace('"', "'"))
-        if USE_FAT_NAMES
-        else file_name
-    )
+    if USE_FAT_NAMES:
+        return re.sub(illegal_fat_chars, "_",
+                      re.sub(illegal_fat_ends, "_\\1",
+                             re.sub(dir_up, "\\1\0\0",
+                                    re.sub(dir_same, "\\1\0", file_name))
+                             .replace(": ", " - ").replace('"', "'"))).replace(
+                                 "\0", ".")
+    return file_name
 
 
 def write_cover_opus(afile, cover):
@@ -167,7 +172,8 @@ class Progress:
     def format_time(time):
         t = int(time)
         if t >= 3600:
-            return "{:d}:{:02d}:{:02d}".format(t // 3600, t % 3600 // 60, t % 60)
+            return "{:d}:{:02d}:{:02d}".format(t // 3600, t % 3600 // 60,
+                                               t % 60)
         else:
             return "{:02d}:{:02d}".format(t // 60, t % 60)
 
@@ -176,7 +182,8 @@ class Progress:
             remaining_time = (
                 float(time_last_step)
                 / content_last_step
-                * (float(self.total_content - self.current_content - content_last_step))
+                * float(self.total_content - self.current_content -
+                        content_last_step)
             )
             self.last_time = time_last_step
             self.last_time_fmt = self.format_time(remaining_time)
@@ -219,7 +226,9 @@ class Progress:
 
         if total_content_width is not None and self.total_content:
             totcont = "{:>{width}d}/{:>{width}d}".format(
-                self.current_content, self.total_content, width=total_content_width
+                self.current_content,
+                self.total_content,
+                width=total_content_width
             )
         else:
             totcont = ""
@@ -239,19 +248,18 @@ class Progress:
             )
         )
 
-        bar_length = os.get_terminal_size().columns - len(prefix) - len(suffix) - 2
+        bar_length = os.get_terminal_size().columns
+        bar_length -= len(prefix) + len(suffix) + 2  # 2 padding spaces
         if percent is not None:
-            arrow = "=" * int(round(percent * bar_length)) + " " * (
-                bar_length - int(round(percent * bar_length))
-            )
+            arrow = "=" * int(round(percent * bar_length)) +\
+                    " " * (bar_length - int(round(percent * bar_length)))
         else:
             arrow = "==="
             max_space = bar_length - len(arrow)
             arrow = (
-                " "
-                * (
+                " " * (
                     (self.internal_counter % max_space)
-                    if (self.internal_counter % (max_space * 2) - max_space < 0)
+                    if self.internal_counter % (max_space * 2) - max_space < 0
                     else (max_space - self.internal_counter % max_space)
                 )
                 + arrow
@@ -279,7 +287,8 @@ class Progress:
             else None
         )
         max_twidth = (
-            max([len(x.get_etr_content(last_time, last_content)) for x in progresses])
+            max([len(x.get_etr_content(last_time, last_content))
+                 for x in progresses])
             if PROGRESS_TIME
             else None
         )
@@ -333,7 +342,8 @@ def convert_opus(files, source_dir, destination_dir, total_progress):
 
     for afile, ext in files:
         infile = os.path.join(source_dir, afile + ext)
-        outfile = to_target_name(os.path.join(destination_dir, afile + ".opus"))
+        outfile = to_target_name(
+            os.path.join(destination_dir, afile + ".opus"))
         try:
             ff = ffmpy.FFmpeg(
                 inputs={infile: "-y -v " + FFMPEG_LOG},  # Always overwrite!
@@ -345,10 +355,12 @@ def convert_opus(files, source_dir, destination_dir, total_progress):
             t = time.time() - t
             fsize = os.path.getsize(infile)
             total_progress.update(
-                current_step=1, current_content=fsize, current_time=t, last_time=t
+                current_step=1, current_content=fsize, current_time=t,
+                last_time=t
             )
             dir_progress.update(
-                current_step=1, current_content=fsize, current_time=t, last_time=t
+                current_step=1, current_content=fsize, current_time=t,
+                last_time=t
             )
             if PRINT_PROGESS:
                 Progress.print_progesses(progresses, t, fsize)
@@ -390,7 +402,7 @@ def convert_cover(files, aud_files, source_dir, destination_dir):
         f, ex = aud_files[0]  # Just get the first file
         tmpinf = os.path.join(source_dir, f + ex)
         print(
-            "   Trying to fetch it from the audio files... (using '{}')".format(tmpinf)
+            f"   Trying to fetch it from the audio files... (using '{tmpinf}')"
         )
         try:
             incov = ffmpy.FFmpeg(
@@ -413,12 +425,15 @@ def convert_cover(files, aud_files, source_dir, destination_dir):
             shell=True,
         )
     ):
-        print("-> Detected alpha channel in cover image. ('{}')".format(infile))
+        print(f"-> Detected alpha channel in cover image. ('{infile}')")
         print(
-            '   Do you want to still use "jpg" and possibly lose transparent backgrounds'
+            '   Do you want to still use "jpg" and'
+            ' possibly lose transparent backgrounds'
         )
-        print("   (will be filled with black) and save more space (possibly idk)")
-        print('   or do you want to keep transparency by using bigger "png" files?')
+        print("   (will be filled with black) and save more space"
+              " (possibly idk)")
+        print('   or do you want to keep transparency by using'
+              ' bigger "png" files?')
         if KEEP_TRANSPARENCY == "ask":
             c = input("    Keep transparency (Y/n)?: ")
             if c not in ["n", "N"]:
@@ -609,24 +624,43 @@ def format_files(aud_files, cover):
         elif ext == ".ogg":
             data = read_data_ogg(infile, outfile)
         else:
-            raise NotImplementedError("Input not implemented for '{}'.".format(ext))
+            raise NotImplementedError(f"Input not implemented for '{ext}'.")
 
         ext = os.path.splitext(outfile)[1].lower()
         if ext == ".opus" and data is not None:
             write_data_opus(outfile, data, cover)
         elif data is not None:
-            raise NotImplementedError("Output not implemented for '{}'.".format(ext))
+            raise NotImplementedError(f"Output not implemented for '{ext}'.")
+
+
+def walk(source):
+    rsource = os.path.realpath(source)
+    if os.path.isdir(rsource):
+        return os.walk(source, followlinks=True)
+    elif os.path.isfile(rsource):
+        return [(os.path.dirname(source), [], [os.path.basename(source)])]
+    else:
+        raise FileNotFoundError(f"file '{source}' not found!")
+
+
+def source_dir(source):
+    if os.path.isfile(os.path.realpath(source)):
+        return os.path.dirname(source)
+    else:
+        return source
 
 
 def walk_and_convert(sources, destination, skip_hidden=True):
-    if os.path.exists(destination) and len(sources) == 1:
-        destination = os.path.join(destination, os.path.basename(sources[0]))
+    source_dirs = {source_dir(s) for s in sources}
+    if os.path.exists(destination) and len(source_dirs) == 1:
+        destination = os.path.join(
+            destination, os.path.basename(source_dir(sources[0])))
 
     total_file_size = 0
     total_file_num = 0
     print("Counting total files to covert...")
     for source in sources:
-        for dirname, dirnames, files in os.walk(source):
+        for dirname, dirnames, files in walk(source):
             # remove hidden files
             for dirn in dirnames:
                 if skip_hidden and dirn.startswith("."):
@@ -651,22 +685,23 @@ def walk_and_convert(sources, destination, skip_hidden=True):
 
     print("Converting...")
     for source in sources:
-        for dirname, dirnames, files in os.walk(source):
+        for dirname, dirnames, files in walk(source):
             # remove hidden files
             for dirn in dirnames:
                 if skip_hidden and dirn.startswith("."):
                     dirnames.remove(dirn)
 
             src_dir = dirname
+            reldir = source_dir(source)
             dest_dir = to_target_name(
                 os.path.join(
                     destination,
                     os.path.relpath(
                         dirname,
-                        start=source
-                        if len(sources) == 1
-                        else os.path.join(source, ".."),
-                    ),
+                        start=reldir
+                        if len(source_dirs) == 1
+                        else os.path.join(reldir, "..")
+                    )
                 )
             )
             if not DRY and not os.path.exists(dest_dir):
@@ -676,8 +711,11 @@ def walk_and_convert(sources, destination, skip_hidden=True):
             cov_files = filter_files(files, COVER_EXTENSIONS, skip_hidden)
 
             print("Entering '{}'...".format(src_dir))
-            converted = convert_opus(aud_files, src_dir, dest_dir, total_progress)
-            infile, internal_cov, external_cov = convert_cover(
+            converted = convert_opus(aud_files,
+                                     src_dir,
+                                     dest_dir,
+                                     total_progress)
+            _, internal_cov, _ = convert_cover(
                 cov_files, aud_files, src_dir, dest_dir
             )
 
