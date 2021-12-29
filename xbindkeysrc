@@ -13,14 +13,14 @@
     XF86AudioPrev
 
 "$HOME/dotfiles/i3/dunstctl.sh close"
-    m:0x14 + c:65
-    Control + space + Release
+    m:0x18 + c:65
+    ALt + space + Release
 "$HOME/dotfiles/i3/dunstctl.sh close-all"
-    m:0x15 + c:65
-    Control+Shift + space
+    m:0x19 + c:65
+    ALt+Shift + space
 "$HOME/dotfiles/i3/dunstctl.sh history-pop"
-    m:0x14 + c:60
-    Control + period
+    m:0x18 + c:60
+    ALt + period
 "$HOME/dotfiles/i3/dunstctl.sh context"
-    m:0x15 + c:60
-    Control+Shift + period
+    m:0x19 + c:60
+    ALt+Shift + period
