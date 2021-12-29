@@ -43,7 +43,10 @@ source "$HOME/.zsh-key-bindings.zsh"
 export EDITOR=nvim
 
 
-alias gcd1="\git clone --depth 1"
+
+alias gcd1="\git clone --recuse-submodules --depth 1"
+alias glg='git log'
+alias 'glg!'='git log --stat'
 alias vim='\nvim'
 alias lvim='\vim'
 alias vimdiff='\nvim -d'
@@ -85,8 +88,9 @@ function mkpdf() {
     latexmk -c
 }
 
-command -v urg > /dev/null || function updaterenpygame() {
+function urg() {
     "$HOME/dotfiles/scripts/update_renpy_game.sh" "$@"
+    cd "$PWD"
 }
 
 function discordstreamHACK() {

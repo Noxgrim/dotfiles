@@ -17,14 +17,15 @@ case "$(tr '[:upper:]' '[:lower:]' <<< "$UPDATEPACKAGE")" in
         unzip -q "$UPDATEPACKAGE" -d "$TEMP_DIR"
         WORKING_DIR="$TEMP_DIR/$(basename "$UPDATEPACKAGE" '.zip')"
         # Remove the files we don't need to save space
-        rm -r "$WORKING_DIR/lib/windows-i686"
+        [ -d "$WORKING_DIR/lib/windows-i686" ] && rm -r "$WORKING_DIR/lib/windows-i686"
+        [ -d "$WORKING_DIR/lib/windows-x86_64" ] && rm -r "$WORKING_DIR/lib/windows-x86_64"
         find "$WORKING_DIR" -maxdepth 1 -type f -iname '*.exe' -delete
         case "$(uname -m)" in # Platform specific libraries
             x86_64)
-                rm -r "$WORKING_DIR/lib/linux-i686"
+                [ -d "$WORKING_DIR/lib/linux-i686" ] && rm -r "$WORKING_DIR/lib/linux-i686"
                 ;;
             i686)
-                rm -r "$WORKING_DIR/lib/linux-x86_64"
+                [ -d "$WORKING_DIR/lib/linux-x86_64" ] && rm -r "$WORKING_DIR/lib/linux-x86_64"
                 ;;
             *)
                 echo "Unknown architecture: $(uname -m)" >&2
@@ -36,10 +37,10 @@ case "$(tr '[:upper:]' '[:lower:]' <<< "$UPDATEPACKAGE")" in
         # Remove the files we don't need to save space
         case "$(uname -m)" in # Platform specific libraries
             x86_64)
-                rm -r "$WORKING_DIR/lib/linux-i686"
+                [ -d "$WORKING_DIR/lib/linux-i686" ] && rm -r "$WORKING_DIR/lib/linux-i686"
                 ;;
             i686)
-                rm -r "$WORKING_DIR/lib/linux-x86_64"
+                [ -d "$WORKING_DIR/lib/linux-x86_64" ] && rm -r "$WORKING_DIR/lib/linux-x86_64"
                 ;;
             *)
                 echo "Unknown architecture: $(uname -m)" >&2
@@ -203,3 +204,4 @@ echo 'Installing new version…'
 rm -r "$TARGET_DIR"
 mv "$WORKING_DIR" "$TARGET_DIR"
 rm -r "$TEMP_DIR"
+cd "$CURR_DIR" || exit 1
