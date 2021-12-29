@@ -5,8 +5,8 @@ export ZSH=/home/noxgrim/.oh-my-zsh
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
-if [[ "$TTY" != /dev/tty[0-9] ]]; then
-    ZSH_THEME="powerlevel10k/powerlevel10k"
+if [ -n "${DISPLAY+.}" ]; then
+    ZSH_THEME="zsh-theme-powerlevel10k/powerlevel10k"
 
     POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs)
     POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status root_indicator background_jobs vi_mode command_execution_time)
@@ -42,6 +42,8 @@ source "$HOME/.zsh-key-bindings.zsh"
 
 export EDITOR=nvim
 
+# for tenacity
+[ -d /opt/wxgtk-dev/lib ]  && export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/wxgtk-dev/lib"
 
 
 alias gcd1="\git clone --recuse-submodules --depth 1"
@@ -99,8 +101,7 @@ function discordstreamHACK() {
 
 
 export EDITOR=nvim
-export MANPAGER="nvim  --cmd 'let g:is_manpage=1' -c 'set ft=man' -"
-
+export MANPAGER="nvim  --cmd 'let g:is_manpage=1' -c 'set ft=man' -c 'Man!' -"
 
 #Load autojump
 . /usr/share/autojump/autojump.zsh
