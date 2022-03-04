@@ -173,6 +173,7 @@ bindsym $mod+Ctrl+Mod1+t exec $scriptdir/device.sh output toggle .
 bindsym $mod+Ctrl+Mod1+d       exec $scriptdir/device.sh output default
 bindsym $mod+Ctrl+Mod1+a       exec $scriptdir/device.sh output all-on
 bindsym $mod+Ctrl+Mod1+p       exec $scriptdir/device.sh output primary .
+bindsym $mod+Ctrl+Mod1+w       exec $scriptdir/device.sh wallpaper
 bindsym $mod+Ctrl+Mod1+Shift+p exec $scriptdir/device.sh output pack
 
 

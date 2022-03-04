@@ -439,12 +439,22 @@ case "$1" in
     output)
         shift 1
         "$HOME/.i3/output_layout.sh" "${@:1:3}"
+        shift 3
+        ;&
+    wallpaper)
         if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
             "$HOME/.device_specific/wallpaper_command.sh"
         else
             find "$HOME" -maxdepth 1 -iname '.wallpaper*' -print0 | sort -z | xargs -0 feh --bg-scale
         fi
-        shift 2
+        ;;
+    wallpaper_arg)
+        shift 1
+        if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
+            "$HOME/.device_specific/wallpaper_command.sh" "$1"
+        else
+            find "$HOME" -maxdepth 1 -iname '.wallpaper*'"$1"'*' -print0 | sort -z | xargs -0 feh --bg-scale
+        fi
         ;;
     volume)
         shift 1
@@ -538,7 +548,8 @@ case "$1" in
     wait_for_backup)
         wait_for_backup
         ;;
-    run)
+    run|run_as)
+        [ "$1" == run_as ] && export USER="$2" && shift 1
         shift 1
         ARGS=()
         while [ -n "${1+"?"}" ] && [ "$1" != ';' ]; do
@@ -548,7 +559,7 @@ case "$1" in
         run "${ARGS[@]}"
         ;;
     piped_link)
-        get_piped | xclip -sel c
+        get_piped | xclip -sel c -r
         ;;
     piped_open)
         get_piped | xargs -0 xdg-open &>/dev/null & disown
@@ -556,12 +567,13 @@ case "$1" in
     *) {
         echo "Unknown command: $1"
         echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-        echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off}+"
+        echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off}+"
         echo "Usage: $0 {list_all_commands|list_clients|count_clients|wait_for_backup}+"
         echo "Usage: $0 schedule {<command>|'<commands>'}"
         echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"
         echo "Usage: $0 schedule_what|execute_what"
         echo "Usage: $0 run ARSGS ;"
+        echo "Usage: $0 run_as USERANDARSGS ;"
         echo "Usage: $0 piped_link|piped_open"
     } >&2
         exit 2
