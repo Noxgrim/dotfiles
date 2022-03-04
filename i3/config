@@ -210,7 +210,7 @@ mode "setnumber [0123456789][Return]" {
 set $device device [+][x][sSlLhHrF][mMnN][d]❖[dh]❖[se] ❖[rR]
 set $force device.force [SRL]
 set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
-set $discord device.discord status: [o]nline (a)idle [d]nd [i]nvisible | actions: [g]o [c]ome | call: [j]oin [r]eject [l]eave | audio: [M]ute [D]eafen | [u]pdate
+set $discord device.discord status: [o]nline (a)idle d[n]d [i]nvisible | actions: [g]o come-[b]ack | call: [j]oin{-(J)video} [c]all{-[v]ideo (V)stop} [r]eject [l]eave | share: [s]creen-share [S]top | audio: [m]ute [d]eafen
 bindsym $mod+Shift+x mode "$device"
 bindsym $mod+y mode "setnumber [0123456789][Return]"
 mode "$device" {
@@ -288,20 +288,25 @@ mode "$discord" {
         # online status
         bindsym o       exec $scriptdir/discord.sh "online",         mode "default"
         bindsym a       exec $scriptdir/discord.sh "idle",           mode "default"
-        bindsym d       exec $scriptdir/discord.sh "do-not-disturb", mode "default"
+        bindsym n       exec $scriptdir/discord.sh "do-not-disturb", mode "default"
         bindsym i       exec $scriptdir/discord.sh "invisible",      mode "default"
         # calls
-        bindsym j       exec $scriptdir/discord.sh "join",           mode "default"
+        bindsym j       exec $scriptdir/discord.sh "join-voice",     mode "default"
+        bindsym Shift+j exec $scriptdir/discord.sh "join-video",     mode "default"
+        bindsym c       exec $scriptdir/discord.sh "voice-call",     mode "default"
+        bindsym v       exec $scriptdir/discord.sh "video-call",     mode "default"
+        bindsym Shift+v exec $scriptdir/discord.sh "video-stop",     mode "default"
         bindsym r       exec $scriptdir/discord.sh "reject",         mode "default"
         bindsym l       exec $scriptdir/discord.sh "leave",          mode "default"
+        # sharing the screen
+        bindsym s       exec $scriptdir/discord.sh "share-screen",   mode "default"
+        bindsym Shift+S exec $scriptdir/discord.sh "stop-share",     mode "default"
         # combined actions
         bindsym g       exec $scriptdir/discord.sh "go-away",        mode "default"
-        bindsym c       exec $scriptdir/discord.sh "come-back",      mode "default"
+        bindsym b       exec $scriptdir/discord.sh "come-back",      mode "default"
         # audio
-        bindsym Shift+m exec $scriptdir/discord.sh "mute",           mode "default"
-        bindsym Shift+d exec $scriptdir/discord.sh "deafen",         mode "default"
-        # misc
-        bindsym u       exec $scriptdir/discord.sh "update",         mode "default"
+        bindsym m       exec $scriptdir/discord.sh "mute",           mode "default"
+        bindsym d       exec $scriptdir/discord.sh "deafen",         mode "default"
 
         bindsym Return  mode "$device"
         bindsym Escape  mode "$device"
@@ -441,6 +446,7 @@ bindsym $mod+Shift+Ctrl+XF86AudioMute        exec $mscriptdir/rofi_audio.sh -c '
 for_window [class="terminal"] border pixel 1
 for_window [class="Pinentry"] floating enable
 for_window [class="discord"] move container to scratchpad
+for_window [class="noxgrim_messengers"] move container to scratchpad
 for_window [class="Element"] move container to scratchpad
 
 
