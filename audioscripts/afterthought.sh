@@ -104,6 +104,8 @@ Tool for mass tagging MP3 audio books in the current working directory (by
 default).
 It needs `id3`, `mp3splt`, `mp3wrap` and `python` with the `mutagen` library to
 be installed.
+The script creates a backup of your files before any excetion. If anything is
+as expected you may delete it with e.g. `rm *.bak`
 
 Options:
 -l TITLE, --title TITLE
@@ -154,7 +156,7 @@ Options:
         .<FILE_NO> A lovely but simple chapter title
         An even simpler title that increases FILE_NO by one
 
-        The line has to start with a dot `.`. If it isn't, the whole line is
+        The line has to start with a dot `.`. If it doesn't, the whole line is
         used as the chapter name and the file counter is increased by 1.
         A `.` is followed by the file number FILE_NO of the audio file. This
         number starts with one. The files are sorted numerically so they should
