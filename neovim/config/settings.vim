@@ -80,7 +80,7 @@ augroup noxgrim_setting_spell
     autocmd FileType gitcommit setlocal spell
     autocmd FileType markdown setlocal spell
     autocmd FileType text setlocal spell textwidth=80
-    autocmd FileType tex setlocal spell
+    autocmd FileType tex setlocal spell textwidth=80
     autocmd FileType plaintex setlocal spell
 augroup END
 
@@ -92,7 +92,7 @@ endif
 
 
 " Terminal settings
-set t_Co=256 " Use 256 colours (Use this setting only if your terminal supports 256 colours)
+" set t_Co=256 " Use 256 colours (Use this setting only if your terminal supports 256 colours)
 if has('nvim')
     autocmd! TermOpen * setlocal listchars=tab:▸\ ,trail:\ ,precedes:↤,extends:↦
     highlight TermCursor ctermfg=darkgreen guifg=darkgreen
@@ -110,7 +110,7 @@ highlight ExtraWhitespace ctermbg=darkred guibg=darkred
 augroup noxgrim_setting_extra_whitespace
     autocmd!
 
-    autocmd ColorScheme * highlight ExtraWhitespace ctermbg=darkred guibg=darkred
+    autocmd ColorScheme * highlight ExtraWhitespace ctermbg=lightred guibg=lightred
     autocmd Syntax * syntax match ExtraWhitespace /\s\+\%#\@<!$\| \+\ze\t/ containedin=ALL
 augroup END
 

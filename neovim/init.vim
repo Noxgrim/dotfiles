@@ -10,9 +10,10 @@ source $HOME/.config/nvim/plug-config/vimplug.vim
 let g:noxgrim_coc_extensions = [
             \ 'coc-clangd', 'coc-git', 'coc-java', 'coc-pyright', 'coc-json',
             \ 'coc-rls', 'coc-sh', 'coc-snippets', 'coc-tsserver', 'coc-vimlsp',
-            \ 'coc-vimtex', 'coc-yank' ]
+            \ 'coc-vimtex', 'coc-ltex', 'coc-yank' ]
 
 source $HOME/.config/nvim/plug-config/vim-airline.vim
+source $HOME/.config/nvim/plug-config/onedark.vim
 
 source $HOME/.config/nvim/plug-config/vim-sneak.vim
 if ! exists('g:is_manpage') || ! g:is_manpage
