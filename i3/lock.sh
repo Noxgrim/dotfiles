@@ -1,5 +1,6 @@
 #!/bin/bash
-IMG='/tmp/lock.png'
+IMG="/tmp/noxgrim/lock.png"
+ARGS=()
 
 # From xss-lock : /usr/share/doc/xss-lock/transfer-sleep-lock-i3lock.sh
 
@@ -11,6 +12,7 @@ IMG='/tmp/lock.png'
 
 # Run before starting the locker
 pre_lock() {
+    [ -d "/tmp/noxgrim" ] || mkdir -p "/tmp/noxgrim"
     return
 }
 
@@ -19,13 +21,18 @@ prepare_lock() {
     if [ -f '/tmp/noxgrim/user_suspended' ] || [ -f '/tmp/noxgrim/user_hibernated' ]; then
         mpc pause -q
     fi
-    scrot "$IMG"
-    mogrify -blur 20x20 "$IMG"
+    if grep -q 00black "$HOME/.fehbg"; then
+        ARGS=( -C 000000 )
+    else
+        scrot "$IMG"
+        mogrify -blur 20x20 "$IMG"
+        ARGS=( -i "$IMG" )
+    fi
 }
 
 # Run after the locker exits
 post_lock() {
-    rm "$IMG"
+    [ -e "$IMG" ] && rm "$IMG"
     [ -f '/tmp/noxgrim/user_suspended' ] && rm '/tmp/noxgrim/user_suspended'
     [ -f '/tmp/noxgrim/user_hibernated' ] && rm '/tmp/noxgrim/user_hibernated'
     return
@@ -47,7 +54,7 @@ if [[ -e /dev/fd/${XSS_SLEEP_LOCK_FD:--1} ]]; then
 
     # we have to make sure the locker does not inherit a copy of the lock fd
     prepare_lock {XSS_SLEEP_LOCK_FD}<&-
-    i3lock -n -f -i "$IMG" {XSS_SLEEP_LOCK_FD}<&-
+    i3lock "${ARGS[@]}" -n -f {XSS_SLEEP_LOCK_FD}<&-
 
     # now close our fd (only remaining copy) to indicate we're ready to sleep
     exec {XSS_SLEEP_LOCK_FD}<&-
@@ -58,7 +65,7 @@ if [[ -e /dev/fd/${XSS_SLEEP_LOCK_FD:--1} ]]; then
 else
     trap 'kill %%' TERM INT
     prepare_lock
-    i3lock -n -f -i "$IMG"&
+    i3lock "${ARGS[@]}" -n -f -i "$IMG"&
     wait
 fi
 
