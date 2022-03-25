@@ -118,6 +118,10 @@ if [ -d "$TARGET_DIR/game/saves" ]; then # Copy saves
     mv "$TARGET_DIR/game/saves" "$WORKING_DIR/game"
 fi
 
+if [ -d "$TARGET_DIR/.bu" ]; then # Copy backups
+    mv "$TARGET_DIR/.bu" "$WORKING_DIR"
+fi
+
 if [ -d "$TARGET_DIR/icons" ]; then # RDG stuff
     mv "$TARGET_DIR/icons" "$WORKING_DIR/icons"
 elif [ -d "$TARGET_DIR/.renpydeskgen-icons" ]; then
@@ -126,6 +130,7 @@ fi
 
 find "$TARGET_DIR" -maxdepth 1 -type f -iname 'screenshot[0-9][0-9][0-9][0-9].png' -exec mv  '{}' "$WORKING_DIR" \;
 find "$TARGET_DIR" -maxdepth 1 -type f -iname 'note*' -exec mv  '{}' "$WORKING_DIR" \;
+find "$TARGET_DIR" -maxdepth 1 -type f -iname '*.patch' -exec mv  '{}' "$WORKING_DIR" \;
 
 if [ -d "$WORKING_DIR/.git" ]; then
     echo 'Managing git…'
@@ -141,62 +146,62 @@ if [ -d "$WORKING_DIR/.git" ]; then
     done
     # If we are versioned, decompile if necessary (git is optimized for plain text)
     if command -v 'unrpyc' > /dev/null; then unrpyc "$WORKING_DIR/game" | grep -oE 'Decompilation of [0-9]+( script)? files successful' || true; fi
+    GIT=(git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR")
+    "${GIT[@]}" add "$WORKING_DIR/."
+    (
+        cd "$WORKING_DIR" || exit 1
+        find "$WORKING_DIR" -maxdepth 1 -type f -iname '*.patch' -print0 | sort -z | xargs -r0n 1 git apply || true
+    )
 
     # Add new files
-    git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" add "$WORKING_DIR/."
+    "${GIT[@]}" add "$WORKING_DIR/."
 
-    if [ -n "$(git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" status --porcelain 2>&1)" ]; then
-    # Prepare a commit message (let the hacking begin!)
+    if [ -n "$("${GIT[@]}" status --porcelain 2>&1)" ]; then
+        # Get some data we could pre-instert (requires rdg/renpy_desktop_generator.sh)
+        cat > "$WORKING_DIR/.git/hooks/prepare-commit-msg" << "EOF"
+#!/usr/bin/env bash
+set -eu -o pipefail
+DIR="$(readlink -e ".")"
+if command -v rdg > /dev/null; then
+    eval "$(RENPYDESKGEN_CHECK_OPTIONAL_DEPENDENCIES=false rdg -qQ \
+        -\! find_renpy_root_dir "$DIR" \
+        -\! find_game_name "$DIR/game" \
+        -\! read_renpy_config_string "$DIR/game" 'config.version' GAME_VERSION \
+        -\? O+GAME_NAME,GAME_VERSION)"
+else
+    GAME_NAME="GAME_NAME"
+    GAME_VERSION="$(sed -z 's/.*-\([^-]*\)-[^-]*$/\1/' <<< "$DIR")"
+fi
+COMMENT="$(git config --get core.commentChar || echo '#')"
 
-    # Get the file that we would edit
-    EDITOR='cat' git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" commit -v > "$TEMP_DIR/COMMIT_FILE" 2> /dev/null || true # “Aborting due to empty commit message” returns error
-    # Get some data we could pre-instert (requires rdg/renpy_desktop_generator.sh)
-    if command -v rdg > /dev/null; then
-        GAME_NAME="$(
-            export RENPYDESKGEN_IS_SOURCED='true'
-            source "$(which rdg)"
-            CHECK_OPTIONAL_DEPENDENCIES='false'
-            LOG_LEVEL=0
-            DISPLAY_NAME=''
+sed -i '1s/^.*$/&'"$GAME_NAME $GAME_VERSION"'\n/' "$1"
 
-            check_dependencies
-            find_renpy_root_dir "$WORKING_DIR"
-            find_game_name
-            echo "$GAME_NAME"
-        )"
-    else
-        GAME_NAME="GAME_NAME"
-    fi
-    GAME_VERSION="$(sed -z 's/.*-\([^-]*\)-[^-]*$/\1/' <<< "$WORKING_DIR")"
-
-    sed -i '1s/^.*$/&'"$GAME_NAME $GAME_VERSION"'\n'"$(git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" config --get core.commentChar || echo '#'
-    )"' ------------------------ >8 ------------------------\n# Comments are not supported. Do not change the line above!\n#/' "$TEMP_DIR/COMMIT_FILE"
-
-    # Insert lines to hide or move potential spoilers in diff or changed files out of the way
-    {
-        INSERT_BEFORE="$(grep '^# Changes to be committed:$' "$TEMP_DIR/COMMIT_FILE" -n | cut -d: -f1)"
-        head -n "$(bc <<< "${INSERT_BEFORE/%/-1}")" "$TEMP_DIR/COMMIT_FILE"
-        echo '# SPOILER{{{'
-        echo '# SPOILERBUMPER{{{' # Insert this if vim isn't used, just to be sure
-        set +o pipefail # For some reason this SIGPIPEs otherwise
-        yes '#' | head -n "$(tput lines || printf 100)"
-        set -o pipefail
-        echo '# / SPOILERBUMPER}}}'
-        tail -n+"$INSERT_BEFORE" "$TEMP_DIR/COMMIT_FILE"
-        echo '# / SPOILER}}}'
-        echo "# vim: foldmethod=marker"
-    } > "$TEMP_DIR/COMMIT_EDITMSG"
-    case "$EDITOR" in
-        *vim)
-            # force to ignore changes by runtime plugin
-            EDITOR="$EDITOR -c 'set foldmethod=marker' --cmd 'set foldmethod=marker'"\
-                git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" commit --no-status -q -t "$TEMP_DIR/COMMIT_EDITMSG" --cleanup=scissors < /dev/tty
-            ;;
-        *)
-            git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" commit --no-status -q -t "$TEMP_DIR/COMMIT_EDITMSG" --cleanup=scissors < /dev/tty
-            ;;
-    esac || # if we didn't edit anything
-        git --git-dir "$WORKING_DIR/.git" --work-tree "$WORKING_DIR" commit -q -F <(cat <<< "$GAME_NAME $GAME_VERSION") || true
+# Insert lines to hide or move potential spoilers in diff or changed files out of the way
+INSERT_BEFORE="$(grep "^$COMMENT"' Changes to be committed:$' "$1" -n | cut -d: -f1)"
+TMP="$(mktemp)"
+{
+    head -n "$(bc <<< "${INSERT_BEFORE/%/-1}")" "$1"
+    echo "$COMMENT SPOILER{{{"
+    echo "$COMMENT SPOILERBUMPER{{{" # Insert this if vim isn't used, just to be sure
+    set +o pipefail # For some reason this SIGPIPEs otherwise
+    yes "$COMMENT" | head -n "$(tput lines || printf 100)"
+    set -o pipefail
+    echo "$COMMENT / SPOILERBUMPER}}}"
+    tail -n+"$INSERT_BEFORE" "$1"
+    echo "$COMMENT / SPOILER}}}"
+    echo "$COMMENT vim: foldmethod=marker"
+} > "$TMP"
+mv "$TMP" "$1"
+EOF
+        chmod u+x "$WORKING_DIR/.git/hooks/prepare-commit-msg"
+        case "$EDITOR" in
+            *vim|*'vim '*)
+                # force to ignore changes by runtime plugin
+                export EDITOR="$EDITOR -c 'set foldmethod=marker' --cmd 'set foldmethod=marker'" ;;
+            *) ;;
+        esac
+        "${GIT[@]}" commit -vq || true
+        "${GIT[@]}" tag -f "$("${GIT[@]}" show --no-patch --oneline | grep -o '\S*$' | sed 's/^[0-9]/b&/')"
     fi
 fi
 
