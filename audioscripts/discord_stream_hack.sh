@@ -25,7 +25,7 @@ TARGET_SI="$(pactl list sink-inputs | tr '[:upper:]' '[:lower:]' |
 [ -z "$TARGET_SI" ] && { echo "target $1 not found or playing back!" >&2; exit 1; }
 
 DISCORD_SO="$(pactl list source-outputs | tr '[:upper:]' '[:lower:]' |
-    sed -n '/^source output/,/^\s*$/{s/^source output #\([0-9]*\)/\1/p;/discord/p}' | grep -iB1 'discord' | grep '[0-9]\+' | tail -n1 || true)"
+    sed -n '/^source output/,/^\s*$/{s/^source output #\([0-9]*\)/\1/p;/electron/p}' | grep -iB1 'electron' | grep '[0-9]\+' | tail -n1 || true)"
 [ -z "$DISCORD_SO" ] && { echo "Discord not found or recording!" >&2; exit 1; }
 
 
