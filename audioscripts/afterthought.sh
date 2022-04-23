@@ -98,6 +98,31 @@ set_option() {
             CHAPTER_PREFIX="$2"
             SHIFT_AMOUNT=2
             ;;
+        -R|--only-roll-back)
+            if find . -iname '*.bak' | grep -q .; then
+                find . -iname '*.mp3' -delete
+                find . -iname '*.bak' -exec bash -c '
+                for F; do
+                    mv -- "$F" "${F%.bak}"
+                done
+                ' bash {} +
+                exit
+            else
+                echo 'Nothing to roll-back to!' >&2
+                exit 1
+            fi
+            ;;
+        -r|--roll-back)
+            if find . -iname '*.bak' | grep -q .; then
+                find . -iname '*.mp3' -delete
+                find . -iname '*.bak' -exec bash -c '
+                for F; do
+                    mv -- "$F" "${F%.bak}"
+                done
+                ' bash {} +
+            fi
+            SHIFT_AMOUNT=1
+            ;;
         -h|--help)
             less -F << 'EOF'
 Tool for mass tagging MP3 audio books in the current working directory (by
@@ -186,6 +211,10 @@ Options:
         for each file (i.e. the files will stay as they are except from splits
         and contain a counter for each file)
         they will be combined into one file using `mp3wrap`.
+-r, --roll-back
+    Restore a previous backup
+-R, --only-roll-back
+    Restore a previous backup and exit
 -d, --directory DIR
         Define the directory in which the script operates in instead of the
         current working directory
@@ -207,7 +236,7 @@ declare -A SPLIT_FILES
 
 if [ -n "$CHAPTER_FILE" ]; then
     if [ ! -f "$CHAPTER_FILE" ]; then
-        echo 'Chapter file does not exist!'
+        >&2 echo 'Chapter file does not exist!'
         exit 1
     fi
 
@@ -239,6 +268,9 @@ if [ -n "$CHAPTER_FILE" ]; then
             fi
             if [ "$THIS" = "$LAST" ] && [ -z "$SPLIT" ]; then
                 echo "$i: There already was a line with the same file number; line must define a split point!" >&2
+                exit 1
+            elif [ "$THIS" -lt "$LAST" ]; then
+                echo "$i: File number is smaller than previous file number!" >&2
                 exit 1
             fi
             if [ -z "$SPLIT" ]; then
@@ -361,7 +393,7 @@ EOF
                 if [ -n "$NEWCHAP" ]; then
                     TCHAPNUM=$((NEWCHAP))
                     if [ $TCHAPNUM -le $CHAPNUM ]; then
-                        echo "To esure right file sorting, chapter numbers must be strictly monotonically increasing!"
+                        echo "To esure correct file sorting, chapter numbers must be strictly monotonically increasing!" >&2
                         exit 1
                     fi
                     CHAPNUM=$TCHAPNUM
@@ -370,7 +402,7 @@ EOF
                 else
                     ((++CHAPNUM))
                 fi
-                CHAP="$(grep -oP '^.*? \K.*' <<< "$LINE")"
+                CHAP="$(grep -oP '^\..*? \K.*' <<< "$LINE" || echo "$LINE")"
                 if [ -z "$CHAP" ]; then
                     CHAP=$LINE
                 fi
