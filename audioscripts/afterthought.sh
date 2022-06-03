@@ -98,7 +98,7 @@ set_option() {
             CHAPTER_PREFIX="$2"
             SHIFT_AMOUNT=2
             ;;
-        -R|--only-roll-back)
+        -B|--only-roll-back)
             if find . -iname '*.bak' | grep -q .; then
                 find . -iname '*.mp3' -delete
                 find . -iname '*.bak' -exec bash -c '
@@ -112,7 +112,7 @@ set_option() {
                 exit 1
             fi
             ;;
-        -r|--roll-back)
+        -b|--roll-back)
             if find . -iname '*.bak' | grep -q .; then
                 find . -iname '*.mp3' -delete
                 find . -iname '*.bak' -exec bash -c '
@@ -211,15 +211,15 @@ Options:
         for each file (i.e. the files will stay as they are except from splits
         and contain a counter for each file)
         they will be combined into one file using `mp3wrap`.
--r, --roll-back
+-b, --roll-back
     Restore a previous backup
--R, --only-roll-back
+-B, --only-roll-back
     Restore a previous backup and exit
 -d, --directory DIR
         Define the directory in which the script operates in instead of the
         current working directory
 EOF
-exit
+exit 0
             ;;
         *)
             >&2 echo 'Unknown option:' "$1"
@@ -232,7 +232,7 @@ while [ $# -gt 0 ]; do
     shift "$SHIFT_AMOUNT"
 done
 
-declare -A SPLIT_FILES
+declare -A SPLIT_FILES # abuse this as a set
 
 if [ -n "$CHAPTER_FILE" ]; then
     if [ ! -f "$CHAPTER_FILE" ]; then
@@ -253,6 +253,9 @@ if [ -n "$CHAPTER_FILE" ]; then
         while IFS= read -r -d$'\0' FILE; do
             FILES+=( "$FILE" )
         done < <(find . -type f -iname '*.mp3' -print0 | sort -znt/ -k2,2)
+        for F in "${FILES[@]}"; do
+            cp "$F" "$F".bak
+        done
         CHAPTERS="$(($(wc -l < "$CHAPTER_FILE")+1))" # +sentinel
 
         for (( i = 1; i <= $CHAPTERS; i++ )); do
@@ -278,7 +281,7 @@ if [ -n "$CHAPTER_FILE" ]; then
             fi
             if ! grep -qE '^[0-9]+\.0*[1-5]?[0-9](\.0*[1-9]?[0-9])?$' <<< "$SPLIT"; then
                 echo "$i: Split malformed. Expected 0-.0-59[.0-99], got $SPLIT" >&2
-                exit
+                exit 1
             fi
             # bring the split into canonical form
             SPLIT="$(sed -E '/^[^.]*\.[^.]*$/s/$/.0/;s/^0*([1-9]?[0-9]+)\.0*([1-5]?[0-9])\.0*([1-9]?[0-9])$/\1.\2.\3/' <<< "$SPLIT")"
