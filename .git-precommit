@@ -1,5 +1,6 @@
 #!/bin/bash
 # backup mpd password
+git status --porcelain | grep -q '^[^ ].mpd\.conf' || exit 0
 PASS="$(grep '^password' mpd.conf | head -n1 | grep -Po '(?<=")[^@]*')"
 (
     tail --pid="$PPID" -f /dev/null; # wait for git to finish
