@@ -564,6 +564,15 @@ case "$1" in
     piped_open)
         get_piped | xargs -0 xdg-open &>/dev/null & disown
         ;;
+    send_all)
+        shopt -s lastpipe
+        while xbindkeys -k  | sed -n '${s/\s*//g;s/Mod2+//;p}' | read -r C; do
+            F="$(xdotool getwindowfocus)"
+            xdotool search --name "$2" | xargs -I{} xdotool windowfocus --sync {} key --window {} "$C"
+            xdotool windowfocus --sync "$F"
+        done
+        shift
+        ;;
     *) {
         echo "Unknown command: $1"
         echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"

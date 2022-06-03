@@ -213,7 +213,6 @@ set $force device.force [SRL]
 set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
 set $discord device.discord status: [o]nline (a)idle d[n]d [i]nvisible | actions: [g]o come-[b]ack | call: [j]oin{-(J)video} [c]all{-[v]ideo (V)stop} [r]eject [l]eave | share: [s]creen-share [S]top | audio: [m]ute [d]eafen
 bindsym $mod+Shift+x mode "$device"
-bindsym $mod+y mode "setnumber [0123456789][Return]"
 mode "$device" {
         # power control
         bindsym Shift+l exec $scriptdir/device.sh logout,          mode "default"
@@ -451,6 +450,7 @@ bindsym $mod+Shift+Ctrl+XF86AudioMute        exec $mscriptdir/rofi_audio.sh -c '
 # window specific settings
 for_window [class="terminal"] border pixel 1
 for_window [class="Pinentry"] floating enable
+for_window [title="XBindKey"] floating enable border pixel 1 resize set 1 1
 for_window [class="discord"] move container to scratchpad
 for_window [class="noxgrim_messengers"] move container to scratchpad
 for_window [class="Element"] move container to scratchpad
