@@ -2,9 +2,10 @@
 set -eu -o pipefail
 
 CURR_DIR="$PWD"
-UPDATEPACKAGE="$(readlink -f "${1:?"Expected packge containing update as first argument."}")"
+DATE=( --date "${1?"Expected version date as first argument (may be empty if \`git\` isn't used)."}" )
+UPDATEPACKAGE="$(readlink -f "${2:?"Expected packge containing update as second argument."}")"
 [ -f "$UPDATEPACKAGE" ] || { echo "package must exist!" >&2 && exit 1; }
-TARGET_DIR="$(readlink -m "${2:?"Expected target dir as second argument."}")"
+TARGET_DIR="$(readlink -m "${3:?"Expected target dir as third argument."}")"
 [ -d "$TARGET_DIR" ] || mkdir -p "$TARGET_DIR"
 ( shopt -s nullglob dotglob; f=( "$TARGET_DIR"/* ); ((! ${#f[@]})) ) &&
     echo 'Directory is empty. You may want to introduce a git repo later.'
@@ -54,9 +55,9 @@ case "$(tr '[:upper:]' '[:lower:]' <<< "$UPDATEPACKAGE")" in
             rm -r "${WORKING_DIR:?"Temp dir empty?!"}/lib"
             mv "$TARGET_DIR/lib" "$WORKING_DIR/lib"
             find "$TARGET_DIR" -maxdepth 1 -type f -iname '*.sh' -exec cp '{}' "$WORKING_DIR" \;
-        elif [ -n "${3:+set}" ]; then
+        elif [ -n "${4:+set}" ]; then
             # Try to use a reference
-            REFERENCE="$(readlink -f "$3")"
+            REFERENCE="$(readlink -f "$4")"
             if [ -d "$REFERENCE/lib" ]; then
                 OUR_BUILD_NAME="$(find "$WORKING_DIR" -maxdepth 1 -type f -iname '*.exe' -print0 | head -zn 1 | sed -z 's|.*/\([^/]*\)\.exe$|\1|i' | tr -d '\0'; printf '_')"
                 OUR_BUILD_NAME="${OUR_BUILD_NAME%_}"
@@ -104,7 +105,7 @@ case "$(tr '[:upper:]' '[:lower:]' <<< "$UPDATEPACKAGE")" in
         esac
         ;;
     *)
-        echo "Unknown package type: $1" >&2
+        echo "Unknown package type: $3" >&2
         rm -rf "$TEMP_DIR"
         exit 1
 esac
@@ -150,7 +151,7 @@ if [ -d "$WORKING_DIR/.git" ]; then
     "${GIT[@]}" add "$WORKING_DIR/."
     (
         cd "$WORKING_DIR" || exit 1
-        find "$WORKING_DIR" -maxdepth 1 -type f -iname '*.patch' -print0 | sort -z | xargs -r0n 1 git apply || true
+        find "$WORKING_DIR" -maxdepth 1 -type f -iname '*.patch' -print0 | sort -z | xargs -r0n 1 git apply --allow-empty || true
     )
 
     # Add new files
@@ -174,10 +175,13 @@ else
 fi
 COMMENT="$(git config --get core.commentChar || echo '#')"
 
-sed -i '1s/^.*$/&'"$GAME_NAME $GAME_VERSION"'\n/' "$1"
+if head -n1 "$1" | grep -q '^\s*$'; then
+    sed -i '1s/^.*$/&'"$GAME_NAME $GAME_VERSION"'\n/' "$1"
+fi
 
 # Insert lines to hide or move potential spoilers in diff or changed files out of the way
-INSERT_BEFORE="$(grep "^$COMMENT"' Changes to be committed:$' "$1" -n | cut -d: -f1)"
+INSERT_BEFORE="$(grep "^$COMMENT"' Changes to be committed:$' "$1" -n | cut -d: -f1 || echo 0)"
+[ "$INSERT_BEFORE" = 0 ] && exit 0 # No status to hide
 TMP="$(mktemp)"
 {
     head -n "$(bc <<< "${INSERT_BEFORE/%/-1}")" "$1"
@@ -200,7 +204,7 @@ EOF
                 export EDITOR="$EDITOR -c 'set foldmethod=marker' --cmd 'set foldmethod=marker'" ;;
             *) ;;
         esac
-        "${GIT[@]}" commit -vq || true
+        "${GIT[@]}" commit "${DATE[@]}" -vq || true
         "${GIT[@]}" tag -f "$("${GIT[@]}" show --no-patch --oneline | grep -o '\S*$' | sed 's/^[0-9]/b&/')"
     fi
 fi
