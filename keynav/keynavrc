@@ -1,0 +1,59 @@
+clear
+
+super+y toggle-start
+super+shift+y toggle-start,windowzoom
+Escape end
+shift+Escape quit
+
+j cut-down
+k cut-up
+h cut-left
+l cut-right
+shift+j move-down
+shift+k move-up
+shift+h move-left
+shift+l move-right
+Down cut-down
+Up cut-up
+Left cut-left
+Right cut-right
+shift+Down move-down
+shift+Up move-up
+shift+Left move-left
+shift+Right move-right
+
+i windowzoom
+m warp
+shift+m warp,end
+g grid-nav toggle
+
+space warp,click 1,end
+shift+space warp,doubleclick 1,end
+c warp,click 3
+shift+c warp,double 3
+1 click 1
+shift+1 doubleclick 1
+2 click 3
+shift+2 double 3
+p click 4
+shift+p double 4
+n click 5
+shift+n double 5
+
+d drag 1
+shift+d drag 1 shift
+ctrl+d drag 1 ctrl
+alt+d drag 1 alt
+super+d drag 1 super
+shift+d drag 1 shift
+t drag 3
+shift+t drag 3 shift
+ctrl+t drag 3 ctrl
+alt+t drag 3 alt
+super+t drag 3 super
+shift+t drag 3 shift
+
+u history-back
+
+q record ~/.cache/keynav_macros
+shift+q playback
