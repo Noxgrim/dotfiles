@@ -33,20 +33,10 @@ join_comma() {
     printf ', %s' "$@" | cut -c3-
 }
 
-wait_for_backup() {
-    local DID_NOTIFY=false
-    if pgrep -c 'borg' >/dev/null; then
-        if [ "$DID_NOTIFY" = false ]; then
-            notify-send -u low "Waiting for backup to finish…"
-            DID_NOTIFY=true
-        fi
-        pwait 'borg' || true
-    fi
-    if pgrep -cf  "bash $HOME/.local/share/backup/backup.sh" >/dev/null; then
-        if [ "$DID_NOTIFY" = false ]; then
-            notify-send -u low "Waiting for backup to finish…"
-        fi
-        pwait -f "bash $HOME/.local/share/backup/backup.sh" || true
+check_for_backup() {
+    if systemctl is-active backup.service -q; then
+        notify-send -u low "Waiting for backup to finish…"
+        sleep 3
     fi
 }
 
@@ -408,13 +398,13 @@ case "$1" in
         i3-msg exit
         ;;
     suspend|sleep)
-        wait_for_backup; do_suspend
+        check_for_backup; do_suspend
         ;;
     hibernate)
-        wait_for_backup; hibernate
+        check_for_backup; hibernate
         ;;
     hybrid)
-        wait_for_backup; hybrid
+        check_for_backup; hybrid
         ;;
     reboot)
         killapps; do_reboot
@@ -556,8 +546,8 @@ case "$1" in
     list_all_commands)
         print_possible_commands | sed '/\<\(\(output\|discord\)\>.*\|volume\)\s\+$/d;/^\s*$/d'
         ;;
-    wait_for_backup)
-        wait_for_backup
+    check_for_backup)
+        check_for_backup
         ;;
     run|run_as)
         [ "$1" == run_as ] && export USER="$2" && shift 1
@@ -588,7 +578,7 @@ case "$1" in
         echo "Unknown command: $1"
         echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
         echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off}+"
-        echo "Usage: $0 {list_all_commands|list_clients|count_clients|wait_for_backup}+"
+        echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
         echo "Usage: $0 schedule {<command>|'<commands>'}"
         echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"
         echo "Usage: $0 schedule_what|execute_what"

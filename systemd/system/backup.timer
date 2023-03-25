@@ -1,0 +1,11 @@
+[Unit]
+Description=User Backup Timer
+
+[Timer]
+WakeSystem=false
+OnCalendar=*-*-* 0/1:00:00
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target
