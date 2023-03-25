@@ -1,0 +1,9 @@
+[Unit]
+Description=Battery Notification Timer
+ 
+[Timer]
+WakeSystem=false
+OnCalendar=*-*-* *:00/1:00
+ 
+[Install]
+WantedBy=timers.target
