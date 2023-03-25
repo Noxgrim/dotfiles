@@ -60,6 +60,11 @@
     mouse_middle_click = do_action, close_current
     mouse_right_click = close_all
 
+    close = ctrl+space
+    close_all = ctrl+shift+space
+    history = ctrl+period
+    context = ctrl+shift+period
+
 [experimental]
     per_monitor_dpi = false
 
@@ -84,12 +89,27 @@
     format = "%s%n%b"
     history_ignore = yes
     set_stack_tag = "volume"
+    set_transient = yes
 
 [volume_mute]
     appname = "noxgrim:volume:mute_action"
     format = "%s%b"
     history_ignore = yes
     set_stack_tag = "volume"
+
+[power]
+    appname = "noxgrim:power"
+    format = "%s%n%b"
+    history_ignore = yes
+    set_stack_tag = "power"
+    set_transient = yes
+
+[brightness]
+    appname = "noxgrim:brightness"
+    format = "%s%n%b"
+    history_ignore = yes
+    set_stack_tag = "brightness"
+    set_transient = yes
 
 [audio_unknown]
     appname= "noxgrim:audio:unknown"
