@@ -19,15 +19,11 @@ contains() {
 
 lock() {
     loginctl lock-session
-    #gnome-screensaver-command -l
-    #~/.i3/lock.sh
-    #numlockx on
 }
 
 # the ugliest implementation of join you have ever seen...
 join_comma() {
-    local IFS=','
-    echo "$*" | sed 's/,/, /g'
+    printf ', %s' "$@" | cut -c3-
 }
 
 wait_for_backup() {
@@ -109,38 +105,38 @@ killapps() {
 }
 
 do_shutdown() {
-    systemctl poweroff -i
-#    /usr/bin/dbus-send --system --print-reply --dest="org.freedesktop.ConsoleKit" /org/freedesktop/ConsoleKit/Manager org.freedesktop.ConsoleKit.Manager.Stop
+    systemctl poweroff
 }
 
 do_reboot() {
-    systemctl reboot -i
-#    /usr/bin/dbus-send --system --print-reply --dest="org.freedesktop.ConsoleKit" /org/freedesktop/ConsoleKit/Manager org.freedesktop.ConsoleKit.Manager.Restart
+    systemctl reboot
 }
 
 announce_hibernate() {
     [ -d '/tmp/'"$USER"'' ] || mkdir -p '/tmp/'"$USER"''
     touch '/tmp/'"$USER"'/user_hibernated'
 }
+
 announce_suspend() {
     # tell the timers waking the PC up that they can suspend again
     [ -d '/tmp/'"$USER"'' ] || mkdir -p '/tmp/'"$USER"''
     touch '/tmp/'"$USER"'/user_suspended'
 }
+
 do_suspend() {
     announce_suspend
-    systemctl suspend -i
-#    /usr/bin/dbus-send --system --print-reply --dest="org.freedesktop.UPower" /org/freedesktop/UPower org.freedesktop.UPower.Suspend
+    systemctl "$SUSPEND_ACTION"
 }
+
 hibernate() {
     announce_hibernate
-    systemctl hibernate -i
+    systemctl "$HIBERNATE_ACTION"
 }
 
 hybrid() {
     announce_suspend
     announce_hibernate
-    systemctl hybrid-sleep -i
+    systemctl hybrid-sleep
 }
 
 screen_off() {

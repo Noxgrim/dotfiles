@@ -1,118 +1,60 @@
-
 [global]
 
     monitor = 0
-
     follow = mouse
-
-
-    width = 300
-
-    height = 65536
-
-    origin = top-right
-
-    offset = 10x10
-
-    scale = 0
-
     notification_limit = 0
-
-
-    progress_bar = true
-
-    progress_bar_height = 10
-
-    progress_bar_frame_width = 1
-
-    progress_bar_min_width = 150
-
-    progress_bar_max_width = 300
-
-
     indicate_hidden = yes
-
-    transparency = 0
-
-    separator_height = 2
-
-    padding = 8
-
-    horizontal_padding = 8
-
-    text_icon_padding = 0
-
-    frame_width = 1
-
-    frame_color = "#666f7f"
-
-    separator_color = frame
-
     sort = yes
-
-    idle_threshold = 120
-
-
-    font = Source Code Pro for Powerline
-
-    line_height = 0
-
+    idle_threshold = 10
     markup = full
-
     format = "<b>%s</b>\n%b\n<i>‏%a</i>"
-
-    alignment = left
-
-    vertical_alignment = top
-
     show_age_threshold = 60
-
     ellipsize = middle
-
     ignore_newline = no
-
     stack_duplicates = true
-
     hide_duplicate_count = false
-
     show_indicators = yes
-
-
-    icon_position = left
-
-    min_icon_size = 0
-
-    max_icon_size = 150
-
-    icon_path = /usr/share/icons/gnome/16x16/status/:/usr/share/icons/gnome/16x16/devices/
-
-
     sticky_history = yes
-
     history_length = 200
-
-
     dmenu = /usr/bin/dmenu -p dunst:
-
     browser = /usr/bin/xdg-open
-
     always_run_script = true
-
-    title = Dunst
-
-    class = Dunst
-
-    corner_radius = 0
-
     ignore_dbusclose = false
 
 
+    font = Source Code Pro for Powerline
+    progress_bar = true
+    progress_bar_height = 10
+    progress_bar_frame_width = 1
+    progress_bar_min_width = 150
+    progress_bar_max_width = 300
+    width = 300
+    height = 65536
+    origin = top-right
+    offset = 10x10
+    separator_height = 2
+    padding = 8
+    horizontal_padding = 8
+    text_icon_padding = 0
+    frame_width = 1
+    frame_color = "#666f7f"
+    separator_color = frame
+    line_height = 0
+    scale = 0
+    corner_radius = 0
+    transparency = 0
+    alignment = left
+    vertical_alignment = top
+    icon_position = left
+    min_icon_size = 0
+    max_icon_size = 150
+    icon_path = /usr/share/icons/gnome/16x16/status/:/usr/share/icons/gnome/16x16/devices/
 
     force_xwayland = false
-
-
     force_xinerama = false
 
+    title = Dunst
+    class = Dunst
 
     mouse_left_click = close_current
     mouse_middle_click = do_action, close_current

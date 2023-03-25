@@ -192,22 +192,6 @@ bindsym $mod+c move position center
 bindsym $mod+m exec $mscriptdir/rofi_audio.sh
 bindsym $mod+p exec passmenu --type
 bindsym $mod+Shift+p exec passmenu
-
-mode "setnumber [0123456789][Return]" {
-    bindsym 1 exec printf 1 >> "$tmpdir/number"
-    bindsym 2 exec printf 2 >> "$tmpdir/number"
-    bindsym 3 exec printf 3 >> "$tmpdir/number"
-    bindsym 4 exec printf 4 >> "$tmpdir/number"
-    bindsym 5 exec printf 5 >> "$tmpdir/number"
-    bindsym 6 exec printf 6 >> "$tmpdir/number"
-    bindsym 7 exec printf 7 >> "$tmpdir/number"
-    bindsym 8 exec printf 8 >> "$tmpdir/number"
-    bindsym 9 exec printf 9 >> "$tmpdir/number"
-    bindsym 0 exec printf 0 >> "$tmpdir/number"
-
-    bindsym Escape exec printf '\n' >> "$tmpdir/number", mode "default"
-    bindsym Return exec printf '\n' >> "$tmpdir/number", mode "default"
-}
 bindsym $mod+Shift+Ctrl+p exec passmenu --choose 2
 
 set $device device [+][x][sSlLhHrF][mMnN][d]❖[dh]❖[se] ❖[rR]
@@ -441,13 +425,6 @@ bindsym $mod+Shift+Ctrl+XF86AudioRaiseVolume exec $mscriptdir/audio.sh      -c v
 bindsym $mod+Shift+Ctrl+XF86AudioLowerVolume exec $mscriptdir/audio.sh      -c v -5
 bindsym $mod+Shift+Ctrl+XF86AudioMute        exec $mscriptdir/rofi_audio.sh -c 'v '
 
-#bindsym XF86AudioPlay
-#bindsym XF86AudioPrev
-#bindsym XF86AudioNext
-#bindsym XF86AudioStop
-#bindsym XF86HomePage
-#workspace "$ws1" output LVDS-1-1
-#workspace "$ws2" output VGA-1-1
 
 # window specific settings
 for_window [class="terminal"] border pixel 1
