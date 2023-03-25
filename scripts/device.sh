@@ -154,6 +154,10 @@ print_possible_commands() {
         sed 's/[{+}]//g;s/|/\n/g' | grep -o '^\w*\s*' | sort
     printf '\n'
 
+    find "$HOME/.device_specific/actions/"  -type f -executable -printf %f\\n |\
+        sed 's/\.sh$//g;s/^/action /' | sort
+    printf '\n'
+
     "$TDIR/discord.sh" usage 2>&1 | tail +2 | cut -d\  -f2- |\
         sed 's/^\s*//;s/[,|]/\n/g' | sed 's/^/discord /'
     printf '\n'
@@ -559,6 +563,10 @@ case "$1" in
         done
         run "${ARGS[@]}"
         ;;
+    action)
+        "$HOME/.device_specific/actions/$2.sh" &>/dev/null &disown
+        shift 1
+        ;;
     piped_link)
         get_piped | xclip -sel c -r
         ;;
@@ -584,6 +592,7 @@ case "$1" in
         echo "Usage: $0 schedule_what|execute_what"
         echo "Usage: $0 run ARSGS ;"
         echo "Usage: $0 run_as USERANDARSGS ;"
+        echo "Usage: $0 action ACTION_NAME"
         echo "Usage: $0 piped_link|piped_open"
     } >&2
         exit 2
