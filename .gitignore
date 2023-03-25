@@ -1,8 +1,7 @@
-vim/*
-!vim/patches
-!vim/colors/
-vimperator/*
-!vimperator/colors/
+home/vim/*
+!home/vim/patches
+!home/vim/colors/
+config/mpd/password.conf
 .stignore
 .stfolder/
 

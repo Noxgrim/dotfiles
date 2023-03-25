@@ -11,7 +11,7 @@ MAX=100
 
 if [ "${1:?"First should be non-empty!"}" = 'select' ]; then
     if [ "$2" == 'unset' ] && [ "$3" == 'active' ]; then
-        [ -f '/tmp/noxgrim/volume/active' ] && rm '/tmp/noxgrim/volume/active'
+        [ -f "/tmp//volume/active" ] && rm '/tmp/'"$USER"'/volume/active'
         exit
     fi
 
@@ -27,13 +27,13 @@ if [ "${1:?"First should be non-empty!"}" = 'select' ]; then
     done
 
     if [ "$2" == 'set' ] && [ "$3" == 'active' ]; then
-        [ -d '/tmp/noxgrim/volume/' ] || mkdir -p '/tmp/noxgrim/volume/'
-        printf '%s\n' "${SINKS[0]}" > '/tmp/noxgrim/volume/active'
+        [ -d '/tmp/'"$USER"'/volume/' ] || mkdir -p '/tmp/'"$USER"'/volume/'
+        printf '%s\n' "${SINKS[0]}" > '/tmp/'"$USER"'/volume/active'
         exit
     fi
     shift 1
-elif [ -f '/tmp/noxgrim/volume/active' ]; then
-    SINKS=( "$(cat '/tmp/noxgrim/volume/active')" )
+elif [ -f '/tmp/'"$USER"'/volume/active' ]; then
+    SINKS=( "$(cat '/tmp/'"$USER"'/volume/active')" )
 fi
 
 for SINK in "${SINKS[@]}"; do
@@ -117,8 +117,8 @@ else MUTED='muted'; fi
 
 if [ -n "$INS" ] || [ $USE_MUTE ]; then
     if [ -n "$INS" ]; then
-        notify-send -a "noxgrim:volume" -u low -h "int:value:$NEW" 'Volume ' "%$MUTED"
+        notify-send -a "$USER"':volume' -u low -h "int:value:$NEW" 'Volume ' "%$MUTED"
     else
-        notify-send -a "noxgrim:volume:mute_action" -u low 'Volume ' "$MUTED"
+        notify-send -a "$USER"':volume:mute_action' -u low 'Volume ' "$MUTED"
     fi
 fi

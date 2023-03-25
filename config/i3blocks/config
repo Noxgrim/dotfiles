@@ -46,12 +46,12 @@ interval=3
 separator=false
 
 [music.title]
-command="$HOME/dotfiles/i3blocks/music.title.sh"
+command="$SCRIPT_ROOT/config/i3blocks/scripts/music.title.sh"
 interval=repeat
 separator=false
 
 [music.progress]
-command="$HOME/dotfiles/i3blocks/music.progress.sh"
+command="$SCRIPT_ROOT/config/i3blocks/scripts/music.progress.sh"
 interval=1
 
 # Memory usage

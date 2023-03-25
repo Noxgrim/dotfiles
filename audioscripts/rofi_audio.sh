@@ -13,7 +13,7 @@ for ARG in "$@"; do
 done
 
 read -ra INPUT <<< "$( rofi -theme solarized -dmenu -p 'Audio' -lines 1 -filter "$*" < /dev/null || echo -- )"
-RESULT="$( "$HOME/dotfiles/audioscripts/audio.sh" "${ARGS[@]}" "${INPUT[@]}" 2>&1 )"
+RESULT="$( "$SCRIPT_ROOT/audioscripts/audio.sh" "${ARGS[@]}" "${INPUT[@]}" 2>&1 )"
 if [ -n "$RESULT" ]; then
     LINES="$(echo "$RESULT" | wc -l)"
     if [ "$LINES" -gt 38 ]; then

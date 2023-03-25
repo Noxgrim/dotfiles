@@ -1,6 +1,7 @@
 #!/bin/bash
 
-THIS="$0" # path to script
+THIS="$(readlink -f "$0")" # path to script
+TDIR="$(dirname "$THIS")"
 # X clients that should be ignored
 WHITELIST=(ibus-x11 ibus-ui-gtk3 unity-settings-daemon notify-osd \
     gnome-screensaver mozc_renderer redshift-gtk skype skypeforlinux udiskie \
@@ -118,13 +119,13 @@ do_reboot() {
 }
 
 announce_hibernate() {
-    [ -d '/tmp/noxgrim' ] || mkdir -p '/tmp/noxgrim'
-    touch '/tmp/noxgrim/user_hibernated'
+    [ -d '/tmp/'"$USER"'' ] || mkdir -p '/tmp/'"$USER"''
+    touch '/tmp/'"$USER"'/user_hibernated'
 }
 announce_suspend() {
     # tell the timers waking the PC up that they can suspend again
-    [ -d '/tmp/noxgrim' ] || mkdir -p '/tmp/noxgrim'
-    touch '/tmp/noxgrim/user_suspended'
+    [ -d '/tmp/'"$USER"'' ] || mkdir -p '/tmp/'"$USER"''
+    touch '/tmp/'"$USER"'/user_suspended'
 }
 do_suspend() {
     announce_suspend
@@ -153,19 +154,19 @@ print_possible_commands() {
         sed 's/[{+}]//g;s/|/\n/g' | grep -o '^\w*\s*' | sort
     printf '\n'
 
-    "$HOME/.i3/discord.sh" usage 2>&1 | tail +2 | cut -d\  -f2- |\
+    "$TDIR/discord.sh" usage 2>&1 | tail +2 | cut -d\  -f2- |\
         sed 's/^\s*//;s/[,|]/\n/g' | sed 's/^/discord /'
     printf '\n'
 
     local OUTPUT_VARIANTS
-    OUTPUT_VARIANTS="$("$HOME/.i3/volume.sh" usage 2>&1 | tail +3 | cut -d\  -f2- | sed 's/\(\[.*]\|{[^}]*}\)\s*//g')"$'\n'
+    OUTPUT_VARIANTS="$("$TDIR/volume.sh" usage 2>&1 | tail +3 | cut -d\  -f2- | sed 's/\(\[.*]\|{[^}]*}\)\s*//g')"$'\n'
     while grep -q '<' <<< "$OUTPUT_VARIANTS"; do
         OUTPUT_VARIANTS="$(sed '/<[^>]*>/{s/^\([^<]*\)<\([^|>]*\)>\(.*$\)/\1\2\3/;s/^\([^<]*\)<\([^|>]*\)|\([^>]*\)>\(.*\)/\1\2\4\n\1<\3>\4/}' <<< "$OUTPUT_VARIANTS")"$'\n'
     done
     sed 's,^\s*,volume ,' <<< "${OUTPUT_VARIANTS}" | head -n-1
 
     local OUTPUT_OPTIONS OUTPUT_VARIANTS=''
-    OUTPUT_OPTIONS="$("$HOME/.i3/output_layout.sh" usage 2>&1 | tail +3 | cut -d\  -f2-)"$'\n'
+    OUTPUT_OPTIONS="$("$TDIR/output_layout.sh" usage 2>&1 | tail +3 | cut -d\  -f2-)"$'\n'
     sed '/MHDL/{s/\s*\(MHDL.\|<[^>]*>\)\s*//g;s/$/ /}' <<< "$OUTPUT_OPTIONS" | sed 's/^/output /' | head -n-1
     printf '\n'
 
@@ -231,7 +232,7 @@ schedule_systemd() {
 }
 
 schedule_cmd() {
-    DIR='/tmp/noxgrim/device_scheduled'
+    DIR='/tmp/'"$USER"'/device_scheduled'
     [ ! -d "$DIR" ] && mkdir -p "$DIR"
 
     CMD="${1-}"
@@ -438,7 +439,7 @@ case "$1" in
         ;;
     output)
         shift 1
-        "$HOME/.i3/output_layout.sh" "${@:1:3}"
+        "$TDIR/output_layout.sh" "${@:1:3}"
         shift 3
         ;&
     wallpaper)
@@ -458,11 +459,11 @@ case "$1" in
         ;;
     volume)
         shift 1
-        "$HOME/.i3/volume.sh" "${@:1:3}"
+        "$TDIR/volume.sh" "${@:1:3}"
         shift 2
         ;;
     discord)
-        "$HOME/.i3/discord.sh" "$2"
+        "$TDIR/discord.sh" "$2"
         shift
         ;;
     dpms_off)
@@ -504,7 +505,7 @@ case "$1" in
         done
         ;;
     mouse_off)
-        DIR='/tmp/noxgrim/'
+        DIR='/tmp/'"$USER"'/'
         [ -d "$DIR" ] || mkdir -p "$DIR"
         xdotool getmouselocation --shell > "$DIR/mouse"
         xdotool mousemove 9001 9001
@@ -513,7 +514,7 @@ case "$1" in
         done
         ;;
     mouse_on)
-        DIR='/tmp/noxgrim/'
+        DIR='/tmp/'"$USER"'/'
         if [ -f "$DIR/mouse" ]; then
         (
             source "$DIR/mouse"
@@ -526,7 +527,7 @@ case "$1" in
         done
         ;;
     mouse_toggle)
-        DIR='/tmp/noxgrim/'
+        DIR='/tmp/'"$USER"'/'
         [ -d "$DIR" ] || mkdir -p "$DIR"
         if [ -f "$DIR/mouse" ]; then
         (

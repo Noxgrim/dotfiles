@@ -11,9 +11,10 @@ set $ws8   8
 set $ws9   9
 set $ws10 10
 
-set $scriptdir $HOME/.i3
+set $i3dir $SCRIPT_ROOT/config/i3
 set $tmpdir /tmp/$USER/i3
-set $mscriptdir $HOME/dotfiles/audioscripts/
+set $scriptdir $SCRIPT_ROOT/scripts
+set $mscriptdir $SCRIPT_ROOT/audioscripts
 
 # Set font
 font pango:Source Code Pro for Powerline 10
@@ -25,8 +26,8 @@ focus_follows_mouse no
 floating_modifier $mod
 
 # Terminal
-bindsym $mod+Return exec --no-startup-id $scriptdir/terminal.sh tmux new -session -As0
-bindsym $mod+Shift+Return exec --no-startup-id $scriptdir/terminal.sh
+bindsym $mod+Return exec --no-startup-id $i3dir/terminal.sh tmux new -session -As0
+bindsym $mod+Shift+Return exec --no-startup-id $i3dir/terminal.sh
 
 # kill focused window
 bindsym $mod+Shift+q kill
@@ -457,6 +458,6 @@ for_window [class="Element"] move container to scratchpad
 
 
 # setup environment
-exec --no-startup-id $HOME/.i3/output_layout.sh default
-exec_always --no-startup-id $HOME/.i3/environment.sh
+exec --no-startup-id $scriptdir/output_layout.sh default
+exec_always --no-startup-id $i3dir/environment.sh
 exec_always --no-startup-id sh -c "[ -d $tmpdir ] || mkdir -p $tmpdir"

@@ -2,10 +2,9 @@
 
 MPC='mpc -q'
 BROWSER=( rofi -theme solarized -dmenu -i -multi-select -p 'Browse')
-AU_DIR='/tmp/noxgrim/audio_control'
+AU_DIR="/tmp/$USER/audio_control"
 PROVIDER='mpd'
-MPD_CONF="$HOME/.mpdconf"
-MPD_HOST="$(grep -Po '(?<=^password ")[^@]*' "$MPD_CONF")@localhost"
+MPD_CONF="$HOME/.config/mpd/mpd.conf"
 export MPD_HOST
 MUSIC_DIR="$(grep 'music_directory' "$MPD_CONF" | grep -oP '(?<=").*?(?=")' |\
     sed -r "s/~/$( sed 's/[&/\]/\\&/g' <<<"$HOME"  )/" )"

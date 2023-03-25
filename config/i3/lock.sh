@@ -1,5 +1,5 @@
 #!/bin/bash
-IMG="/tmp/noxgrim/lock.png"
+IMG="/tmp/$USER/lock.png"
 ARGS=()
 
 # From xss-lock : /usr/share/doc/xss-lock/transfer-sleep-lock-i3lock.sh
@@ -12,13 +12,13 @@ ARGS=()
 
 # Run before starting the locker
 pre_lock() {
-    [ -d "/tmp/noxgrim" ] || mkdir -p "/tmp/noxgrim"
+    [ -d "/tmp/$USER" ] || mkdir -p "/tmp/$USER"
     return
 }
 
 # Prepare the actual locking
 prepare_lock() {
-    if [ -f '/tmp/noxgrim/user_suspended' ] || [ -f '/tmp/noxgrim/user_hibernated' ]; then
+    if [ -f "/tmp/$USER/user_suspended" ] || [ -f "/tmp/$USER/user_hibernated" ]; then
         mpc pause -q
     fi
     if grep -q 00black "$HOME/.fehbg"; then
@@ -33,8 +33,8 @@ prepare_lock() {
 # Run after the locker exits
 post_lock() {
     [ -e "$IMG" ] && rm "$IMG"
-    [ -f '/tmp/noxgrim/user_suspended' ] && rm '/tmp/noxgrim/user_suspended'
-    [ -f '/tmp/noxgrim/user_hibernated' ] && rm '/tmp/noxgrim/user_hibernated'
+    [ -f "/tmp/$USER/user_suspended" ] && rm "/tmp/$USER/user_suspended"
+    [ -f "/tmp/$USER/user_hibernated" ] && rm "/tmp/$USER/user_hibernated"
     return
 }
 

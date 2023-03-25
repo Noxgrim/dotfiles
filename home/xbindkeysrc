@@ -1,15 +1,15 @@
-"$HOME/dotfiles/audioscripts/audio.sh t"
+"$SCRIPT_ROOT/audioscripts/audio.sh t"
     XF86AudioPlay
-"$HOME/dotfiles/audioscripts/audio.sh t"
+"$SCRIPT_ROOT/audioscripts/audio.sh t"
     XF86AudioPause
-"$HOME/dotfiles/audioscripts/audio.sh t"
+"$SCRIPT_ROOT/audioscripts/audio.sh t"
     m:0x10 + c:208
     Mod2 + XF86AudioPlay
-"$HOME/dotfiles/audioscripts/audio.sh h"
+"$SCRIPT_ROOT/audioscripts/audio.sh h"
     XF86AudioStop
-"$HOME/dotfiles/audioscripts/audio.sh J"
+"$SCRIPT_ROOT/audioscripts/audio.sh J"
     XF86AudioNext
-"$HOME/dotfiles/audioscripts/audio.sh K"
+"$SCRIPT_ROOT/audioscripts/audio.sh K"
     XF86AudioPrev
 
 "$HOME/dotfiles/i3/dunstctl.sh close"

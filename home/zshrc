@@ -1,5 +1,6 @@
 # Path to your oh-my-zsh installation.
-export ZSH=/home/noxgrim/.oh-my-zsh
+export ZSH="$HOME"/.oh-my-zsh
+export SCRIPT_ROOT="$HOME/dotfiles"
 
 # Set name of the theme to load.
 # Look in ~/.oh-my-zsh/themes/
@@ -30,7 +31,7 @@ plugins=(git vi-mode)
 
 # User configuration
 
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:$HOME/.local/bin"
 export MANPATH="/usr/local/man:$MANPATH"
 [ -d "$HOME/.local/share/zsh/complete" ] && fpath=( "$HOME/.local/share/zsh/complete" $fpath )
 
@@ -53,7 +54,7 @@ alias 'glg!'='git log --stat'
 alias vim='\nvim'
 alias lvim='\vim'
 alias vimdiff='\nvim -d'
-alias audio="$HOME/dotfiles/audioscripts/audio.sh -C"
+alias audio="$SCRIPT_ROOT/audioscripts/audio.sh -C"
 alias ncmpcpp='\ncmpcpp --host=$MPD_HOST'
 alias r='ranger'
 # uni stuff
@@ -93,12 +94,12 @@ function mkpdf() {
 }
 
 function urg() {
-    "$HOME/dotfiles/scripts/update_renpy_game.sh" "$@"
+    "$SCRIPT_ROOT/scripts/update_renpy_game.sh" "$@"
     cd "$PWD"
 }
 
 function discordstreamHACK() {
-    "$HOME/dotfiles/audioscripts/discord_stream_hack.sh" "$@"
+    "$SCRIPT_ROOT/audioscripts/discord_stream_hack.sh" "$@"
 }
 
 

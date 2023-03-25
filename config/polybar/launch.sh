@@ -16,7 +16,7 @@ polybar bar_poly_secondary >>/tmp/polybar2.log 2>&1 &
 
 sleep 0.5
 if pgrep compton; then
-    source "$HOME/dotfiles/i3/notify.sh"
+    source "$SCRIPT_ROOT/i3/notify.sh"
     killall compton
     execute 'compton -CGb &> /dev/null & disown'
 fi
