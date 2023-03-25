@@ -3,11 +3,18 @@
 THIS="$(readlink -f "$0")" # path to script
 TDIR="$(dirname "$THIS")"
 # X clients that should be ignored
-WHITELIST=(ibus-x11 ibus-ui-gtk3 unity-settings-daemon notify-osd \
-    gnome-screensaver mozc_renderer redshift-gtk skype skypeforlinux udiskie \
-    nm-applet DiscordCanary Discord electron)
-KILLLIST=( steam )
-PIPED_URL='https://piped.kavin.rocks'
+IGNORELIST=('"i3-frame" "i3-frame"' 'root window' 'none' '"[^"]*" "i3bar"'
+            '"Dunst" "Dunst"' '"picom" "picom"' '"redshift-gtk" ""'
+            '"redshift" "redshift"' '"nm-applet" "Nm-applet"'
+            '"electron" "[Ee]lectron"' '"[eE]lement1?" "[Ee]lement1?"'
+            '"signal(-desktop)?" "[Ss]ignal(-desktop)?"'
+            '"protonmail-bridge" "Proton Mail Bridge"'
+        )
+WAITLIST=( '-f /usr/sbin/anki' 'eclipse' )
+KILLLIST=( steam zoom )
+PIPED_URL='https://piped.video'
+SUSPEND_ACTION='suspend'
+HIBERNATE_ACTION='hibernate'
 
 contains() {
     local V
@@ -59,23 +66,28 @@ close_firefox() {
 }
 
 listclients() {
-    declare -ag CLIENTS
-    CLIENTS=()
-    local INDEX=0
+    declare -Ag CLIENTS
     while read -r LINE; do
-        CLIENT="$(sed -rn 's/^\S+\s+(.+)$/\1/p' <<< "$LINE")"
-        if [ -n "$CLIENT" ]; then
-            for IGNORED in "${WHITELIST[@]}"; do
-                # Use a regex to also allow non-$PATH programs (Yes, I mean you Skype!)
-                if grep -qP "(^|/)$IGNORED($|\s+)" <<< "$CLIENT"; then
-                    continue 2; fi
+        if [ -n "$LINE" ]; then
+            for IGNORED in "${IGNORELIST[@]}"; do
+                if [[ "$(cut -d\  -f2- <<< "$LINE")" =~ $IGNORED ]]; then
+                    continue 2
+                fi
             done
-            CLIENTS[$INDEX]="$CLIENT"
-            INDEX=$((INDEX + 1))
+            #shellcheck disable=2001
+            CLIENTS["$(sed 's/[^"]*"[^"]*" "\(.*\)"$/\1/' <<< "${LINE,,}")"]=""
+            [ "${1-false}" = true ] && echo "$LINE"
         fi
-    done < <(xlsclients) # the loop somehow can't modify the variables
-                         # if I just pipe this in...
-    join_comma "${CLIENTS[@]}"
+    done < <(xwininfo -root -tree -int | grep -v '^\s*[0-9]* (has no name):'|\
+        sed 's/^\s*\([0-9]*\).*(\([^(]*\))[^)]*$/\1 \2/;te;d;:e /^\s*[0-9]*\s*$/d')
+    [ "${1-false}" != true ] && join_comma "${!CLIENTS[@]}"
+}
+
+waitclientcleanup() {
+    for CLIENT in "${WAITLIST[@]}"; do
+        #shellcheck disable=2086
+        while pgrep $CLIENT; do sleep 0.1; done
+    done
 }
 
 countclients() {
@@ -84,10 +96,10 @@ countclients() {
 }
 
 killapps() {
-    close_firefox >/dev/null
+    check_for_backup&
+    export -f close_firefox waitclientcleanup
+    timeout 4 bash -c close_firefox # Wait at most 4 seconds
     i3-msg '[class=".*"] kill' # close all windows
-    wait_for_backup&
-    while pgrep -f '/usr/bin/anki'; do sleep '0.1'; done # wait for anki to sync
     sleep '1' # Wait because my system is SO slow
     killall "${KILLLIST[@]}"
     if [ "$(countclients)" -gt 0 ]; then # there are clients that refuse to die
@@ -101,6 +113,8 @@ killapps() {
     fi
     while [ "$(countclients)" -gt 0 ]; do sleep '0.1'; done
     wait
+    timeout 30 bash -c waitclientcleanup # Wait at most 30 seconds
+    while pgrep -f 'eclipse'; do sleep '0.1'; done # wait for Eclipse to save
     return 0
 }
 
@@ -415,7 +429,7 @@ case "$1" in
         do_shutdown
         ;;
     list_clients)
-        listclients
+        listclients true
         ;;
     count_clients)
         countclients
