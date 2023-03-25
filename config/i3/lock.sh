@@ -54,7 +54,7 @@ if [[ -e /dev/fd/${XSS_SLEEP_LOCK_FD:--1} ]]; then
 
     # we have to make sure the locker does not inherit a copy of the lock fd
     prepare_lock {XSS_SLEEP_LOCK_FD}<&-
-    i3lock "${ARGS[@]}" -n -f {XSS_SLEEP_LOCK_FD}<&-
+    i3lock "${ARGS[@]}" -f {XSS_SLEEP_LOCK_FD}<&-
 
     # now close our fd (only remaining copy) to indicate we're ready to sleep
     exec {XSS_SLEEP_LOCK_FD}<&-
