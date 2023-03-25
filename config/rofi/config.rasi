@@ -37,5 +37,6 @@ configuration {
 	kb-mode-complete: "Control+Shift+space";
 	kb-toggle-case-sensitivity: "grave,dead_grave,Control+i";
 	kb-toggle-sort: "Alt+grave,Control+s";
+	monitor: -1;
 }
 @import "/usr/share/rofi/themes/solarized_alternate.rasi"

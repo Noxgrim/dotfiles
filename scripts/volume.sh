@@ -9,6 +9,9 @@ source "$HOME/.device_specific/default_sink.sh"
 STEP=2
 MAX=100
 
+# pulse is buggy!
+pactl list modules | grep 'Name: module-combine-sink' -q || pactl load-module module-combine-sink sink_name=combined
+
 if [ "${1:?"First should be non-empty!"}" = 'select' ]; then
     if [ "$2" == 'unset' ] && [ "$3" == 'active' ]; then
         [ -f "/tmp//volume/active" ] && rm '/tmp/'"$USER"'/volume/active'

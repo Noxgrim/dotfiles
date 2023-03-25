@@ -54,9 +54,11 @@ alias 'glg!'='git log --stat'
 alias vim='\nvim'
 alias lvim='\vim'
 alias vimdiff='\nvim -d'
+alias jshell="$(dirname "$(readlink "$(which java)")")/jshell"
 alias audio="$SCRIPT_ROOT/audioscripts/audio.sh -C"
 alias ncmpcpp='\ncmpcpp --host=$MPD_HOST'
 alias r='ranger'
+alias dps='docker ps | less -S'
 # uni stuff
 alias pk-cc='\gcc -std=c99 -g -Wall -Wextra -Wpedantic -Wbad-function-cast -Wconversion -Wwrite-strings -Wstrict-prototypes'
 function makesmallmkv() {
@@ -184,7 +186,7 @@ function mvln() {
 }
 function daysspanning() {
   # we have to round with +60*60*12  because of a funny concept called summer time
-  local DAYS="$((($(date -d"${2-today}" +%s)-$(date -d"${1?"Need date."}" +%s)+60*60*12)/(60*60*24)))"
+  local DAYS="$(((($(date -d"${2-00:00}" +%s))-($(date -d"${1?"Need date."}" +%s))+60*60*12)/(60*60*24)))"
   printf '%s\n' "$((${DAYS#-}+1))"
 }
 function installbandcamp() {

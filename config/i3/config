@@ -230,6 +230,10 @@ mode "$device" {
         bindsym $mod+Shift+r restart
 
 
+        bindsym $mod+Shift+s  exec $scriptdir/device.sh schedule_in 1h suspend,      mode "default"
+        bindsym $mod+Ctrl+s   exec $scriptdir/device.sh schedule_in 2h suspend,      mode "default"
+
+
         bindsym Shift+f mode "$force"
         bindsym plus    mode "$schedule"
         bindsym d       mode "$discord"
