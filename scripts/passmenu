@@ -7,6 +7,11 @@ if [[ $1 == "--type" ]]; then
     typeit=1
     shift
 fi
+choose=1
+if [[ $1 == "--choose" ]]; then
+    choose="$2"
+    shift 2
+fi
 
 prefix=${PASSWORD_STORE_DIR-~/.password-store}
 password_files=( "$prefix"/**/*.gpg )
@@ -17,8 +22,25 @@ password=$(printf '%s\n' "${password_files[@]}" | dmenu "$@")
 
 [[ -n $password ]] || exit
 
+case "$password" in
+    ssh/*)
+        expect - -- \
+        "$(pass show "$password" | sed -n 's,\($HOME\|~\),'"$HOME"',g;2p')" \
+        "$(pass show "$password" | sed -n '1p')" << "EOF"
+        set file [lindex $argv 0]
+        set password [lindex $argv 1]
+        spawn ssh-add "$file"
+        expect "Enter passphrase for $file:"
+        send "$password\n"
+        expect "Identity added: $file *"
+        wait
+        close
+EOF
+    ;;
+esac
+
 if [[ $typeit -eq 0 ]]; then
-    pass show -c "$password" 2>/dev/null
+    pass show -c"$choose" "$password" 2>/dev/null
 else
     delay=48 # in ms
     typecmd='\x00type\x00--clearmodifiers\x00--delay\x00'"$delay"'\x00'

@@ -208,6 +208,7 @@ mode "setnumber [0123456789][Return]" {
     bindsym Escape exec printf '\n' >> "$tmpdir/number", mode "default"
     bindsym Return exec printf '\n' >> "$tmpdir/number", mode "default"
 }
+bindsym $mod+Shift+Ctrl+p exec passmenu --choose 2
 
 set $device device [+][x][sSlLhHrF][mMnN][d]❖[dh]❖[se] ❖[rR]
 set $force device.force [SRL]
