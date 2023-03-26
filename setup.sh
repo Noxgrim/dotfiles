@@ -21,6 +21,11 @@ for F in config/*; do
   ln -nsfr "$F" "$HOME/.$F"
 done
 
+[ ! -d "$HOME"/.local/bin ] && mkdir "$HOME"/.local/bin
+for F in bin/*; do
+  ln -Lsfr {,"$HOME/.local/"}"$F"
+done
+
 ln -sfr .git-precommit '.git/hooks/pre-commit' # The censorer
 
 [ -d "$HOME/.mpd/playlists" ] || mkdir -p "$HOME/.mpd/playlists"
