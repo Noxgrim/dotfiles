@@ -1,0 +1,28 @@
+export MPD_HOST="$(grep -Po '(?<=^password ")[^@]*' "$SCRIPT_ROOT/config/mpd/password.conf")@localhost"
+numlockx on
+[[ -f ~/.Xresources  ]] && xrdb -merge -I$HOME ~/.Xresources
+
+setxkbmap -option shift:both_capslock
+setxkbmap -option caps:ctrl_modifier
+setxkbmap -option compose:rctrl-altgr
+setxkbmap -option compose:lwin-altgr
+setxkbmap -option compose:prsc
+xcape -e 'Caps_Lock=Escape;Control_R=Menu' -t 210
+xbindkeys
+
+dbus-update-activation-environment --systemd DISPLAY
+eval $(/usr/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh)
+export SSH_AUTH_SOCK
+
+#export GTK_IM_MODULE=xim # GTK is strange...
+#export QT_IM_MODULE=fcitx
+#export XMODIFIERS=@im=fcitx
+#fcitx &
+
+case "$USE_WM" in
+    gnome)
+        exec gnome-session
+        ;;
+    *)
+        exec i3
+esac
