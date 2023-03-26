@@ -26,6 +26,7 @@ if ! exists('g:is_manpage') || ! g:is_manpage
     source $HOME/.config/nvim/plug-config/vim-closetag.vim
     source $HOME/.config/nvim/plug-config/vim-which-key.vim
     source $HOME/.config/nvim/plug-config/vim-markdown.vim
+    " source $HOME/.config/nvim/plug-config/coqtail.vim
 endif
 " source $HOME/.config/nvim/plug-config/browserlink.vim
 
