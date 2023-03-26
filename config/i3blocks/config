@@ -135,6 +135,11 @@ markup=pango
 #instance=1
 interval=30
 
+[time_JP]
+command=env TZ=Asia/Tokyo date '+日本%H:%M'
+interval=10
+separator=false
+
 # Date Time
 #
 [time]
