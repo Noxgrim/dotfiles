@@ -33,8 +33,9 @@ ln -sfr .git-precommit '.git/hooks/pre-commit' # The censorer
 # Do we have a battery?
 if [ -n "$(find /sys/class/power_supply -iname 'BAT*' -print -quit)"  ]; then
   sudo cp scripts/{battery,notify}.sh /root
+  sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
   sudo cp systemd/system/battery.{service,timer} /etc/systemd/system
-  sudo pacman -Syu acpid
+  pacman -Qi acpid >/dev/null || sudo pacman -Sy acpid
   sudo systemctl daemon-reload
   sudo systemctl enable battery.timer
   sudo systemctl start battery.timer
@@ -48,7 +49,7 @@ install_override 'systemd/sleep.conf.d'
 install_override 'systemd/system/getty@tty1.service.d'
 # Do we have a backlight?
 if [ -n "$(find /sys/class/backlight -mindepth 1 -iname '*' -print -quit)"  ]; then
-  sudo pacman -Syu acpilight
+  pacman -Qi acpilight >/dev/null || sudo pacman -Sy acpilight
   [ -d '/etc/udev/rules.d' ] || mkdir -p '/etc/udev/rules.d'
   sudo cp -a {,/etc/}'udev/rules.d/90-backlight.rules'
   sudo usermod -aG video "$USER"
