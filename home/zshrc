@@ -48,7 +48,7 @@ export EDITOR=nvim
 [ -d /opt/wxgtk-dev/lib ]  && export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/wxgtk-dev/lib"
 
 
-alias gcd1="\git clone --recuse-submodules --depth 1"
+alias gcd1="\git clone --recurse-submodules --depth 1"
 alias glg='git log'
 alias 'glg!'='git log --stat'
 alias vim='\nvim'
