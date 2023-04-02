@@ -1,6 +1,6 @@
 #!/bin/bash
 
-THIS="$(readlink -f "$0")" # path to script
+THIS="$(readlink -f "$(command -v "$0")")" # path to script
 TDIR="$(dirname "$THIS")"
 # X clients that should be ignored
 IGNORELIST=('"i3-frame" "i3-frame"' 'root window' 'none' '"[^"]*" "i3bar"'
