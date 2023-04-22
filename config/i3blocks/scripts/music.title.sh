@@ -1,5 +1,3 @@
-export MPD_HOST="$(grep -Po '(?<=^password ")[^@]*' "$HOME/.mpdconf")@localhost"
-
 # Don't wait the first time we're started
 if [ "$(pgrep i3blocks)" == "$(cat '/tmp/'"$USER"'/audio_control/I3BLOCKS_PID')" ]; then
     mpc -qf "[[[%artist% • ][%album% • ][%title%]]|[%file%]]" current --wait
