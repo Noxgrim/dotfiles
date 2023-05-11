@@ -136,7 +136,7 @@ function fat32copy {
         FILE="$(basename "$DEST")"
         printf "\r\e[0K%3.2f%% (%d/%d): '%s'" "$(echo "scale=4; $NUM/$TOTAL*100" | bc)" $NUM $TOTAL "$FILE"
         if [ ! -d "$DIR" ]; then
-            mkdir -pv "$DIR"
+            mkdir -p "$DIR"
         fi
         cp --no-clobber "$F" "$DIR/$FILE"
     done
