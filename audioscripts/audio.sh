@@ -409,7 +409,7 @@ $0 [OPTION]... COMMANDS
 
 Commands:
  Commands control what tasks the script performs. Multiple commands must
- be written in a string (e.g. JJp) with the arguments following after that.
+ be written in a string (e.g. jjp) with the arguments following after that.
  The arguments will be associated with the commands that accessed them
  accordingly. The search query commands (s, f) will always accept the
  remaining arguments.
@@ -426,13 +426,13 @@ Commands:
   # mpc stats
   D [args]
     mpc [args] (mnemonic mpc Do; Executes a mpc query; Overrides a search/handler)
-  k kill PROVIDER (executed immediately)
+  K kill PROVIDER (executed immediately)
   Y mpc update --wait
 
  Stackable:
-  K mpc prev
-  J mpc next
-  Q Toggle the automatic displaying of a notification if the p, t, h, b, J, K
+  k mpc prev
+  j mpc next
+  Q Toggle the automatic displaying of a notification if the p, t, h, b, j, K
      commands are used
   r mpc repeat
   z mpc random
@@ -501,7 +501,6 @@ Options: [these only accepted before the commands!]
                       running
   -p  --provider [provider]
                      specify the provider. Supported: mpd, mopidy; default: $PROVIDER
-                      
   -s, --specify-type Specify the type of search queries yourself.
                       The type is set to 'any' if this parameter is
                       omitted and all subsequent arguments will be
@@ -559,7 +558,7 @@ elif [ ! "$( pgrep "$PROVIDER" )" ]; then
     notify-send "Starting $PROVIDER_NAME!"
     case "$PROVIDER" in
         mpd)
-            mpd "$HOME/.mpdconf"
+            systemctl --user restart mpd.service
             ;;
         mopidy)
             mopidy &> "$AU_DIR/mopidy.log"& disown
@@ -612,13 +611,13 @@ for C in $( echo $COMMAND | grep -o . ); do
             fi
             ;;
 
-        K)
+        k)
             $MPC prev
             if [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
             fi
             ;;
-        J)
+        j)
             $MPC next
             if [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
@@ -648,7 +647,7 @@ for C in $( echo $COMMAND | grep -o . ); do
         C)
             change_notify
             ;;
-        k)
+        K)
             if [ -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 change_notify
             fi
@@ -681,7 +680,7 @@ for C in $( echo $COMMAND | grep -o . ); do
             ((ARGS_START++))
             ;;
         S)
-            $MPC seek ${!ARGS_START}
+            $MPC seek ${!ARGS_START-0}
             ((ARGS_START++))
             ;;
 
@@ -713,7 +712,7 @@ for C in $( echo $COMMAND | grep -o . ); do
 
         *)
             echo "$C is not a valid command."
-            echo 'Valid commands: abcdfhiklpqrstvxyzBCDJKLPQSY#'
+            echo 'Valid commands: abcdfhijklpqrstvxyzBCDKLPQSY#'
             echo 'See -h for more info.'
             exit 1
     esac
