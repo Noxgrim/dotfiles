@@ -12,7 +12,6 @@ IGNORELIST=('"i3-frame" "i3-frame"' 'root window' 'none' '"[^"]*" "i3bar"'
         )
 WAITLIST=( '-f /usr/sbin/anki' 'eclipse' )
 KILLLIST=( steam zoom )
-PIPED_URL='https://piped.video'
 SUSPEND_ACTION='suspend'
 HIBERNATE_ACTION='hibernate'
 
@@ -154,8 +153,8 @@ print_possible_commands() {
         sed 's/[{+}]//g;s/|/\n/g' | grep -o '^\w*\s*' | sort
     printf '\n'
 
-    find "$HOME/.device_specific/actions/"  -type f -executable -printf %f\\n |\
-        sed 's/\.sh$//g;s/^/action /' | sort
+    find "$HOME/.device_specific/actions/" "$SCRIPT_ROOT/actions"  -type f -executable -printf %f\\n |\
+        sed 's/\.sh$//g;s/^/action /' | sort -u
     printf '\n'
 
     "$TDIR/discord.sh" usage 2>&1 | tail +2 | cut -d\  -f2- |\
@@ -330,26 +329,6 @@ run() {
             su "$USER" -c "$*"
         fi
     done
-}
-
-get_piped() {
-    xclip -sel c -o | case "$(xclip -sel c -o)" in
-        'https://www.youtube.com/watch?v='*)
-            sed 's,^https://www.youtube.com/watch?v=,,'
-            ;;
-        'https://youtu.be/'*)
-            sed 's,^https://youtu.be/,,'
-            ;;
-        'https://piped.'*'/')
-            sed 's,^https://piped.[^/]*/,,'
-            ;;
-        '{'*) # aussume copied debug info from YouTube, needed for some ads
-            jq '.addebug_videoId, .debug_videoId' -r | sed  '/^\(null\|\)$/d' | head -n1
-            ;;
-        *)
-            echo 'Uknown format in clipboard…' >&2 && return 1
-            ;;
-    esac | sed 's,^,'"$PIPED_URL"'/watch?v=,'
 }
 
 while [ $# -gt 0 ]; do
@@ -564,14 +543,12 @@ case "$1" in
         run "${ARGS[@]}"
         ;;
     action)
-        "$HOME/.device_specific/actions/$2.sh" &>/dev/null &disown
+        if [ -x "$HOME/.device_specific/actions/$2.sh" ]; then
+            "$HOME/.device_specific/actions/$2.sh" &>/dev/null& disown
+        elif [ -x "$SCRIPT_ROOT/actions/$2.sh" ]; then
+            "$SCRIPT_ROOT/actions/$2.sh" &>/dev/null& disown
+        fi
         shift 1
-        ;;
-    piped_link)
-        get_piped | xclip -sel c -r
-        ;;
-    piped_open)
-        get_piped | xargs -0 xdg-open &>/dev/null & disown
         ;;
     send_all)
         shopt -s lastpipe
@@ -593,7 +570,6 @@ case "$1" in
         echo "Usage: $0 run ARSGS ;"
         echo "Usage: $0 run_as USERANDARSGS ;"
         echo "Usage: $0 action ACTION_NAME"
-        echo "Usage: $0 piped_link|piped_open"
     } >&2
         exit 2
 esac
