@@ -5,12 +5,10 @@
 #     Chapter #0:0: START 0.000000, END 1290.013333
 #       first   _     _     START    _     END
 
-echo "$0"
-
 BASEDIR="$( dirname "$0" )"
 SECRET_FILE="$BASEDIR/audible.secrets"
 # Audible Secret
-SECRET="$(head -n1 < "$BASEDIR/audible.secrets" | grep -o '[0-9a-f]*$')"
+[ -f "$SECRET_FILE" ] && SECRET="$(head -n1 < "$SECRET_FILE" | grep -o '[0-9a-f]*$')"
 
 # if secret is not given, try to extract it from AudibleActivation.sys
 # you may find this file on your rooted Android phone
@@ -18,12 +16,9 @@ SECRET="$(head -n1 < "$BASEDIR/audible.secrets" | grep -o '[0-9a-f]*$')"
 # or on your audible activated MP3 player (e.g. Sandisk Clip, Sandisk Sports)
 
 if [[ -z $SECRET ]] ; then
-    if [[ -e "$BASEDIR/AudibleActivation.sys" ]] ; then
+    if [[ -e "$BASEDIR/AudibleActivation.sys" ]] && command -v hexdump 2>/dev/null; then
         SECRET="$( hexdump "$BASEDIR"/AudibleActivation.sys | head -n 1 | sed -r 's/^.{8}(.{4}) (.{4}).*/\2\1/' )"
         echo "Your secret: $SECRET"
-    else
-        echo "no secret";
-        exit
     fi
 fi
 
@@ -105,7 +100,65 @@ while [[ $# -gt 0 ]] ; do
             shift 2
             continue
             ;;
+        -h|--help)
+            less -F << EOF
+Usage: "$0" [[OPTION...] [AAX FILE...]...]
+
+'afterthought' can be used afterwards for tagging.
+Options always affect all files after them until new values are set. Thus, if
+the defaults should be avoided the respective options must be specified before
+the first file.
+
+Options:
+-f FORMAT, --format FORMAT, --fmt FORMAT
+        Specify the output format.
+
+        Possible values for FORMAT:
+        mp3 (default), ogg, flac
+        custom EXTENSION CODEC
+            EXTENSION
+                extra argument specifying the file extension
+            CODEC
+                extra argument specifying name of the FFmpeg codec which shall
+                be used
+-L LANG, --language LANG, --lang LANG
+        Set the amount of time which is skipped at the start and end for the
+        intro and outro. This varies by language.
+
+        Possible values for FORMAT:
+        en:     English
+        de:     new, longer German intro (around 7s)
+        de_old: old, shorter German intro (around 4s)
+        none:   don't remove intro or outro (default)
+        custom START EMD
+            START
+                extra argument specifying time in seconds to skip at the start
+                of the file. The value supports fractions.
+            END
+                extra argument specifying time in seconds to skip at the end of
+                the file. The value supports fractions.
+-s FILE, --secret-file FILE
+        The file in which to search for decoding secrets. Decoding secrets have
+        have to be present as lower-case hex strings at the end of the line. The
+        first found string is taken.
+        Defaults to a file called 'audible.secrets' in the script's directory.
+        If this is unsuccessful, the script tries to extract the secret using a
+        file called 'AudibleActivation.sys' in the script's directory.
+-S SECRET, --secret SECRET
+        Manual specification of a secret (see --secret-file for secret format)
+-o DIR, -O DIR, -d DIR, --output-dir DIR
+        Set ouput directory for extracted files
+-h, --help
+        This help.
+
+Example:
+        "$0" -L en -f mp3 ENG_TO_MP3 -L de GER_TO_MP3 GER_TO_MP3 -f flac GER_TO_FLAC
+EOF
+            exit
+            ;;
     esac
+
+    [ -z "$SECRET" ] && echo "no secret" 1>&2 && exit 1
 
     TMP="$( mktemp /tmp/audebilXXXXX )"
 
