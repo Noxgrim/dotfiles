@@ -7,7 +7,7 @@
     Mod2 + XF86AudioPlay
 "$SCRIPT_ROOT/audioscripts/audio.sh h"
     XF86AudioStop
-"$SCRIPT_ROOT/audioscripts/audio.sh J"
+"$SCRIPT_ROOT/audioscripts/audio.sh j"
     XF86AudioNext
-"$SCRIPT_ROOT/audioscripts/audio.sh K"
+"$SCRIPT_ROOT/audioscripts/audio.sh k"
     XF86AudioPrev
