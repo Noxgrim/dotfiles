@@ -230,8 +230,10 @@ mode "$device" {
         bindsym $mod+Shift+r restart
 
 
-        bindsym $mod+Shift+s  exec $scriptdir/device.sh schedule_in 1h suspend,      mode "default"
-        bindsym $mod+Ctrl+s   exec $scriptdir/device.sh schedule_in 2h suspend,      mode "default"
+        bindsym $mod+Shift+s  exec $scriptdir/device.sh schedule_in 1h suspend,   mode "default"
+        bindsym $mod+Ctrl+s   exec $scriptdir/device.sh schedule_in 2h suspend,   mode "default"
+        bindsym $mod+Shift+h  exec $scriptdir/device.sh schedule_in 1h hibernate, mode "default"
+        bindsym $mod+Ctrl+h   exec $scriptdir/device.sh schedule_in 2h hibernate, mode "default"
 
 
         bindsym Shift+f mode "$force"
