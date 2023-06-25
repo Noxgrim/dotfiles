@@ -114,6 +114,9 @@ export MANPAGER="nvim  --cmd 'let g:is_manpage=1' -c 'set ft=man' -c 'Man!' -"
 if [ -d "$HOME/.local/bin" ]; then
     PATH="$HOME/.local/bin:$PATH"
 fi
+if [ -d "$SCRIPT_ROOT/bin" ]; then
+    PATH="$SCRIPT_ROOT/bin:$PATH"
+fi
 
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
