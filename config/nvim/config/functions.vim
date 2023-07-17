@@ -1,7 +1,14 @@
+" Escape for the {string} in a 'substitute' command or function. ',' will also
+" be escaped for string.
+" @str the string to escape
+function s:escape_re(str) abort
+    return escape(a:str, ' \,' . (&magic ? '&~' : ''))
+endfunction
+
 " Implement own function to save files as super user
 " to allow no or one argument.
 " @file the file to open (defaults to % if empty)
-function! <SID>noxgrim_sudo_write(file)
+function! s:noxgrim_sudo_write(file)
     if len(a:file)
         execute "w !sudo tee > /dev/null " . fnameescape(a:file)
     else
@@ -47,6 +54,40 @@ function! <SID>noxgrim_focus_floating(num)
                 \ " window number " . l:num . "!"
     echohl None
 endfunction
+
+" Surround the given range with comments intended for marked folding, This
+" function will try to respect the b:commentary_format (from 'commenary') and
+" if that's not set &commentstring. The function will close the created fold
+" if the &foldmethod = merker.
+"
+" @name the name to give to the fold. If empty the function will query it and
+"       only continue if it is non-empty.
+function! Nfold(name) range
+    let l:foldname = a:name
+
+    if empty(l:foldname)
+        let l:foldname = input('Fold name: ')
+    endif
+    if empty(l:foldname)
+        return
+    endif
+    let l:folds = split(&foldmarker, ',')
+    if exists("b:commentary_format")
+        let l:form = b:commentary_format
+    elseif &commentstring =~? '%s'
+        let l:form = &commentstring
+    else
+        let l:form = '# %s'
+    endif
+    exe a:lastline  . 's,$,\r' . s:escape_re(substitute(l:form, '%s', s:escape_re('/' . l:foldname . ' ' . folds[1]), ''))
+    exe a:firstline . 's,^,'   . s:escape_re(substitute(l:form, '%s', s:escape_re(' ' . l:foldname . ' ' . folds[0]), '')) . '\r'
+    if &foldmethod ==# "marker"
+        exe (a:lastline + 1) . "norm! zc"
+        return
+    endif
+endfunction
+
+vnoremap <leader>z :call Nfold("")<CR>
 
 command! -nargs=? -complete=file Swrite call <SID>noxgrim_sudo_write('<args>')
 
