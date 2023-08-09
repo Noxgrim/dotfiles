@@ -30,6 +30,40 @@ ln -sfr .git-precommit '.git/hooks/pre-commit' # The censorer
 
 [ -d "$HOME/.mpd/playlists" ] || mkdir -p "$HOME/.mpd/playlists"
 
+# backup services
+if ! id backup &>/dev/null; then
+  sudo useradd backup --home '/home/.backup' --shell '/home/.backup/connected.sh'
+  sudo mkdir -p '/home/.backup/.ssh'
+  sudo chown backup:backup '/home/.backup'
+  sudo chmod 700 '/home/.backup'
+  sudo cp backup/{connected,backup}.sh '/home/.backup'
+  sudo cp scripts/notify.sh /root
+  sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
+  sudo cp backup/backup.{service,timer} /etc/systemd/system
+  sudo gcc actions/trigger_backup.c -o actions/trigger_backup.sh
+  sudo chmod u+s actions/trigger_backup.sh
+  if [ -e 'backup/backup.conf' ]; then
+    sudo cp 'backup/backup.conf' '/home/.backup'
+  else
+    printf '\e[1;31mPlease /home/.backup/backup.conf (press any button after you'\''re done)\e[0m\n'
+    read -r
+  fi
+  if [ ! -e "$HOME/.ssh/backup_ed25519.pub" ] || [ ! -f  '/home/.backup/backup.conf' ]; then
+    printf '\e[1;31mPlease install SSH key %s/.ssh/backup_ed25519.pub (press any button after you'\''re done)\e[0m\n' "$HOME"
+    read -r
+  fi
+  if [ -e "$HOME/.ssh/backup_ed25519.pub" ]; then
+    sudo cp "$HOME/.ssh/backup_ed25519.pub" '/home/.backup/.ssh/authorized_keys'
+  fi
+  if [ -e "$HOME/.ssh/backup_ed25519.pub" ] && [ -f  '/home/.backup/backup.conf' ]; then
+    sudo systemctl enable backup.timer
+    sudo systemctl start backup.timer
+    printf '\e[1;32mInstalled backup; make sure ".backup_exclude" files are found by locate\e[0m\n'
+  else
+    printf '\e[1;91mSSH key or config are missing, backup not enabled\e[0m\n'
+  fi
+fi
+
 # Do we have a battery?
 if [ -n "$(find /sys/class/power_supply -iname 'BAT*' -print -quit)"  ]; then
   sudo cp scripts/{battery,notify}.sh /root
