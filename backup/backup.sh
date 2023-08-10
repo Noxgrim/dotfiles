@@ -136,7 +136,7 @@ send_message low "Backing up..." "<u>Keep device connected!</u>"
 TIME="$(date +%s)"
 OUT="$(mktemp)"
 # Backup all of /home except a few excluded directories and files
-borg create --verbose --stats --compression lz4 --list --filter AME \
+borg create --verbose --stats --compression auto,zstd --list --filter AME \
         --show-rc                                        \
         "$REPOSITORY"::'{hostname}-{now:%Y-%m-%d %H:%M}' \
                                                          \
@@ -173,6 +173,8 @@ echo '
         --exclude '/var/tmp/*'          \
         --exclude '/home/lost+found'    \
         --exclude '__pycache__'         \
+        --exclude 'chache'              \
+        --exclude 'chaches'             \
         --exclude '*.img'               \
         --exclude '*.iso'               \
         --exclude '*.rpa'               \

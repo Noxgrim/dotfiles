@@ -33,6 +33,7 @@ plugins=(git vi-mode)
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:$HOME/.local/bin"
 export MANPATH="/usr/local/man:$MANPATH"
+export GOPATH="$HOME/.cache/go"
 [ -d "$HOME/.local/share/zsh/complete" ] && fpath=( "$HOME/.local/share/zsh/complete" $fpath )
 
 source $ZSH/oh-my-zsh.sh
