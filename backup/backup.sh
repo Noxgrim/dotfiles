@@ -101,10 +101,11 @@ if ! grep -qs "$MOUNTLOC" /proc/mounts; then # only mount if not already mounted
         DO_CLOSE=false
     fi
     mount '/dev/mapper/backup' "$MOUNTLOC"
-    DO_UMOUNT='true'
+    DO_UMOUNT=true
 else
     echo 'Already mounted.'
-    DO_UMOUNT='false'
+    DO_UMOUNT=false
+    DO_CLOSE=false
 fi
 
 
@@ -124,7 +125,7 @@ if [ -e "$REPOSITORY/lock.exclusive"  ]; then
     if [ "$TIME" -lt 3600 ]; then
         send_message normal "Backup repair finished." "Took $(TZ=UTC date +%M:%S -d@"$TIME").\nStarting normal backup."
     else
-        send_message normal "Backup repair finished." "Took $(TZ=UTC date +%T     -d@"$TIME").\nStarting normal backup."
+        send_message normal "Backup repair finished." "Took $(TZ=UTC date +%T    -d@"$TIME").\nStarting normal backup."
     fi
 
 else
