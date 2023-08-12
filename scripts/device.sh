@@ -428,6 +428,8 @@ case "$1" in
     wallpaper)
         if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
             "$HOME/.device_specific/wallpaper_command.sh"
+        elif [ -e "$HOME/Documents/.wallpaper" ]; then
+            "$SCRIPT_ROOT/scripts/wallpaper_command.sh"
         else
             find "$HOME" -maxdepth 1 -iname '.wallpaper*' -print0 | sort -z | xargs -0 feh --bg-scale
         fi
@@ -436,6 +438,8 @@ case "$1" in
         shift 1
         if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
             "$HOME/.device_specific/wallpaper_command.sh" "$1"
+        elif [ -e "$HOME/Documents/.wallpaper" ]; then
+            "$SCRIPT_ROOT/scripts/wallpaper_command.sh" "$1"
         else
             find "$HOME" -maxdepth 1 -iname '.wallpaper*'"$1"'*' -print0 | sort -z | xargs -0 feh --bg-scale
         fi
