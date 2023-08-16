@@ -4,6 +4,7 @@ import base64
 import os
 import re
 import sys
+import pdb
 
 from mutagen.flac import Picture
 from mutagen.flac import error as FLACError
@@ -35,11 +36,20 @@ PROGRESS_PERCENT_OF = "steps"
 
 USE_FAT_NAMES = True
 PRINT_PROGESS = True
+PRESERVE_STRUCTURE = True
 DRY = False
 KEEP_TRANSPARENCY = "y"  # ask, n
 
 AUDIO_EXTENSIONS = [".mp3", ".flac", ".wma", ".wav", ".ogg", ".opus"]
 COVER_EXTENSIONS = [".jpg", ".jpeg", ".png"]
+
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description="Convert sources to target with ffmpeg and keep metadata.")
+    parser.add_argument('sources', nargs='+', metavar='SOURCE', action='extend', help='source files or directories to be converted')
+    parser.add_argument('destination', nargs=1, metavar='DIRECTORY', action='store', help='destination directory')
+    parser.add_argument('--fat-names', '-f', action='store_true', dest='fat', help='use FAT compatible names', default=False)
+    parser.add_argument('--no-fat-names', '-F', action='store_false', dest='fat', help='do not use use FAT compatible names', default=False)
 
 
 def is_fat_fs(destination):
@@ -692,7 +702,15 @@ def walk_and_convert(sources, destination, skip_hidden=True):
                     dirnames.remove(dirn)
 
             src_dir = dirname
-            reldir = source_dir(source)
+            if PRESERVE_STRUCTURE:
+                reldir = os.path.commonpath(source_dirs)
+                # pdb.set_trace()
+                reldir = os.path.join(reldir,
+                                      os.path.relpath(source_dir(source),
+                                                      start=reldir)
+                                      .split(os.path.sep)[0])
+            else:
+                reldir = source_dir(source)
             dest_dir = to_target_name(
                 os.path.join(
                     destination,

@@ -12,3 +12,5 @@ endfor
 if !empty(s:command)
     execute 'CocInstall ' . s:command
 endif
+" make sure that this has precedence
+" inoremap <expr> <CR> coc#pum#visible() ? coc#_select_confirm() : lexima#expand('<CR>', 'i')
