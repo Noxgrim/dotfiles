@@ -1,5 +1,5 @@
 #! /bin/bash
-source "$HOME/.device_specific/wallpaper_command.sh"
+device wallpaper
 numlockx on
 pgrep -u "$USER" dunst        || dunst &
 pgrep -u "$USER" keynav       || keynav &
