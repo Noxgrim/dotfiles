@@ -50,6 +50,7 @@ if [ ! -e "/dev/disk/by-uuid/$DEVICEUUID" ]; then # check for existence
         if ping -qc 1 -w 1 "$HOST" >/dev/null; then
             if ssh -i "$SSHKEY" backup@"$HOST"; then
                 message_skip "Backup not possible" "Backup device not connected, \nbut <b>$HOST</b> should back up."
+                clear_skip
                 exit 0
             fi
         fi
