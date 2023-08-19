@@ -120,8 +120,8 @@ else MUTED='muted'; fi
 
 if [ -n "$INS" ] || [ $USE_MUTE ]; then
     if [ -n "$INS" ]; then
-        notify-send -a "$USER"':volume' -u low -h "int:value:$NEW" 'Volume ' "%$MUTED"
+        notify-send -a 'noxgrim:volume' -u low -h "int:value:$NEW" 'Volume ' "%$MUTED"
     else
-        notify-send -a "$USER"':volume:mute_action' -u low 'Volume ' "$MUTED"
+        notify-send -a 'noxgrim:volume:mute_action' -u low 'Volume ' "$MUTED"
     fi
 fi
