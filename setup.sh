@@ -42,13 +42,15 @@ if ! id backup &>/dev/null; then
   sudo cp backup/backup.{service,timer} /etc/systemd/system
   sudo gcc actions/trigger_backup.c -o actions/trigger_backup.sh
   sudo chmod u+s actions/trigger_backup.sh
-  if [ -e 'backup/backup.conf' ]; then
-    sudo cp 'backup/backup.conf' '/home/.backup'
+  if [ -e "data/$HOSTNAME/backup.conf" ]; then
+    sudo cp "data/$HOSTNAME/backup.conf" '/home/.backup'
+  elif [ -e "data/shared/backup.conf" ]; then
+    sudo cp "data/shared/backup.conf" '/home/.backup'
   else
-    printf '\e[1;31mPlease /home/.backup/backup.conf (press any button after you'\''re done)\e[0m\n'
+    printf '\e[1;31mPlease install /home/.backup/backup.conf (press any button after you'\''re done)\e[0m\n'
     read -r
   fi
-  if [ ! -e "$HOME/.ssh/backup_ed25519.pub" ] || [ ! -f  '/home/.backup/backup.conf' ]; then
+  if [ ! -e "$HOME/.ssh/backup_ed25519.pub" ]; then
     printf '\e[1;31mPlease install SSH key %s/.ssh/backup_ed25519.pub (press any button after you'\''re done)\e[0m\n' "$HOME"
     read -r
   fi

@@ -2,7 +2,7 @@ home/vim/*
 !home/vim/patches
 !home/vim/colors/
 config/mpd/password.conf
-backup/backup.conf
+data
 actions/trigger_backup.sh
 .stignore
 .stfolder/
