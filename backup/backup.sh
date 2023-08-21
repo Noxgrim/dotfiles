@@ -2,7 +2,7 @@
 THISDIR="$(dirname "$(readlink -f "$0")")"
 source /root/notify.sh
 source "$THISDIR/backup.conf"
-CACHE="${XDG_CACHE_DIR-"$THISDIR/.cache/backup"}"
+CACHE="${XDG_CACHE_DIR-"$THISDIR/.cache"}/backup"
 
 send_message() {
     notify -a backup -u "$1" "$2" "$3"
@@ -84,16 +84,16 @@ if [ ! -e "/dev/disk/by-uuid/$DEVICEUUID" ]; then # check for existence
 fi
 
 # Pass phrase
-if [ -z "$(systemd-creds decrypt backup)" ]; then
+if [ -z "$(systemd-creds decrypt "$THISDIR/key")" ]; then
     send_message normal "Requesting backup keys" "Please provide if propmted"
     if [ -z "$(execute pass show /etc/backup)" ]; then
         increase_skip
         send_message critical "Backup not possible" "Key retrival failed!"
         exit 1
     fi
-    execute pass show /etc/backup | systemd-creds encrypt - backup --not-after='+12h' -H
+    execute pass show /etc/backup | systemd-creds encrypt - "$THISDIR/key" --not-after='+12h' -H
 fi
-BORG_PASSPHRASE="$(systemd-creds decrypt backup -)"
+BORG_PASSPHRASE="$(systemd-creds decrypt "$THISDIR/key" -)"
 if ! grep -qs "$MOUNTLOC" /proc/mounts; then # only mount if not already mounted
     if [ ! -e "/dev/mapper/backup" ]; then
         cryptsetup open "/dev/disk/by-uuid/$DEVICEUUID" backup - <<< "$BORG_PASSPHRASE"
