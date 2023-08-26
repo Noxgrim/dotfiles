@@ -188,27 +188,46 @@ rm "$OUT"
 # Route the normal process logging to journalctl
 #2>&1
 
-# If there is an error backing up, reset password envvar and exit
-if [ "$EXIT" != 0 ] ; then
-    export BORG_PASSPHRASE=""
-    "$DO_UMOUNT" && umount "$MOUNTLOC"
-    "$DO_CLOSE" && cryptsetup close backup
-    send_message critical "Backup may be incomplete" "An backup error occurred."
-    exit 1
-fi
+# Look at exit code
+case "$EXIT" in
+    0) # Everything fine
+        CONTINUE=true
+        MESSAGE_URGENCY=low
+        MESSAGE_HEAD="Backup completed"
+        MESSAGE_BODY=""
+        ;;
+    1) # Waring
+        CONTINUE=true
+        MESSAGE_URGENCY=low
+        MESSAGE_HEAD="Backup completed"
+        MESSAGE_BODY="<u>There were warinings!</u>\n"
+        ;;
+    2) # Error
+        CONTINUE=false # we con't want to interact more with the repository
+        MESSAGE_URGENCY=critical
+        MESSAGE_HEAD="Backup may be incomplete!"
+        MESSAGE_BODY="<u>An backup error occurred!</u>\n"
+        ;;
+    *) # Probably signal, https://github.com/borgbackup/borg/issues/6756
+        CONTINUE=false
+        MESSAGE_URGENCY=critical
+        MESSAGE_HEAD="Backup may be incomplete!"
+        MESSAGE_BODY="<u>An backup error occurred!</u>\nCode: $EXIT\n"
+        ;;
+esac
 
 # Prune the repo of extra backups
-borg prune -v "$REPOSITORY" --verbose -a '{hostname}-*' \
-    --keep-hourly 16                                    \
-    --keep-daily 7                                      \
-    --keep-weekly 4                                     \
-    --keep-monthly 12                                   \
-    --keep-yearly -1
+$CONTINUE && prune -v "$REPOSITORY" --verbose -a '{hostname}-*' \
+    --keep-hourly  16                                           \
+    --keep-daily    7                                           \
+    --keep-weekly   4                                           \
+    --keep-monthly 12                                           \
+    --keep-yearly  -1
 
 # Include the remaining device capacity in the log
 df -hl | grep --color=never "$MOUNTLOC"
 
-borg list "$REPOSITORY"
+$CONTINUE && borg list "$REPOSITORY"
 
 # Unset the password
 export BORG_PASSPHRASE=""
@@ -217,8 +236,8 @@ export BORG_PASSPHRASE=""
 ETIME="$(date +%s)"
 TIME=$((ETIME-TIME))
 if [ "$TIME" -lt 3600 ]; then
-    send_message low "Backup completed" "Took $(TZ=UTC date +%M:%S -d@"$TIME")"
+    send_message "$MESSAGE_URGENCY" "$MESSAGE_HEAD" "${MESSAGE_BODY}Took $(TZ=UTC date +%M:%S -d@"$TIME")"
 else
-    send_message low "Backup completed" "Took $(TZ=UTC date +%T    -d@"$TIME")"
+    send_message "$MESSAGE_URGENCY" "$MESSAGE_HEAD" "${MESSAGE_BODY}Took $(TZ=UTC date +%T    -d@"$TIME")"
 fi
 exit 0
