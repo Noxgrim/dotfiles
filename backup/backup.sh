@@ -65,13 +65,13 @@ if [ -e /tmp/backup_suspend ]; then
 fi
 # don't backup while still backing up
 if [ "$( pgrep -cf "bash $0" )" -gt 1 ]; then
-    message_skip "Backup skipped" "There'\\''s already a backup running!"
+    message_skip "Backup skipped" "There's already a backup running!"
     exit 0
 fi
 # don't backup while still backing up
 if [ "$( pgrep -cf "borg" )" -gt 1 ]; then
     increase_skip
-    message_skip "Backup skipped" "There'\\''s already some other <i>borg</i> running?"
+    message_skip "Backup skipped" "There's already some other <i>borg</i> running?"
     exit 0
 fi
 
