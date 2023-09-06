@@ -93,6 +93,11 @@ if [ -z "$(systemd-creds decrypt "$THISDIR/key")" ]; then
     fi
     execute pass show /etc/backup | systemd-creds encrypt - "$THISDIR/key" --not-after='+12h' -H
 fi
+
+send_message low "Backing up..." "<u>Keep device connected!</u>"
+TIME="$(date +%s)"
+OUT="$(mktemp)"
+
 BORG_PASSPHRASE="$(systemd-creds decrypt "$THISDIR/key" -)"
 if ! grep -qs "$MOUNTLOC" /proc/mounts; then # only mount if not already mounted
     if [ ! -e "/dev/mapper/backup" ]; then
@@ -128,14 +133,12 @@ if [ -e "$REPOSITORY/lock.exclusive"  ]; then
     else
         send_message normal "Backup repair finished." "Took $(TZ=UTC date +%T    -d@"$TIME").\nStarting normal backup."
     fi
-
+    send_message low "Trying normal back up now..." "<u>Still keep device connected!</u>"
+    TIME="$(date +%s)"
 else
     borg break-lock "$REPOSITORY"
 fi
 
-send_message low "Backing up..." "<u>Keep device connected!</u>"
-TIME="$(date +%s)"
-OUT="$(mktemp)"
 # Backup all of /home except a few excluded directories and files
 borg create --verbose --stats --compression auto,zstd --list --filter AME \
         --show-rc                                        \
