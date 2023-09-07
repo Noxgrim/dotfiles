@@ -220,11 +220,11 @@ case "$EXIT" in
 esac
 
 # Prune the repo of extra backups
-$CONTINUE && prune -v "$REPOSITORY" --verbose -a '{hostname}-*' \
-    --keep-hourly  16                                           \
-    --keep-daily    7                                           \
-    --keep-weekly   4                                           \
-    --keep-monthly 12                                           \
+$CONTINUE && borg prune -s -v "$REPOSITORY" --verbose -a '{hostname}-*' \
+    --keep-hourly  16                                                   \
+    --keep-daily    7                                                   \
+    --keep-weekly   4                                                   \
+    --keep-monthly 12                                                   \
     --keep-yearly  -1
 
 # Include the remaining device capacity in the log
