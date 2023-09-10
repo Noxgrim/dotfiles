@@ -2,25 +2,48 @@
 
 shopt -s nullglob globstar
 
-typeit=0
+typeit=false
 if [[ $1 == "--type" ]]; then
-    typeit=1
+    typeit=true
     shift
 fi
-choose=1
+choose=false
 if [[ $1 == "--choose" ]]; then
-    choose="$2"
-    shift 2
+    choose=true
+    shift
 fi
 
 prefix=${PASSWORD_STORE_DIR-~/.password-store}
-password_files=( "$prefix"/**/*.gpg )
-password_files=( "${password_files[@]#"$prefix"/}" )
-password_files=( "${password_files[@]%.gpg}" )
+lastcache="/tmp/$USER/nextpass"
+if [[ -f "$lastcache" ]] && ! $choose; then
+    password="$(cat "$lastcache")"
+fi
 
-password=$(printf '%s\n' "${password_files[@]}" | dmenu "$@")
+if [[ -z "$password" ]]; then
+    rankfile=${XDG_CACHE_DIR-$HOME/.cache}
+    rankfile_tmp="$rankfile/passmenu-1.cache"
+    rankfile="$rankfile/passmenu.cache"
+    [ -e "$rankfile"  ] || touch "$rankfile"
+    password_files=( "$prefix"/**/*.gpg )
+    password_files=( "${password_files[@]#"$prefix"/}" )
+    password_files=( "${password_files[@]%.gpg}" )
+    printf '%s\n' "${password_files[@]}" |
+        sed -f <(sed 's/^\([0-9]\+\) \(.*\)$/s#^\2$#\1 \&#;t/;
+            s/^-1 \(.*\)$/s#^\1.*#-1 \1#;t/' < "$rankfile";
+            printf 's/^/0 /\n') |
+        sort -nsr > "$rankfile_tmp"
 
-[[ -n $password ]] || exit
+    password=$(sed '/^-1 /d;s/^[0-9]* //' < "$rankfile_tmp" | rofi -dmenu -format d -no-custom)
+
+    if [[ -z $password ]]; then
+        mv "$rankfile_tmp" "$rankfile"
+        exit
+    fi
+
+    #shellcheck disable=2016
+    password="$(sed -i "$password"'{s/^\([0-9]*\) \(.*\)$/echo "$((\1+1)) \2"/;e'$'\n'';w /dev/stdout'$'\n}' "$rankfile_tmp" | cut -d\  -f2-)"
+    mv "$rankfile_tmp" "$rankfile"
+fi
 
 case "$password" in
     ssh/*)
@@ -36,21 +59,42 @@ case "$password" in
         wait
         close
 EOF
+    $choose || exit
     ;;
 esac
 
-if [[ $typeit -eq 0 ]]; then
-    pass show -c"$choose" "$password" 2>/dev/null
+line=1
+if $choose; then
+    line=$(pass show "$password" |
+        sed '1{s/.*/Password/;t};2{s/.*/Login/;t};/^\s*\([-0-9A-Za-z_ ]*\)\s*: .*/{s//\1/;t};s/^.\+$/?/' |
+        rofi -dmenu -format d -no-custom)
+    [ -f "$lastcache" ] && rm "$lastcache"
+elif [[ -e "$lastcache" ]]; then
+    line=1
+    rm "$lastcache"
+elif [[ "$(pass show "$password" | wc -l)" -gt 1 ]]; then
+    line=2
+    [ -d "/tmp/$USER" ] || mkdir -p "/tmp/$USER"
+    echo "$password" > "$lastcache"
+fi
+
+if ! $typeit; then
+    pass show -c"$line" "$password" 2>/dev/null
+    sel="${PASSWORD_STORE_X_SELECTION:-clipboard}"
+    pass="$(xclip -o -selection "$sel")"
+    #shellcheck disable=2001
+    sed 's/^\s*\([-0-9A-Za-z_ ]*\)\s*: //' <<< "$pass" | xclip -rmlastnl -selection "$sel"
+    unset pass
 else
     delay=48 # in ms
     typecmd='\x00type\x00--clearmodifiers\x00--delay\x00'"$delay"'\x00'
     keycmd='\x00sleep\x00'"$(printf 'scale=3;%s/1000\n' "$delay"| bc)"'\x00key\x00--clearmodifiers\x00'
-    pass show "$password" | { IFS= read -r pass; printf %s "$pass"; } |
+    pass show "$password" | sed -n "$line"'{s/^\s*\([-0-9A-Za-z_ ]*\)\s*: //;p}' |
         sed 's/[^`^´~]\+/'"$typecmd"'&/g
              s/\^/'"$keycmd"'asciicircum/g
              s/`/'"$keycmd"'grave/g
              s/´/'"$keycmd"'acute/g
              s/~/'"$keycmd"'asciitilde/g' |
-        sed 's/^\x00*//' |
+        sed 's/^\x00*//' | sed -z 's/\n$//' |
         xargs -0 -n 5 xdotool
 fi
