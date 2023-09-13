@@ -6,6 +6,7 @@ notify() {
         eval export "$(grep -z ^DISPLAY /proc/"$pid"/environ | tr '\000' '\n')"
         eval export "$(grep -z ^DBUS_SESSION_BUS_ADDRESS /proc/"$pid"/environ | tr '\000' '\n')"
 
+        export IFS=' '
         if [ "$(whoami)" = "$USER" ]; then
             sh -c "notify-send  $*"
         else
@@ -21,6 +22,7 @@ execute() {
         eval export "$(grep -z ^DISPLAY /proc/"$pid"/environ | tr '\000' '\n')"
         eval export "$(grep -z ^DBUS_SESSION_BUS_ADDRESS /proc/"$pid"/environ | tr '\000' '\n')"
 
+        export IFS=' '
         if [ "$(whoami)" = "$USER" ]; then
             sh -c "$*"
         else
