@@ -14,17 +14,14 @@ xset dpms 120 120 120
 pgrep -u "$USER" xidlelock    || {
   xidlehook --detect-sleep --not-when-fullscreen \
     --timer 60 \
-    '[ -d "/tmp/$USER" ] || mkdir "/tmp/$USER";
-     xbacklight -get > "/tmp/$USER/xbacklight" &&
-     xbacklight -steps 500 -time 5000 -set 1&disown' \
-    "pkill -f $'\\x2fusr/sbin/xbacklight'"' || true;
-     xbacklight -set "$(cat "/tmp/$USER/xbacklight")" -time 20 -steps 2' &
+    'device brightness save set 1 5000&disown' \
+    'device brightness restore 20&disown' &
   xidlehook --detect-sleep \
     --timer 3540 \
     'notify-send -u critical -a "[system]" "Inactivity" "Forcing screen off in 60s"' \
     'notify-send -u critical -a "[system]" "Inactivity" "Forcing screen off in 60s" -t 1' \
     --timer 60 \
-    'notify-send -u critical -a "[system]" "Inactivity" "Forcing screen off in 60s" -t 1 && "$HOME/.i3/device.sh" screen_off' \
+    'notify-send -u critical -a "[system]" "Inactivity" "Forcing screen off in 60s" -t 1 && device screen_off' \
     '' \
     --timer 300 \
     'device suspend' \

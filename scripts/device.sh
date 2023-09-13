@@ -161,6 +161,10 @@ print_possible_commands() {
         sed 's/^\s*//;s/[,|]/\n/g' | sed 's/^/discord /'
     printf '\n'
 
+    "$TDIR/brightness.sh" help 2>&1 |\
+        sed 's/^\(\w\+\):.*/\1/;t;s/^\(\w\+\) .*/\1 /;t;d' | sed 's/^/brightness /'
+    printf '\n'
+
     local OUTPUT_VARIANTS
     OUTPUT_VARIANTS="$("$TDIR/volume.sh" usage 2>&1 | tail +3 | cut -d\  -f2- | sed 's/\(\[.*]\|{[^}]*}\)\s*//g')"$'\n'
     while grep -q '<' <<< "$OUTPUT_VARIANTS"; do
@@ -554,6 +558,10 @@ case "$1" in
         fi
         shift 1
         ;;
+    brightness)
+        shift
+        shift "$("$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3)" 2>&1
+        ;;
     send_all)
         shopt -s lastpipe
         while xbindkeys -k  | sed -n '${s/\s*//g;s/Mod2+//;p}' | read -r C; do
@@ -566,7 +574,7 @@ case "$1" in
     *) {
         echo "Unknown command: $1"
         echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-        echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off}+"
+        echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|brightness ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off}+"
         echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
         echo "Usage: $0 schedule {<command>|'<commands>'}"
         echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"

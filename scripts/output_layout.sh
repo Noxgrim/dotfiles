@@ -14,8 +14,10 @@ LAST_ACTIVE_SOURCE=
 #LAST_ACTIVE_DEFAULT=
 
 ACTIVE_MONITORS=0
+CONNECTED_MONTORS=""
 for NO in $(seq $MONITORS); do
     eval "ACTIVE=1;
+          CONNECTED=1
           MONITOR_${NO}_ACTIVE=1;
           MONITOR_${NO}_CONNECTED=1;
           if grep -qE ^\"\$MONITOR_${NO}_SOURCE\"' connected( [a-z]*)* \\(' <<< \"\$XRANDR\"; then
@@ -25,7 +27,11 @@ for NO in $(seq $MONITORS); do
               MONITOR_${NO}_ACTIVE=
               MONITOR_${NO}_CONNECTED=
               ACTIVE=
+              CONNECTED=
           fi"
+    if [ -n "$CONNECTED" ]; then
+        eval "CONNECTED_MONTORS=\"\$CONNECTED_MONTORS\$MONITOR_${NO}_SOURCE"$'\n"'
+    fi
     if [ -n "$ACTIVE" ]; then
         ((ACTIVE_MONITORS+=1))
         LAST_ACTIVE="$NO"
@@ -360,6 +366,13 @@ case "$1" in
             echo " reflect MHDL1 <normal|x|y|xy>"
         } >&2
 esac
+
+CONNECTED_MONTORS_FILE="/tmp/$USER/connected_montors"
+touch "$CONNECTED_MONTORS_FILE"
+if ! sort -u <<< "${CONNECTED_MONTORS%$'\n'}" | diff <(sort -u "$CONNECTED_MONTORS_FILE") -; then
+    echo reload > "/tmp/$USER/brightness/service"
+fi
+printf '%s' "$CONNECTED_MONTORS" > "$CONNECTED_MONTORS_FILE"
 
 if [ "${HARD_REDRAW:-false}" = true ] && [ "${XORG_TTY:=1}" -ge 0 ]; then
     xrefresh -black

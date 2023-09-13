@@ -84,6 +84,12 @@ install_override 'systemd/logind.conf.d'
 install_override 'systemd/sleep.conf.d'
 install_override 'systemd/system/getty@tty1.service.d'
 # Do we have a backlight?
+sudo cp systemd/system/brightness.service /etc/systemd/system
+sudo cp scripts/{brightness,notify}.sh /root
+sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
+sudo systemctl enable brightness.service
+sudo systemctl start brightness.service
+until [ -f "/tmp/$USER/brightness/ddcci" ]; do sleep 1; done
 if [ -n "$(find /sys/class/backlight -mindepth 1 -iname '*' -print -quit)"  ]; then
   pacman -Qi acpilight >/dev/null || sudo pacman -Sy acpilight
   [ -d '/etc/udev/rules.d' ] || mkdir -p '/etc/udev/rules.d'
