@@ -27,7 +27,7 @@ else
             set -- "${1%!}"
             ;&
         *)
-            find "$HOME/Documents/.wallpaper" \( -type f -o -type f \) -print0 | \
+            find "$HOME/Documents/.wallpaper" \( -type f -o -xtype f \) -print0 | \
                 grep -zE "($1)" | sort -zR  | xargs -0 feh --bg-scale
             ;;
     esac
