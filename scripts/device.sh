@@ -560,7 +560,7 @@ case "$1" in
         ;;
     brightness)
         shift
-        shift "$("$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3)" 2>&1
+        shift "$(setsid "$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3)" 2>&1
         ;;
     send_all)
         shopt -s lastpipe

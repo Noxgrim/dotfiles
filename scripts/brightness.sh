@@ -149,7 +149,16 @@ _get() {
   shopt -u nullglob
 }
 
-trap 'kill 0' SIGINT SIGTERM
+clean() {
+  trap - SIGINT SIGTERM
+  [ -f "$DIR/PID" ] && rm "$DIR/PID"
+  TOTAL=$((TOTAL+USED))
+  $REPORT && echo "$TOTAL" >&2
+  [ -f "$DIR/PID" ] && rm "$DIR/PID"
+  setsid ps -s $$ -o pid= | grep -v ^$$\$ | xargs -r kill 2>/dev/null || true
+}
+
+trap clean SIGINT SIGTERM
 
 TOTAL=0
 while [ $# -gt 0 ]; do
@@ -190,8 +199,8 @@ while [ $# -gt 0 ]; do
       shift "$USED"
       ;;
     reset)
-      _set set '100' "$@"
       USED=$((USED-1))
+      _set set '100' "$@"
       TOTAL=$((TOTAL+USED))
       shift "$USED"
       ;;
