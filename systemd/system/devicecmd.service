@@ -1,12 +1,12 @@
 [Unit]
-Description=Brightness files
+Description=Device Root Command Runner
 
 [Service]
 Type=simple
 Nice=19
 IOSchedulingClass=2
 IOSchedulingPriority=7
-ExecStart=-/root/brightness.sh service
+ExecStart=-/root/device.service.sh
 
 [Install]
 RequiredBy=graphical.target

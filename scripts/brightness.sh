@@ -72,31 +72,6 @@ setup() {
   chown 1000:1000 "$CACHE"
 }
 
-service() {
-  [ "$(id -u)" != 0 ] && echo 'Needs superuser!' >&2 && return 1
-  local FIFO="$DIR/service"
-  [ -p "$FIFO" ] || mkfifo "$FIFO"
-  chmod 622 "$FIFO"
-  LAST='0'
-  while [ -p "$FIFO" ]; do
-    read -r CMD < "$FIFO"
-    case "$CMD" in
-      reload)
-        DIFF=$(($(date +%s)-LAST))
-        if [ "$DIFF" -lt 120 ]; then
-          echo "Refusing to serve after only $DIFF seconds!" >&2
-        else
-          setup
-          LAST="$(date +%s)"
-        fi
-        ;;
-      *)
-        echo "Unknown command: $CMD" >&2
-        ;;
-    esac
-  done
-}
-
 _set() {
   : $((USED++))
   [ -n "${3+x}" ] && : $((USED++))
@@ -174,9 +149,6 @@ while [ $# -gt 0 ]; do
     init|reload)
       setup
       ;;
-    service)
-      service
-      ;;
     save)
       _get getf > "$DIR/save"
       ;;
@@ -219,9 +191,6 @@ restore [TIME [STPES]]:
 kill:   kill backlight change in progress
 [as root] init|reload:
         setup relevant files,
-[as root] service:
-        init create pipe for interative reloading
-        and serve requests
 [debug] report:
         print number of arguments consumed to stderr
         (excluding this one)

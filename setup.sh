@@ -40,8 +40,6 @@ if ! id backup &>/dev/null; then
   sudo cp scripts/notify.sh /root
   sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
   sudo cp backup/backup.{service,timer} /etc/systemd/system
-  sudo gcc actions/trigger_backup.c -o actions/trigger_backup.sh
-  sudo chmod u+s actions/trigger_backup.sh
   if [ -e "data/$HOSTNAME/backup.conf" ]; then
     sudo cp "data/$HOSTNAME/backup.conf" '/home/.backup'
   elif [ -e "data/shared/backup.conf" ]; then
@@ -84,12 +82,9 @@ install_override 'systemd/logind.conf.d'
 install_override 'systemd/sleep.conf.d'
 install_override 'systemd/system/getty@tty1.service.d'
 # Do we have a backlight?
-sudo cp systemd/system/brightness.service /etc/systemd/system
 sudo cp scripts/{brightness,notify}.sh /root
 sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
-sudo systemctl enable brightness.service
-sudo systemctl start brightness.service
-until [ -f "/tmp/$USER/brightness/ddcci" ]; do sleep 1; done
+sudo 'scripts/brightness.sh' reload
 if [ -n "$(find /sys/class/backlight -mindepth 1 -iname '*' -print -quit)"  ]; then
   pacman -Qi acpilight >/dev/null || sudo pacman -Sy acpilight
   [ -d '/etc/udev/rules.d' ] || mkdir -p '/etc/udev/rules.d'
@@ -97,6 +92,13 @@ if [ -n "$(find /sys/class/backlight -mindepth 1 -iname '*' -print -quit)"  ]; t
   sudo usermod -aG video "$USER"
   sudo udevadm control --reload
 fi
+
+# Setup device command root service
+sudo cp systemd/system/devicecmd.service /etc/systemd/system
+sudo cp scripts/device.service.sh /root
+sudo systemctl enable devicecmd.service
+sudo systemctl start devicecmd.service
+
 sudo cp systemd/system/delayed-hibernation.service /etc/systemd/system
 sudo killall -HUP systemd-logind
 sudo systemctl daemon-reload
