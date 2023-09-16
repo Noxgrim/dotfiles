@@ -370,7 +370,7 @@ esac
 CONNECTED_MONTORS_FILE="/tmp/$USER/connected_montors"
 touch "$CONNECTED_MONTORS_FILE"
 if ! sort -u <<< "${CONNECTED_MONTORS%$'\n'}" | diff <(sort -u "$CONNECTED_MONTORS_FILE") -; then
-    echo reload > "/tmp/$USER/brightness/service"
+    echo 'brightness reload' > "/tmp/$USER/service"
 fi
 printf '%s' "$CONNECTED_MONTORS" > "$CONNECTED_MONTORS_FILE"
 

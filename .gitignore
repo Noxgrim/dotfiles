@@ -3,7 +3,6 @@ home/vim/*
 !home/vim/colors/
 config/mpd/password.conf
 data
-actions/trigger_backup.sh
 .stignore
 .stfolder/
 
