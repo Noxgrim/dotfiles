@@ -32,7 +32,7 @@ service() {
         DIFF=$(($(date +%s)-LAST))
         if [ "$DIFF" -lt 600 ]; then
           echo "Refusing to serve after only $DIFF seconds!" >&2
-        elif [ -x '/etc/systemd/system/backup.service' ]; then
+        elif [ -f '/etc/systemd/system/backup.service' ]; then
           systemctl start backup.service
           LAST="$(date +%s)"
         fi
