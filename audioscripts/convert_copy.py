@@ -17,6 +17,7 @@ dir_same = re.compile("(/|^)\\.(?=(/|$))")
 
 
 FFMPEG_LOG = "error"
+# https://wiki.xiph.org/Opus_Recommended_Settings
 FFMPEG_BITRATE = "60k"
 
 COVER_BASENAME_SEARCH = "cover"
