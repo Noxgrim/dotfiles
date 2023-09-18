@@ -170,10 +170,12 @@ bindsym $mod+Ctrl+Mod1+0 exec $scriptdir/device.sh output toggle 10
 bindsym $mod+Ctrl+Mod1+x exec $scriptdir/device.sh output off    .
 bindsym $mod+Ctrl+Mod1+o exec $scriptdir/device.sh output on     . #This is a little bit nonsensical
 bindsym $mod+Ctrl+Mod1+t exec $scriptdir/device.sh output toggle .
-bindsym $mod+Ctrl+Mod1+b exec $scriptdir/device.sh brightness reset
-bindsym $mod+Ctrl+Mod1+r exec $scriptdir/device.sh brightness restore
-bindsym $mod+Ctrl+Mod1+plus  exec $scriptdir/device.sh brightness inc 10
-bindsym $mod+Ctrl+Mod1+minus exec $scriptdir/device.sh brightness dec 10
+bindsym $mod+Ctrl+Mod1+b exec $scriptdir/device.sh           brightness reset         notify
+bindsym $mod+Ctrl+Mod1+r exec $scriptdir/device.sh           brightness restore '' '' notify
+bindsym $mod+Ctrl+Mod1+plus        exec $scriptdir/device.sh brightness inc 10  '' '' notify
+bindsym $mod+Ctrl+Mod1+minus       exec $scriptdir/device.sh brightness dec 10  '' '' notify
+bindsym $mod+Ctrl+Mod1+Shift+plus  exec $scriptdir/device.sh brightness inc  1  '' '' notify
+bindsym $mod+Ctrl+Mod1+Shift+minus exec $scriptdir/device.sh brightness dec  1  '' '' notify
 
 bindsym $mod+Ctrl+Mod1+d       exec $scriptdir/device.sh output default
 bindsym $mod+Ctrl+Mod1+a       exec $scriptdir/device.sh output all-on
@@ -388,8 +390,10 @@ bar {
 
 
 # All the brightness
-bindsym XF86MonBrightnessUp                  exec $scriptdir/brightness.sh inc 10
-bindsym XF86MonBrightnessDown                exec $scriptdir/brightness.sh dec 10
+bindsym XF86MonBrightnessUp                  exec $scriptdir/brightness.sh inc 10 '' '' notify
+bindsym XF86MonBrightnessDown                exec $scriptdir/brightness.sh dec 10 '' '' notify
+bindsym Shift+XF86MonBrightnessUp            exec $scriptdir/brightness.sh inc  1 '' '' notify
+bindsym Shift+XF86MonBrightnessDown          exec $scriptdir/brightness.sh dec  1 '' '' notify
 # So mutch volume control
 bindsym XF86AudioRaiseVolume                 exec $scriptdir/volume.sh raise
 bindsym XF86AudioLowerVolume                 exec $scriptdir/volume.sh lower

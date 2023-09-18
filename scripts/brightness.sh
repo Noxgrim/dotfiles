@@ -33,7 +33,7 @@ setup() {
 
   while IFS=@ read -r ID _ NAME; do
     {
-      if [ ! -f "$CACHE" ] || ! grep -Fo "$NAME" "$CACHE"; then
+      if [ ! -f "$CACHE" ] || ! grep -Fo "$NAME" "$CACHE" &>/dev/null; then
         local DEV
         if [ -e "/sys/class/backlight/ddcci$ID" ]; then
           DEV="ddcci$ID"
@@ -72,12 +72,30 @@ setup() {
   chown 1000:1000 "$CACHE"
 }
 
+_notify() {
+  if [ "$(id -u)" == 0 ]; then
+    source '/root/notify.sh'
+  else
+    source "$SCRIPT_ROOT/scripts/notify.sh"
+  fi
+  local DATA BOT NEW
+  DATA="$(_get get)"
+  BOT="$(sort -nut@ -k2,2 <<< "$DATA")"
+  NEW="$(head -n 1 <<< "$BOT" | cut -d@ -f2)"
+  if [ "$(wc -l <<< "$BOT")" = 1 ]; then
+    notify -a 'noxgrim:brightness' -u low -h "int:value:$NEW" 'Brightness ' '%' >/dev/null
+  else
+    notify -a 'noxgrim:brightness' -u low -h "int:value:$NEW" 'Brightness ' '%'$'\n'"<i>$(sed 's/@/: /;s/$/%/' <<< "$DATA")</i>" >/dev/null
+  fi
+}
+
+
 _set() {
   : $((USED++))
   [ -n "${3+x}" ] && : $((USED++))
   [ -n "${4+x}" ] && : $((USED++))
-  local OP="$1" TARGET="$2" TIME="${3-0}"
-  local STEPS="${4-$((TIME/50))}"
+  local OP="$1" TARGET="$2" TIME="${3:-0}"
+  local STEPS="${4:-$((TIME/50))}"
   shopt -s nullglob extglob
   [ -f "$DIR/PID" ] && kill "$(cat "$DIR/PID")" || true
   echo "$$" > "$DIR/PID"
@@ -110,7 +128,7 @@ _set() {
     )&
   done
   wait
-  rm "$DIR/PID"
+  [ -f "$DIR/PID" ] && rm "$DIR/PID"
   shopt -u nullglob extglob
 }
 
@@ -129,11 +147,10 @@ clean() {
   [ -f "$DIR/PID" ] && rm "$DIR/PID"
   TOTAL=$((TOTAL+USED))
   $REPORT && echo "$TOTAL" >&2
-  [ -f "$DIR/PID" ] && rm "$DIR/PID"
   setsid ps -s $$ -o pid= | grep -v ^$$\$ | xargs -r kill 2>/dev/null || true
 }
 
-trap clean SIGINT SIGTERM
+trap clean EXIT
 
 TOTAL=0
 while [ $# -gt 0 ]; do
@@ -145,6 +162,9 @@ while [ $# -gt 0 ]; do
     report)
       REPORT=true
       TOTAL=$((TOTAL-1))
+      ;;
+    notify)
+      _notify
       ;;
     init|reload)
       setup
@@ -189,6 +209,7 @@ save:   save current state
 restore [TIME [STPES]]:
         restore previous state
 kill:   kill backlight change in progress
+notify: send a notification about the current brightness
 [as root] init|reload:
         setup relevant files,
 [debug] report:
@@ -201,4 +222,3 @@ EOF
       break
   esac
 done
-$REPORT && echo "$TOTAL" >&2
