@@ -204,7 +204,7 @@ inc VALUE [TIME [STPES]]:
         increase all devices by value
 dec VALUE [TIME [STPES]]:
         deccrease all devices by value
-reset:  short for 'set 100'
+reset: [TIME [STPES]] short for 'set 100 TIME STEPS'
 save:   save current state
 restore [TIME [STPES]]:
         restore previous state
