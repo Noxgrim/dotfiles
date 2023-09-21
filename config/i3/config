@@ -170,7 +170,7 @@ bindsym $mod+Ctrl+Mod1+0 exec $scriptdir/device.sh output toggle 10
 bindsym $mod+Ctrl+Mod1+x exec $scriptdir/device.sh output off    .
 bindsym $mod+Ctrl+Mod1+o exec $scriptdir/device.sh output on     . #This is a little bit nonsensical
 bindsym $mod+Ctrl+Mod1+t exec $scriptdir/device.sh output toggle .
-bindsym $mod+Ctrl+Mod1+b exec $scriptdir/device.sh           brightness reset         notify
+bindsym $mod+Ctrl+Mod1+b exec $scriptdir/device.sh           brightness reset   '' '' notify
 bindsym $mod+Ctrl+Mod1+r exec $scriptdir/device.sh           brightness restore '' '' notify
 bindsym $mod+Ctrl+Mod1+plus        exec $scriptdir/device.sh brightness inc 10  '' '' notify
 bindsym $mod+Ctrl+Mod1+minus       exec $scriptdir/device.sh brightness dec 10  '' '' notify
