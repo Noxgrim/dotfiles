@@ -1,0 +1,225 @@
+" General Settings
+set configversion 2.0
+set updatenaglastversion 1.14.8
+set update.lastchecktime 1695405248305
+set update.lastnaggedversion 1.23.0
+set update.nag true
+set update.nagwait 7
+set update.checkintervalsecs 86400
+set storageloc local
+set searchengine duckduckgo
+set theme dark
+set externalclipboardcmd auto
+set editorcmd alacritty --class tridactyl_editor -e nvim %f '+normal!%lGzv%c|'
+set smoothscroll true
+
+" Binds
+bind J tabprev
+bind K tabnext
+bind <A-p> pin
+bind <A-m> mute toggle
+bind <F1> help
+bind o fillcmdline open
+bind O current_url open
+bind w fillcmdline winopen
+bind W current_url winopen
+bind t fillcmdline tabopen
+bind ]] followpage next
+bind [[ followpage prev
+bind [c urlincrement -1
+bind ]c urlincrement 1
+bind <C-x> urlincrement -1
+bind <C-a> urlincrement 1
+bind T current_url tabopen
+bind yy clipboard yank
+bind ys clipboard yankshort
+bind yc clipboard yankcanon
+bind ym clipboard yankmd
+bind yt clipboard yanktitle
+bind gh home
+bind gH home true
+bind p clipboard open
+bind P clipboard tabopen
+bind j scrollline 10
+bind <C-e> scrollline 10
+bind k scrollline -10
+bind <C-y> scrollline -10
+bind h scrollpx -50
+bind l scrollpx 50
+bind G scrollto 100
+bind gg scrollto 0
+bind <C-u> scrollpage -0.5
+bind <C-d> scrollpage 0.5
+bind <C-f> scrollpage 1
+bind <C-b> scrollpage -1
+bind $ scrollto 100 x
+bind ^ scrollto 0 x
+bind <C-6> tab #
+bind <C-^> tab #
+bind H back
+bind L forward
+bind <C-o> jumpprev
+bind <C-i> jumpnext
+bind d tabclose
+bind D composite tabprev; tabclose #
+bind gx0 tabclosealltoleft
+bind gx$ tabclosealltoright
+bind << tabmove -1
+bind >> tabmove +1
+bind u undo
+bind U undo window
+bind r reload
+bind R reloadhard
+bind x stop
+bind gi focusinput -l
+bind g? rot13
+bind g; changelistjump -1
+bind gt tabnext_gt
+bind gT tabprev
+bind g^ tabfirst
+bind g0 tabfirst
+bind g$ tablast
+bind gr reader
+bind gu urlparent
+bind gU urlroot
+bind gf viewsource
+bind : fillcmdline_notrail
+bind s fillcmdline open search
+bind S fillcmdline tabopen search
+bind M gobble 1 quickmark
+bind B fillcmdline taball
+bind b fillcmdline tab
+bind ZZ qall
+bind f hint
+bind F hint -b
+bind gF hint -qb
+bind ;i hint -i
+bind ;b hint -b
+bind ;o hint
+bind ;I hint -I
+bind ;k hint -k
+bind ;y hint -y
+bind ;p hint -p
+bind ;P hint -P
+bind ;r hint -r
+bind ;s hint -s
+bind ;S hint -S
+bind ;a hint -a
+bind ;A hint -A
+bind ;; hint -;
+bind ;# hint -#
+bind ;v hint -W mpvsafe
+bind ;w hint -w
+bind ;t hint -W tabopen
+bind ;O hint -W fillcmdline_notrail open 
+bind ;W hint -W fillcmdline_notrail winopen 
+bind ;T hint -W fillcmdline_notrail tabopen 
+bind ;z hint -z
+bind ;m composite hint -pipe img src | js -p tri.excmds.open('images.google.com/searchbyimage?image_url=' + JS_ARG)
+bind ;M composite hint -pipe img src | jsb -p tri.excmds.tabopen('images.google.com/searchbyimage?image_url=' + JS_ARG)
+bind ;gi hint -qi
+bind ;gI hint -qI
+bind ;gk hint -qk
+bind ;gy hint -qy
+bind ;gp hint -qp
+bind ;gP hint -qP
+bind ;gr hint -qr
+bind ;gs hint -qs
+bind ;gS hint -qS
+bind ;ga hint -qa
+bind ;gA hint -qA
+bind ;g; hint -q;
+bind ;g# hint -q#
+bind ;gv hint -qW mpvsafe
+bind ;gw hint -qw
+bind ;gb hint -qb
+bind <S-Insert> mode ignore
+bind <CA-Escape> mode ignore
+bind <CA-`> mode ignore
+bind <S-Escape> mode ignore
+bind <Escape> composite mode normal ; hidecmdline
+bind <C-[> composite mode normal ; hidecmdline
+bind a current_url bmark
+bind A bmark
+bind zi zoom 0.1 true
+bind zo zoom -0.1 true
+bind zm zoom 0.5 true
+bind zr zoom -0.5 true
+bind zM zoom 0.5 true
+bind zR zoom -0.5 true
+bind zz zoom 1
+bind zI zoom 3
+bind zO zoom 0.3
+bind . repeat
+
+bind yo clipboard yankorg
+bind <C-v> nmode ignore 1 mode normal
+bind g! jumble
+bind ga tabaudio
+bind ;K hint -K
+bind ;Y hint -cF img i => tri.excmds.yankimage(tri.urlutils.getAbsoluteURL(i.src))
+bind ;h hint -h
+bind v hint -h
+bind ;V hint -V
+bind ;gF hint -qb
+bind ;gf hint -q
+bind <AC-Escape> mode ignore
+bind <AC-`> mode ignore
+bind m gobble 1 markadd
+bind ` gobble 1 markjump
+unbind <C-7>
+unbind --mode=browser <S-F2>
+unbind --mode=browser <S-F12>
+bind --mode=browser <C-,> escapehatch
+bind --mode=browser <C-6> tab #
+bind --mode=browser <CS-6> tab #
+autocmd DocLoad ^https://github.com/tridactyl/tridactyl/issues/new$ issue
+autocmd TriStart .* source_quiet
+
+" Logging
+set logging.autocmds undefined
+set logging.cmdline undefined
+set logging.containers undefined
+set logging.controller undefined
+set logging.excmd undefined
+set logging.hinting undefined
+set logging.messaging undefined
+set logging.native undefined
+set logging.performance undefined
+set logging.state undefined
+set logging.styling undefined
+
+" For syntax highlighting see https://github.com/tridactyl/vim-tridactyl
+" vim: set filetype=tridactyl
+
+""" CUSTOM STUFF
+" Bindings
+unbind ;x
+unbind ;X
+bind ;xx hint      -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y)}
+bind ;Xx hint -c * -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y)}
+bind ;x1 hint      -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 1")}
+bind ;X1 hint -c * -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 1")}
+bind ;x2 hint      -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 2")}
+bind ;X2 hint -c * -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 2")}
+bind ;x3 hint      -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 3")}
+bind ;X3 hint -c * -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 3")}
+bindurl piped.kavin.rocks   n js tri.excmds.urlmodify("-t", "piped.kavin.rocks",   "piped.adminforge.de")
+bindurl piped.adminforge.de n js tri.excmds.urlmodify("-t", "piped.adminforge.de", "piped.video")
+bindurl piped.video         n js tri.excmds.urlmodify("-t", "piped.video",         "inv.tux.pizza")
+bindurl inv.tux.pizza       n js tri.excmds.urlmodify("-t", "inv.tux.pizza",       "piped.kavin.rocks")
+bindurl piped.kavin.rocks   N js tri.excmds.urlmodify("-t", "piped.kavin.rocks",   "inv.tux.pizza")
+bindurl piped.adminforge.de N js tri.excmds.urlmodify("-t", "piped.adminforge.de", "piped.kavin.rocks")
+bindurl piped.video         N js tri.excmds.urlmodify("-t", "piped.video",         "piped.adminforge.de")
+bindurl inv.tux.pizza       N js tri.excmds.urlmodify("-t", "inv.tux.pizza",       "piped.video")
+
+bind <C-m> mouse_mode
+bind <C-S-m> no_mouse_mode
+bind _vp js var v = document.querySelector('video'); var playing = (v != null) && v.currentTime > 0 && !v.paused && !v.ended && v.readyState > 2; tri.excmds.exclaim_quiet("echo " + playing + ">> /tmp/user/videos.ff");
+"bind --mode=browser <C-7> js var v = document.querySelector('video'); var playing = (v != null) && v.currentTime > 0 && !v.paused && !v.ended && v.readyState > 2; tri.excmds.exclaim_quiet("echo " + playing + ">> /tmp/user/videos.ff");
+
+" Autocmds
+" autocmd DocStart ^http(s?)://www.youtube.com/watch js tri.excmds.urlmodify("-t", "www.youtube.com", "piped.kavin.rocks")
+" autocmd DocStart ^http(s?)://(www.)?youtu.be js tri.excmds.urlmodify("-r", "(www\.)?youtu\.be", "piped.kavin.rocks")
+" autocmd DocStart ^http(s?)://invidious.snopyta.org js tri.excmds.urlmodify("-t", "invidious.snopyta.org", "piped.kavin.rocks")
+autocmd DocLoad .* no_mouse_mode
