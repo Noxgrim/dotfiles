@@ -467,7 +467,7 @@ case "$1" in
             if ! xset q | grep -q "DPMS is Enabled"; then
                 notify-send -u low "Enabled DPMS"
             fi
-            xset s off -dpms
+            xset s on +dpms
         ;;
     dpms_toggle)
         if xset q | grep -q "DPMS is Enabled"; then
