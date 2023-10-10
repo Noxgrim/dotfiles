@@ -21,6 +21,8 @@ prepare_lock() {
     if [ -f "/tmp/$USER/user_suspended" ] || [ -f "/tmp/$USER/user_hibernated" ]; then
         mpc pause -q
     fi
+    device dpms_on # always reset this once we're locking
+    killall rofi rofi-theme-selector dmenu 2>/dev/null || true
     if grep -q 00black "$HOME/.fehbg"; then
         ARGS=( -C 000000 )
     else
@@ -33,7 +35,7 @@ prepare_lock() {
 # Run after the locker exits
 post_lock() {
     [ -e "$IMG" ] && rm "$IMG"
-    [ -f "/tmp/$USER/user_suspended" ] && rm "/tmp/$USER/user_suspended"
+    [ -f "/tmp/$USER/user_suspended"  ] && rm "/tmp/$USER/user_suspended"
     [ -f "/tmp/$USER/user_hibernated" ] && rm "/tmp/$USER/user_hibernated"
     return
 }
