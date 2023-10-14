@@ -71,6 +71,7 @@ if $choose; then
     line=$(pass show "$password" |
         sed '1{s/.\+/Password/;t};2{s/.\+/Login/;t};/^\s*\([-0-9A-Za-z_ ]*\)\s*: .*/{s//\1/;t};s/^.\+$/?/' |
         rofi -dmenu -format d -no-custom)
+    [ -z "$line" ] && exit
     [ -f "$lastcache" ] && rm "$lastcache"
 elif [[ -e "$lastcache" ]]; then
     line=1
