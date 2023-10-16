@@ -41,8 +41,8 @@ check_for_backup() {
 
 close_firefox() {
     local WIN_IDS
-    WIN_IDS="$(xdotool search --class "firefox")"
-    while [ -n "$WIN_IDS" ]; do
+    WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
+    while [ "$WIN_IDS" != ' ' ]; do
         for ID in $WIN_IDS; do
             if xprop -id "$ID" | grep -q '^WM_STATE(WM_STATE):'; then
                 xdotool key --clearmodifiers --window "$ID" ctrl+q
@@ -50,7 +50,7 @@ close_firefox() {
                 break
             fi
         done
-        WIN_IDS="$(xdotool search --class "firefox")"
+        WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
     done
 }
 
