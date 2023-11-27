@@ -58,6 +58,7 @@ if ! exists('g:is_manpage') || ! g:is_manpage
     Plug 'plasticboy/vim-markdown'
     Plug 'junegunn/vim-emoji'
     Plug 'vim-utilities/emoji-syntax'
+    Plug 'petrisch/vim-ifc'
 endif
 call plug#end()
 
