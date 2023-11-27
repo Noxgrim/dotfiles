@@ -4,7 +4,7 @@ set -eu -o pipefail
 CURR_DIR="$PWD"
 DATE=( --date "${1?"Expected version date as first argument (may be empty if \`git\` isn't used)."}" )
 UPDATEPACKAGE="$(readlink -f "${2:?"Expected packge containing update as second argument."}")"
-[ -f "$UPDATEPACKAGE" ] || { echo "package must exist!" >&2 && exit 1; }
+[ -f "$UPDATEPACKAGE" ] || { echo "package '$UPDATEPACKAGE' must exist!" >&2 && exit 1; }
 TARGET_DIR="$(readlink -m "${3:?"Expected target dir as third argument."}")"
 [ -d "$TARGET_DIR" ] || mkdir -p "$TARGET_DIR"
 ( shopt -s nullglob dotglob; f=( "$TARGET_DIR"/* ); ((! ${#f[@]})) ) &&
