@@ -50,19 +50,19 @@ export EDITOR=nvim
 # export LD_PRELOAD="$LD_PRELOAD:noxgrim_sssniffer.so"
 
 
-alias gcd1='\git clone --recurse-submodules --depth 1'
-alias glg='\git log'
-alias grbik='\git rebase -i --committer-date-is-author-date'
-alias 'glg!'='\git log --stat'
-alias vim='\nvim'
+alias gcd1='git clone --recurse-submodules --depth 1'
+alias glg='git log'
+alias grbik='git rebase -i --committer-date-is-author-date'
+alias 'glg!'='git log --stat'
+alias vim='nvim'
 alias lvim='\vim'
-alias vimdiff='\nvim -d'
+alias vimdiff='nvim -d'
 alias jshell="$(dirname "$(readlink "$(which java)")")/jshell"
 alias audio="$SCRIPT_ROOT/audioscripts/audio.sh -C"
-alias ncmpcpp='\ncmpcpp --host=$MPD_HOST'
+alias ncmpcpp='ncmpcpp --host=$MPD_HOST'
 alias r='ranger'
-alias v='\nvim'
-alias mpv='\mpv --no-audio-display'
+alias v='nvim'
+alias mpv='mpv --no-audio-display'
 alias dps='docker ps | less -S'
 # uni stuff
 alias pk-cc='\gcc -std=c99 -g -Wall -Wextra -Wpedantic -Wbad-function-cast -Wconversion -Wwrite-strings -Wstrict-prototypes'
