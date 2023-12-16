@@ -9,6 +9,7 @@ IGNORELIST=('"i3-frame" "i3-frame"' 'root window' 'none' '"[^"]*" "i3bar"'
             '"electron" "[Ee]lectron"' '"[eE]lement1?" "[Ee]lement1?"'
             '"signal(-desktop)?" "[Ss]ignal(-desktop)?"'
             '"protonmail-bridge" "Proton Mail Bridge"'
+            '"xdg-desktop-portal-gtk" "Xdg-desktop-portal-gtk"'
         )
 WAITLIST=( '-f /usr/sbin/anki' 'eclipse' )
 KILLLIST=( steam zoom )
