@@ -154,18 +154,20 @@ R /root
 R /mnt
 '
 locate /.backup_exclude | while read -r F; do
+    F="${F#/}"
     E="$(sed 's,[&,\],\\&,' <<< "${F%/*}")"
     if    [ ! -s "$F" ]; then
         echo "P fm"$'\n'"! ${F%/*}"
     else
         sed '/^\s*#/d;/^\s*$/d;
-        /^\(..\):\(.*\)/{s,,P \1\n!'"$E"'/\2,;b}
+        /^\(..\):\(.*\)/{s,,P \1\n! '"$E"'/\2,;b}
         s,^.*,P fm\n! '"$E/&," "$F"
     fi
 done
 echo '
-+ /mnt/home
-! /mnt/*
+P fm
++ mnt/home
+! mnt/*
 '
 )                                       \
         --exclude-caches                \
