@@ -4,8 +4,16 @@
 
 DEF_LANG='en'
 NAME_NO_CHAP='%1$s%2$0$MAXd'
-NAME_CHAP='%1$s%2$0$MAXd: %3$s'
-NAME_CHAP_PARTS='%1$s%2$0$MAXd.%3$0$MAXPd: %4$s'
+NAME_DO_PREFIX_CHAP='%1$s%2$0$MAXd: %3$s'
+NAME_DO_PREFIX_CHAP_PARTS='%1$s%2$0$MAXd.%3$0$MAXPd: %4$s'
+NAME_NO_PREFIX_CHAP='%2$0$MAXd. %3$s'
+NAME_NO_PREFIX_CHAP_PARTS='%2$0$MAXd.%3$0$MAXPd. %4$s'
+TITLE_NO_PREFIX_CHAP='%3$s'
+TITLE_NO_PREFIX_CHAP_PARTS='%4$s'
+NAME_CHAP="$NAME_DO_PREFIX_CHAP"
+NAME_CHAP_PARTS="$NAME_DO_PREFIX_CHAP_PARTS"
+TITLE_CHAP="$NAME_DO_PREFIX_CHAP"
+TITLE_CHAP_PARTS="$NAME_DO_PREFIX_CHAP_PARTS"
 INFO_COMMENT='%1$s%2$s; %3$s'
 NARRATOR=
 NARRATOR_PREFIX=
@@ -97,6 +105,18 @@ set_option() {
         -p|--prefix)
             CHAPTER_PREFIX="$2"
             SHIFT_AMOUNT=2
+
+            if [ -n "$2" ]; then
+                NAME_CHAP="$NAME_DO_PREFIX_CHAP"
+                NAME_CHAP_PARTS="$NAME_DO_PREFIX_CHAP_PARTS"
+                TITLE_CHAP="$NAME_DO_PREFIX_CHAP"
+                TITLE_CHAP_PARTS="$NAME_DO_PREFIX_CHAP_PARTS"
+            else
+                NAME_CHAP="$NAME_NO_PREFIX_CHAP"
+                NAME_CHAP_PARTS="$NAME_NO_PREFIX_CHAP_PARTS"
+                TITLE_CHAP="$NAME_NO_PREFIX_CHAP"
+                TITLE_CHAP_PARTS="$NAME_NO_PREFIX_CHAP_PARTS"
+            fi
             ;;
         -B|--only-roll-back)
             if find . -iname '*.bak' | grep -q .; then
@@ -186,12 +206,12 @@ Options:
         A `.` is followed by the file number FILE_NO of the audio file. This
         number starts with one. The files are sorted numerically so they should
         start with a number or be already naturally sorted beforehand. File
-        numbers have be to strictly monotonically increasing (if no split
+        numbers have to be strictly monotonically increasing (if no split
         points are used).
-        Optionally, a SPLIT point can specified directly after the file number
-        in parentheses. This tells the script that the chapter only starts after
-        the specified split time stamp. The splits do not affect FILE_NO in any
-        way.
+        Optionally, a SPLIT point can be specified directly after the file
+        number in parentheses. This tells the script that the chapter only
+        starts after the specified split time stamp. The splits do not affect
+        FILE_NO in any way.
         SPLIT has the following format:
          m.s[.h]
         With the minutes m being unlimited 0-∞, the seconds s being 0-59 and
@@ -360,8 +380,8 @@ fi
 NAME_F_NO_CHAP=$( echo "$NAME_NO_CHAP" | sed 's/\$MAX/'"$MAX"'/' )
 NAME_F_CHAP_PART=$( echo "$NAME_CHAP_PARTS" | sed 's/\$MAXP/'"$MAXP"'/;s/$MAX/'"$MAX"'/' )
 NAME_F_CHAP=$( echo "$NAME_CHAP" | sed 's/\$MAX/'"$MAX"'/' )
-NAME_T_NO_CHAP=$( echo "$NAME_NO_CHAP" | sed 's/\$MAX//' )
-NAME_T_CHAP=$( echo "$NAME_CHAP" | sed 's/\$MAX//' )
+NAME_T_NO_CHAP=$( echo "$TITLE_CHAP_PARTS" | sed 's/\$MAX//' )
+NAME_T_CHAP=$( echo "$TITLE_CHAP" | sed 's/\$MAX//' )
 
 NUM=0
 CHAPLINE=0
