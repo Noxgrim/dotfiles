@@ -135,11 +135,6 @@ markup=pango
 interval=30
 
 # Date Time
-[time_JP]
-command=env TZ=Asia/Tokyo date '+日本%H:%M'
-interval=30
-separator=false
-
 [time]
 command=date '+ %a %Y-%m-%d  %H:%M:%S'
 interval=1
