@@ -221,4 +221,5 @@ EOF
     *)
       break
   esac
+  USED=0
 done
