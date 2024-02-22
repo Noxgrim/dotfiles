@@ -40,6 +40,13 @@ check_for_backup() {
     fi
 }
 
+pre_screen_save() {
+    if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 | read -r; then
+        xdotool mousemove_relative 1 0 mousemove_relative -- -1 0
+        exit 0
+    fi
+}
+
 close_firefox() {
     local WIN_IDS
     WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
@@ -540,6 +547,9 @@ case "$1" in
         ;;
     check_for_backup)
         check_for_backup
+        ;;
+    if_should_screen_save|if_should_pre_screen_save)
+        pre_screen_save
         ;;
     run|run_as)
         [ "$1" == run_as ] && export USER="$2" && shift 1

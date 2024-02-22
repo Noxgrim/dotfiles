@@ -12,9 +12,9 @@ xset s 120 0
 xset dpms 120 120 120
 
 pgrep -u "$USER" xidlelock    || {
-  xidlehook --detect-sleep --not-when-fullscreen \
+  xidlehook --detect-sleep \
     --timer 60 \
-    'device brightness save set 1 5000&disown' \
+    'device if_should_pre_screen_save brightness save set 1 5000&disown' \
     'device brightness restore 20&disown' &
   xidlehook --detect-sleep \
     --timer 3540 \
