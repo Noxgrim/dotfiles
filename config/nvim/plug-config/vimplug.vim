@@ -52,7 +52,7 @@ if ! exists('g:is_manpage') || ! g:is_manpage
     Plug 'tpope/vim-repeat'
     Plug 'tpope/vim-surround'
     Plug 'tpope/vim-unimpaired'
-    Plug 'vim-scripts/gnupg.vim'
+    Plug 'jamessan/vim-gnupg'
     Plug 'w0rp/ale'
     Plug 'godlygeek/tabular'
     Plug 'plasticboy/vim-markdown'
