@@ -222,6 +222,7 @@ bind _vp js var v = document.querySelector('video'); var playing = (v != null) &
 " autocmd DocStart ^http(s?)://www.youtube.com/watch js tri.excmds.urlmodify("-t", "www.youtube.com", "piped.kavin.rocks")
 " autocmd DocStart ^http(s?)://(www.)?youtu.be js tri.excmds.urlmodify("-r", "(www\.)?youtu\.be", "piped.kavin.rocks")
 " autocmd DocStart ^http(s?)://invidious.snopyta.org js tri.excmds.urlmodify("-t", "invidious.snopyta.org", "piped.kavin.rocks")
+autocmd DocLoad      .* no_mouse_mode
 autocmd HistoryState .* no_mouse_mode
-autocmd DocLoad .* js -r video_notifier.js
+autocmd DocLoad      .* js -r video_notifier.js
 autocmd HistoryState .* js -r video_notifier.js

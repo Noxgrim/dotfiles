@@ -4,11 +4,11 @@
     }
     document.my_noxgrim_loaded_video_checker = true;
     const name = self.crypto.randomUUID();
-    var last = false;
+    const dir = "/tmp/$USER/ssuspend"
+    let last = false;
     console.log("ssuspend: loaded video notifier");
     const write = function (playing) {
         if (last != playing) {
-            var dir = "/tmp/$USER/ssuspend"
             console.log(`ssuspend: ${playing ? "playing" : "stopped"} ${name}`)
             if (playing) {
                 tri.excmds.exclaim_quiet(`[ -d "${dir}" ] || mkdir -p "${dir}"; touch "${dir}/browser.${name}"`)
@@ -18,7 +18,7 @@
         }
     };
     const check = function (_) {
-        var playing = false;
+        let playing = false;
         if (document.visibilityState !== 'hidden' && !window.location.search.substring(1).includes('&listen=1')) {
             for (const v of document.querySelectorAll('video')) {
                 playing = playing || ((v !== null)
