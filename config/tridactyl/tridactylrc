@@ -213,8 +213,8 @@ bindurl piped.adminforge.de N js tri.excmds.urlmodify("-t", "piped.adminforge.de
 bindurl piped.video         N js tri.excmds.urlmodify("-t", "piped.video",         "piped.adminforge.de")
 bindurl inv.tux.pizza       N js tri.excmds.urlmodify("-t", "inv.tux.pizza",       "piped.video")
 
-bind <C-m> mouse_mode
-bind <C-S-m> no_mouse_mode
+bind <C-x> mouse_mode
+bind <C-S-x> no_mouse_mode
 bind _vp js var v = document.querySelector('video'); var playing = (v != null) && v.currentTime > 0 && !v.paused && !v.ended && v.readyState > 2; tri.excmds.exclaim_quiet("echo " + playing + ">> /tmp/user/videos.ff");
 "bind --mode=browser <C-7> js var v = document.querySelector('video'); var playing = (v != null) && v.currentTime > 0 && !v.paused && !v.ended && v.readyState > 2; tri.excmds.exclaim_quiet("echo " + playing + ">> /tmp/user/videos.ff");
 
