@@ -41,8 +41,12 @@ check_for_backup() {
 }
 
 pre_screen_save() {
+    if ! xset q | grep -q "DPMS is Enabled"; then
+        xdotool key XF86WWW
+        exit 0
+    fi
     if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 | read -r; then
-        xdotool mousemove_relative 1 0 mousemove_relative -- -1 0
+        xdotool key XF86WWW
         exit 0
     fi
 }
