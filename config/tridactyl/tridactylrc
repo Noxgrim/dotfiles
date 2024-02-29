@@ -196,6 +196,13 @@ set logging.styling undefined
 " Bindings
 unbind ;x
 unbind ;X
+unbind _vp
+unbind <C-7>
+unbind <C-m>
+unbind <C-M>
+autocmddelete DocLoad .*
+autocmddelete HistoryState .*
+
 bind ;xx hint      -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y)}
 bind ;Xx hint -c * -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y)}
 bind ;x1 hint      -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 1")}
@@ -214,9 +221,7 @@ bindurl piped.video         N js tri.excmds.urlmodify("-t", "piped.video",      
 bindurl inv.tux.pizza       N js tri.excmds.urlmodify("-t", "inv.tux.pizza",       "piped.video")
 
 bind <C-x> mouse_mode
-bind <C-S-x> no_mouse_mode
-bind _vp js var v = document.querySelector('video'); var playing = (v != null) && v.currentTime > 0 && !v.paused && !v.ended && v.readyState > 2; tri.excmds.exclaim_quiet("echo " + playing + ">> /tmp/user/videos.ff");
-"bind --mode=browser <C-7> js var v = document.querySelector('video'); var playing = (v != null) && v.currentTime > 0 && !v.paused && !v.ended && v.readyState > 2; tri.excmds.exclaim_quiet("echo " + playing + ">> /tmp/user/videos.ff");
+bind <C-S-m> no_mouse_mode
 
 " Autocmds
 " autocmd DocStart ^http(s?)://www.youtube.com/watch js tri.excmds.urlmodify("-t", "www.youtube.com", "piped.kavin.rocks")
@@ -224,5 +229,3 @@ bind _vp js var v = document.querySelector('video'); var playing = (v != null) &
 " autocmd DocStart ^http(s?)://invidious.snopyta.org js tri.excmds.urlmodify("-t", "invidious.snopyta.org", "piped.kavin.rocks")
 autocmd DocLoad      .* no_mouse_mode
 autocmd HistoryState .* no_mouse_mode
-autocmd DocLoad      .* js -r video_notifier.js
-autocmd HistoryState .* js -r video_notifier.js
