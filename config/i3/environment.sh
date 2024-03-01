@@ -14,9 +14,19 @@ xset dpms 120 120 120
 
 pgrep -u "$USER" xidlelock    || {
   xidlehook --detect-sleep \
-    --timer 60 \
+    --timer 30 \
+    'device if_should_pre_screen_save&disown' \
+    '' \
+    --timer 30 \
     'device if_should_pre_screen_save brightness save set 1 5000&disown' \
-    'device brightness restore 20&disown' &
+    'device brightness restore 20&disown' \
+    --timer 30 \
+    'device if_should_pre_screen_save&disown' \
+    '' \
+    --timer 29 \
+    'device if_should_pre_screen_save&disown' \
+    '' \
+    &
   xidlehook --detect-sleep \
     --timer 3540 \
     'notify-send -u critical -a "[system]" "Inactivity" "Forcing screen off in 60s"' \
@@ -26,5 +36,6 @@ pgrep -u "$USER" xidlelock    || {
     '' \
     --timer 300 \
     'device suspend' \
-    '' &
+    '' \
+    &
 }
