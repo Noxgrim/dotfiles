@@ -1,76 +1,17 @@
 #!/usr/bin/env python3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import re
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 
-VIDEO_NOTIFIER_PATH = '/tmp/{user}/ssuspend/browser.{uuid}'
 USER_SCRIPTS="{script_root}/browser/user-scripts/{file}"
 
-def marker(uuid : str, create : bool):
-    from getpass import getuser
-    import os
-    from pathlib import Path
-    path = VIDEO_NOTIFIER_PATH.format(user=getuser(), uuid=uuid)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    if create:
-        Path(path).touch(exist_ok=True)
-    elif os.path.exists(path):
-        os.remove(path)
-
-
-
 class Handler(BaseHTTPRequestHandler):
-
-    def handle_video_request(self, state: bool|None, status: int):
-        parsed = urlparse(self.path)
-        parts = parsed.path.split("/")[1:]
-        if len(parts) != 2 or parts[0] != 'video-notification':
-            print(f"invalid path: {parsed.path} ({self.path})")
-            return self.error(404)
-        name = parts[1];
-        if not re.match(r'^[0-9a-z-_]*$', name):
-            print(f"invalid name: {name} ({self.path})")
-            return self.error(404)
-        sstate:bool = True
-        if state == None:
-            try:
-                query = parse_qs(parsed.query)
-                states = query['state'][0]
-                if states == 'playing':
-                    sstate = True
-                elif states == 'stopped':
-                    sstate = False
-                else:
-                    raise ValueError("Unknown value!")
-            except KeyError as ke:
-                print(f"invalid queries: ({self.path})")
-                return self.error(status=404)
-            except ValueError:
-                print(f"invalid values: ({self.path})")
-                return self.error(status=404)
-        else:
-            sstate=state
-
-
-        marker(name, sstate)
-        return self.process(status)
-
-
-    def do_PUT(self):
-        return self.handle_video_request(True, 201)
-
-
-    def do_DELETE(self):
-        self.handle_video_request(False, 204)
 
     def do_OPTIONS(self):
         self.send_response(200)
         parsed = urlparse(self.path)
         parts = parsed.path.split("/")[1:]
-        if len(parts) == 2 and parts[0] == 'video-notification':
-            self.send_header("Allow", "OPTIONS, DELETE, POST, PUT")
-            self.send_header("Access-Control-Allow-Methods", "OPTIONS, POST, DELETE, PUT")
-        elif len(parts) == 2 and parts[0] == 'user-scripts':
+        if len(parts) == 2 and parts[0] == 'user-scripts':
             self.send_header("Allow", "OPTIONS, GET")
             self.send_header("Access-Control-Allow-Methods", "OPTIONS, GET")
         else:
@@ -80,13 +21,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Max-Age", "86400")
         self.end_headers()
         self.wfile.write(bytes("", "utf-8"))
-        
+
         return False
-
-
-    def do_POST(self):
-        return self.handle_video_request(None, 200)
-
 
 
     def do_GET(self):

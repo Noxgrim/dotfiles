@@ -1,15 +1,12 @@
 // ==UserScript==
 // @name         Video Notifier Frontend
 // @namespace    http://tampermonkey.net/
-// @version      2024-02-29
-// @description  Send a message to a local server if a video about the playback state of videos
+// @version      80
+// @description  Send a message to another (tridactyl) script if a video about the playback state of videos
 // @author       Noxgrim
 // @match        *://*/*
-// @grant        GM.xmlHttpRequest
-// @grant        unsafeWindow
 // @updateURL    http://localhost:8023/user-scripts/video_notifier.js
 // @downloadURL  http://localhost:8023/user-scripts/video_notifier.js
-// @connect      localhost
 // @run-at       documet-end
 // @sandbox      raw
 // ==/UserScript==
@@ -26,18 +23,20 @@
     const name = self.crypto.randomUUID();
     let last = false;
     let lastHref = document.location.href;
-    console.log(`ssuspend: loaded video notifier loaded for frame ${window.location} (${name})`);
     const write = function (playing) {
-        // be sure that this is sent when the tab is closed (async requests may be cancelled)
-        // We could use `navigator.sendBeacon` here but that always uses POST (a no-no with the bad and cursed
-        // REST-ish client I implemeted) and needs some extra rules in uBlock Origin (as this API is
-        // intended for analytics) so I stick with the blocking call for now (it's local anyways)
-        if (last != playing) {
+        // to avoid being cancelled or being blocked we use the power of
+        // tridactyl to call some local commands (instead of a REST-ish interface
+        // which) may be blocked
+        // Because CSP we also have to use "*" here (a changing parent should
+        // still receive our messages)
+        if (last !== playing) {
             const state = playing ? "playing" : "stopped";
-            console.log(`ssuspend: ${state} ${name}`)
-            const request = new XMLHttpRequest();
-            request.open(playing ? "PUT" : "DELETE", `http://localhost:8023/video-notification/${name}`, false);
-            request.send(null);
+            console.debug(`ssuspend.w: ${state} ${name}`)
+            window.parent.postMessage({
+                _my_namespace: "noxgrim_video_notifier_worker",
+                uuid: name,
+                create: playing,
+            }, "*");
         }
         last = playing;
     };
@@ -45,7 +44,7 @@
         let playing = false;
         // i.e. the video is playing (not ended or buffering), in a focussed tab with actual video (and not just
         // audio, as supported by Piped or Invidious)
-        if (document.visibilityState !== 'hidden' && !window.location.search.substring(1).includes('&listen=1')) {
+        if (document.visibilityState !== 'hidden' && !/[&?]listen=(1|true)\b/i.test(window.location.search.substring(1))) {
             for (const v of document.querySelectorAll('video')) {
                 playing = playing || ((v !== null)
                     && !v.paused && v.error === null
@@ -116,9 +115,22 @@
     // for some reason getting any events (or not cancelling listeners?) when
     // closing a tab is _really_ unreliable (at least in Firefox/LibreWolf)
     // so we just register _all_ the events… the more the merrier
-    unsafeWindow.addEventListener('visibilitychange', checkTabFocus, false);
-    unsafeWindow.addEventListener('beforeunload', (_) => write(false), false);
-    unsafeWindow.addEventListener('unload', (_) => write(false), false);
-    unsafeWindow.addEventListener('pagehide', (_) => write(false), false);
+    window.addEventListener('visibilitychange', checkTabFocus, false);
+    window.addEventListener('beforeunload', (_) => write(false), false);
+    window.addEventListener('unload', (_) => write(false), false);
+    window.addEventListener('pagehide', (_) => write(false), false);
+    // bubble up any messages to the top whilst checking that it came from on eof our iframes
+    if (window.top !== window.self) {
+        window.addEventListener('message', (event) => {
+            if ([...document.querySelectorAll('iframe')]
+                .some(f => f.contentWindow === event.source)) {
+                if (event.data._my_namespace === "noxgrim_video_notifier_worker") {
+                    window.parent.postMessage(event.data, "*"); // we want to know of redirects
+                }
+            }
+
+        })
+    };
     observer.observe(document, {childList: true, subtree: true});
+    console.debug(`ssuspend.w: loaded video notify worker loaded for frame ${window.location} (${name})`);
 })();
