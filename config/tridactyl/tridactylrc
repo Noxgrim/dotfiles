@@ -229,5 +229,5 @@ bind <C-S-m> no_mouse_mode
 " autocmd DocStart ^http(s?)://invidious.snopyta.org js tri.excmds.urlmodify("-t", "invidious.snopyta.org", "piped.kavin.rocks")
 autocmd DocLoad      .* no_mouse_mode
 autocmd HistoryState .* no_mouse_mode
-autocmd DocLoad      .* js -r video_notifier.js
-autocmd HistoryState .* js -r video_notifier.js
+autocmd DocLoad      .*.* js -r video_notifier.js
+autocmd HistoryState .*.* js -r video_notifier.js
