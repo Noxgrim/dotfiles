@@ -22,6 +22,8 @@ prepare_lock() {
         mpc pause -q
     fi
     device dpms_on # always reset this once we're locking
+    # shellcheck disable=2015
+    # [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -delete || true
     killall rofi rofi-theme-selector dmenu 2>/dev/null || true
     if grep -q 00black "$HOME/.fehbg"; then
         ARGS=( -C 000000 )

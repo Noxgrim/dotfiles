@@ -22,10 +22,10 @@ pgrep -u "$USER" xidlelock    || {
     'device brightness restore 20&disown' \
     --timer 30 \
     'device if_should_pre_screen_save&disown' \
-    '' \
+    'device brightness restore 20&disown' \
     --timer 29 \
     'device if_should_pre_screen_save&disown' \
-    '' \
+    'device brightness restore 20&disown' \
     &
   xidlehook --detect-sleep \
     --timer 3540 \
