@@ -9,7 +9,7 @@ source $HOME/.config/nvim/config/functions.vim
 source $HOME/.config/nvim/plug-config/vimplug.vim
 let g:noxgrim_coc_extensions = [
             \ 'coc-clangd', 'coc-git', 'coc-java', 'coc-pyright', 'coc-json',
-            \ 'coc-rls', 'coc-sh', 'coc-snippets', 'coc-tsserver', 'coc-vimlsp',
+            \ 'coc-rust-analyzer', 'coc-sh', 'coc-snippets', 'coc-tsserver', 'coc-vimlsp',
             \ 'coc-vimtex', 'coc-ltex', 'coc-yank' ]
 
 source $HOME/.config/nvim/plug-config/vim-airline.vim
