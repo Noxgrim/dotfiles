@@ -8,6 +8,7 @@ if [[ $1 == "--type" ]]; then
     shift
 fi
 choose=false
+password_only=false
 if [[ $1 == "--choose" ]]; then
     choose=true
     shift
@@ -59,7 +60,13 @@ case "$password" in
         wait
         close
 EOF
-    $choose || exit
+    if ! $choose; then
+        if pgrep '\<[g]it\>' &>/dev/null; then
+            password_only=true
+        else
+            exit
+        fi
+    fi
     ;;
 esac
 
@@ -76,7 +83,7 @@ if $choose; then
 elif [[ -e "$lastcache" ]]; then
     line=1
     rm "$lastcache"
-elif [[ "$(pass show "$password" | wc -l)" -gt 1 ]] && [[ -n "$(pass show "$password" | sed -n 2p)" ]]; then
+elif ! $password_only && [[ "$(pass show "$password" | wc -l)" -gt 1 ]] && [[ -n "$(pass show "$password" | sed -n 2p)" ]]; then
     line=2
     [ -d "/tmp/$USER" ] || mkdir -p "/tmp/$USER"
     echo "$password" > "$lastcache"
