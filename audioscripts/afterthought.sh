@@ -114,13 +114,17 @@ set_option() {
             else
                 NAME_CHAP="$NAME_NO_PREFIX_CHAP"
                 NAME_CHAP_PARTS="$NAME_NO_PREFIX_CHAP_PARTS"
-                TITLE_CHAP="$NAME_NO_PREFIX_CHAP"
-                TITLE_CHAP_PARTS="$NAME_NO_PREFIX_CHAP_PARTS"
+                TITLE_CHAP="$TITLE_NO_PREFIX_CHAP"
+                TITLE_CHAP_PARTS="$TITLE_NO_PREFIX_CHAP_PARTS"
             fi
             ;;
         -B|--only-roll-back)
             if find . -iname '*.bak' | grep -q .; then
                 find . -iname '*.mp3' -delete
+                # you may simplify this to -iname '*__*.bak' if your find doesn't support lisp regexes
+                P='_[0-9][0-9]m_[0-9][0-9]s\(_[0-9][0-9]h\)?'
+                P=".*?${P}_${P}.*?"'\.bak'
+                find . -regex "$P" -delete
                 find . -iname '*.bak' -exec bash -c '
                 for F; do
                     mv -- "$F" "${F%.bak}"
@@ -135,6 +139,10 @@ set_option() {
         -b|--roll-back)
             if find . -iname '*.bak' | grep -q .; then
                 find . -iname '*.mp3' -delete
+                # you may simplify this to -iname '*__*.bak' if your find doesn't support lisp regexes
+                P='_[0-9][0-9]m_[0-9][0-9]s\(_[0-9][0-9]h\)?'
+                P=".*?${P}_${P}.*?"'\.bak'
+                find . -regex "$P" -delete
                 find . -iname '*.bak' -exec bash -c '
                 for F; do
                     mv -- "$F" "${F%.bak}"
@@ -458,9 +466,12 @@ EOF
                     python - "$DEST_FILE" << EOF
 import mutagen.easyid3 as mid3
 import sys
-f = mid3.Open(sys.argv[1])
-f.clear()
-f.save()
+try:
+    f = mid3.Open(sys.argv[1])
+    f.clear()
+    f.save()
+except ValueError:
+    pass
 EOF
                     id3 -c '' -d "$DEST_FILE"
                     id3 -2 "${TAG_ARGS[@]}" -n "$NUM" -t "$( printf "$NAME_T_CHAP" "$CHAPTER_PREFIX" "$CHAPNUM" "$CHAP" )" "$DEST_FILE"
