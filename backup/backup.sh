@@ -91,7 +91,7 @@ if [ -z "$(systemd-creds decrypt "$THISDIR/key")" ]; then
         send_message critical "Backup not possible" "Key retrival failed!"
         exit 1
     fi
-    execute pass show /etc/backup | systemd-creds encrypt - "$THISDIR/key" --not-after='+12h' -H
+    execute pass show /etc/backup | systemd-creds encrypt - "$THISDIR/key" --not-after='+12h' --with-key=auto
 fi
 
 send_message low "Backing up..." "<u>Keep device connected!</u>"
