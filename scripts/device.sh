@@ -2,17 +2,6 @@
 
 THIS="$(readlink -f "$(command -v "$0")")" # path to script
 TDIR="$(dirname "$THIS")"
-# X clients that should be ignored
-IGNORELIST=('"i3-frame" "i3-frame"' 'root window' 'none' '"[^"]*" "i3bar"'
-            '"Dunst" "Dunst"' '"picom" "picom"' '"redshift-gtk" ""'
-            '"redshift" "redshift"' '"nm-applet" "Nm-applet"'
-            '"electron" "[Ee]lectron"' '"[eE]lement1?" "[Ee]lement1?"'
-            '"signal(-desktop)?" "[Ss]ignal(-desktop)?"'
-            '"protonmail-bridge" "Proton Mail Bridge"'
-            '"xdg-desktop-portal-gtk" "Xdg-desktop-portal-gtk"'
-        )
-WAITLIST=( '-f /usr/sbin/anki' 'eclipse' )
-KILLLIST=( steam zoom )
 SUSPEND_ACTION='suspend'
 HIBERNATE_ACTION='hibernate'
 
@@ -67,6 +56,10 @@ close_firefox() {
 }
 
 listclients() {
+    if ! ${SHUTDOWN_DATA-false}; then
+        #shellcheck disable=1091
+        source "$SCRIPT_ROOT/data/shutdown_data.sh"
+    fi
     declare -Ag CLIENTS
     while read -r LINE; do
         if [ -n "$LINE" ]; then
@@ -76,11 +69,33 @@ listclients() {
                 fi
             done
             #shellcheck disable=2001
-            CLIENTS["$(sed 's/[^"]*"[^"]*" "\(.*\)"$/\1/' <<< "${LINE,,}")"]=""
+            NAME="$(sed 's/[^"]*"[^"]*" "\(.*\)"$/\1/' <<< "${LINE,,}")"
+            if [ -z "$NAME" ]; then
+                #shellcheck disable=2001
+                NAME="$(sed 's/[^"]*"\([^"]*\)".*/\1/' <<< "${LINE,,}")"
+            fi
+            if [ -z "$NAME" ]; then
+                #shellcheck disable=2001
+                NAME="[unknown:$(sed 's/ *\([^ ]\).*/\1/' <<< "${LINE,,}")]"
+            fi
+            CLIENTS["$NAME"]=""
             [ "${1-false}" = true ] && echo "$LINE"
         fi
-    done < <(xwininfo -root -tree -int | grep -v '^\s*[0-9]* (has no name):'|\
-        sed 's/^\s*\([0-9]*\).*(\([^(]*\))[^)]*$/\1 \2/;te;d;:e /^\s*[0-9]*\s*$/d')
+    done < <(xwininfo -root -tree -int |\
+        sed '/^xwininfo:/d;
+             /^\s*$/d;
+             /^\s*\(Root\|Parent\) window id:/d;
+             /child\(ren\)\?:$/d;
+             :loop
+               /  -\?[0-9]*x-\?[0-9]*+-\?[0-9]*+-\?[0-9]*  +-\?[0-9]*+-\?[0-9]*$/b end;
+               N;s/\n//g;
+               b loop;
+             :end
+               s///
+               s/^\s*//
+               /^[0-9]* (has no name):/d;
+               /()$/d;
+               s/^\s*\([0-9]*\).*(\([^)]*\))$/\1 \2/;')
     [ "${1-false}" != true ] && join_comma "${!CLIENTS[@]}"
 }
 
@@ -104,18 +119,26 @@ killapps() {
     sleep '1' # Wait because my system is SO slow
     killall "${KILLLIST[@]}"
     if [ "$(countclients)" -gt 0 ]; then # there are clients that refuse to die
-        i3-nagbar -t warning \
-            -m "The following clients refused to close: $(listclients)" \
-            -b 'Logout' 'i3-msg exit' \
-            -b 'Shutdown' "/bin/bash '$THIS' shutdown_force" \
-            -b 'Reboot' "/bin/bash '$THIS' reboot_force" \
-            -b 'Cancel' "/bin/bash -c 'killall \"$THIS\"'" & disown
         i3-msg mode "device.force [SRL]"
     fi
-    while [ "$(countclients)" -gt 0 ]; do sleep '0.1'; done
+    barpid=""
+    N=0
+    while [ "$(countclients)" -gt 0 ]; do
+        if [ "$((N%5))" = 0 ]; then
+            [ -n "$barpid" ] && kill "$barpid"
+            i3-nagbar -t warning \
+                -m "The following clients refused to close: $(listclients)" \
+                -b 'Logout' 'i3-msg exit' \
+                -b 'Shutdown' "/bin/bash '$THIS' shutdown_force" \
+                -b 'Reboot' "/bin/bash '$THIS' reboot_force" \
+                -b 'Cancel' "/bin/bash -c 'killall \"$THIS\"'" & disown
+            barpid="$!"
+        fi
+        sleep 0.1
+        N="$((N+1))"
+    done
     wait
     timeout 30 bash -c waitclientcleanup # Wait at most 30 seconds
-    while pgrep -f 'eclipse'; do sleep '0.1'; done # wait for Eclipse to save
     return 0
 }
 
@@ -220,7 +243,7 @@ to_secs() {
         FMT="$(date +%s -d "$FMT")"
         if [ -n "$FMT" ]; then
             NOW="$(date +%s)"
-            FMT=$((FMT-NOW))
+            FMT=$((fmt-now))
             if [ $FMT -lt 0 ]; then
                 notify-send "Must not be a past date"
                 exit 1
