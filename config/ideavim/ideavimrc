@@ -86,6 +86,8 @@ sethandler <C-h> n:ide
 " Same as default IDEA action, but only in insert mode. Enter block-visual
 " mode in normal mode.
 sethandler <C-v> i:ide
+" Set method parameter options
+sethandler <C-p> i:ide
 
 " https://github.com/JetBrains/ideavim/wiki/Select-mode
 " set selectmode-=template
@@ -133,8 +135,8 @@ map <Leader>R <Action>(Refactorings.QuickListPopupAction)
 map <Leader>a <Action>(AnalyzeActionsPopup)
 
 # Build artifacts
-map <Leader>b <Action>(BuildArtifact)
-map <Leader>B <Action>(BuildMenu)
+map <Leader>B <Action>(BuildArtifact)
+map <Leader>b <Action>(BuildMenu)
 " I like using space for jumping to the next error or issue
 map <Leader><Space> <Action>(GotoNextError)
 " Kind of makes more sense to use Backspace to go back... but could it be assigned a better action?
