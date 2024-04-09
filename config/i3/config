@@ -203,7 +203,7 @@ bindsym $mod+Ctrl+p exec       passmenu --type --choose
 bindsym $mod+Shift+Ctrl+p exec passmenu --choose
 
 set $device device [+][x][sSlLhHrF][mMnN][d]❖[dh]❖[se] ❖[rR]
-set $force device.force [SRL]
+set $force device.force [SRL[xc]]
 set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
 set $discord device.discord status: [o]nline (a)idle d[n]d [i]nvisible | actions: [g]o come-[b]ack | call: [j]oin{-(J)video} [c]all{-[v]ideo (V)stop} [r]eject [l]eave | share: [s]creen-share [S]top | audio: [m]ute [d]eafen
 bindsym $mod+Shift+x mode "$device"
@@ -252,9 +252,12 @@ mode "$device" {
 
 }
 mode "$force" {
-        bindsym Shift+l exec $scriptdir/device.sh logout_force     mode "default"
-        bindsym Shift+s exec $scriptdir/device.sh shutdown_force   mode "default"
-        bindsym Shift+r exec $scriptdir/device.sh reboot_force     mode "default"
+        bindsym Shift+l exec $scriptdir/device.sh logout_force,     mode "default"
+        bindsym Shift+s exec $scriptdir/device.sh shutdown_force,   mode "default"
+        bindsym Shift+r exec $scriptdir/device.sh reboot_force,     mode "default"
+
+        bindsym x  exec killall i3-nagbar,     mode "$device"
+        bindsym c  exec killall i3-nagbar,     mode "$device"
 
         bindsym Escape mode "$device"
 }

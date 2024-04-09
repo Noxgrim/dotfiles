@@ -57,30 +57,32 @@ close_firefox() {
 
 listclients() {
     if ! ${SHUTDOWN_DATA-false}; then
+        # See killapps for documentation
         #shellcheck disable=1091
-        source "$SCRIPT_ROOT/data/shutdown_data.sh"
+        source "$SCRIPT_ROOT/data/shared/shutdown_data.sh"
     fi
+    unset CLIENTS
     declare -Ag CLIENTS
-    while read -r LINE; do
-        if [ -n "$LINE" ]; then
-            for IGNORED in "${IGNORELIST[@]}"; do
-                if [[ "$(cut -d\  -f2- <<< "$LINE")" =~ $IGNORED ]]; then
-                    continue 2
-                fi
-            done
-            #shellcheck disable=2001
-            NAME="$(sed 's/[^"]*"[^"]*" "\(.*\)"$/\1/' <<< "${LINE,,}")"
-            if [ -z "$NAME" ]; then
-                #shellcheck disable=2001
-                NAME="$(sed 's/[^"]*"\([^"]*\)".*/\1/' <<< "${LINE,,}")"
-            fi
-            if [ -z "$NAME" ]; then
-                #shellcheck disable=2001
-                NAME="[unknown:$(sed 's/ *\([^ ]\).*/\1/' <<< "${LINE,,}")]"
-            fi
-            CLIENTS["$NAME"]=""
-            [ "${1-false}" = true ] && echo "$LINE"
+    while IFS=\" read -r ID A _ B _; do
+        PATTERN='"'"$A"'" "'"$B"'"'
+        PATTERN="${PATTERN,,}"
+        if "${IGNORELIST["$PATTERN"]-false}"; then
+            continue
         fi
+        for IGNORED in "${IGNORELIST_REGEX[@]}"; do
+            if [[ "$PATTERN" =~ $IGNORED ]]; then
+                continue 2
+            fi
+        done
+        if [ -n "$B" ]; then
+            NAME="$B"
+        elif [ -n "$A" ]; then
+            NAME="$A"
+        else
+            NAME="[unknown:${ID%% }]"
+        fi
+        CLIENTS["${NAME,,}"]=""
+        "${1-false}" && echo "$ID \"$A\" \"$B\""
     done < <(xwininfo -root -tree -int |\
         sed '/^xwininfo:/d;
              /^\s*$/d;
@@ -96,7 +98,7 @@ listclients() {
                /^[0-9]* (has no name):/d;
                /()$/d;
                s/^\s*\([0-9]*\).*(\([^)]*\))$/\1 \2/;')
-    [ "${1-false}" != true ] && join_comma "${!CLIENTS[@]}"
+    "${1-false}" || join_comma "${!CLIENTS[@]}"
 }
 
 waitclientcleanup() {
@@ -106,32 +108,53 @@ waitclientcleanup() {
     done
 }
 
-countclients() {
+clientsrunning() {
     listclients >& /dev/null
-    echo ${#CLIENTS[@]}
+    test ${#CLIENTS[@]} -gt 0
+    return $?
 }
 
 killapps() {
+    set -x
+    if ! ${SHUTDOWN_DATA-false}; then
+        # Should contain a few varibales
+        # SHUTDOWN_DATA=true
+        # IGNORELIST_REGEX # array with regex against '"class" "class"' pattern
+        #   e.g. '"[^"]*" "i3bar"' (case insensitive)
+        # IGNORELIST # asso. array: strings, value always 'true' against pattern
+        #   e.g. IGNORELIST['"i3-frame" "i3-frame"']=true (case insensitive)
+        # WAITLIST # array: each value arguments for pgrep
+        #   e.g. "-f '/bin/bash'"
+        # KILLLIST # array: each value process name to kill
+        #   e.g. 'firefox'
+        #shellcheck disable=1091
+        source "$SCRIPT_ROOT/data/shared/shutdown_data.sh"
+    fi
     check_for_backup&
     export -f close_firefox waitclientcleanup
     timeout 4 bash -c close_firefox # Wait at most 4 seconds
     i3-msg '[class=".*"] kill' # close all windows
-    sleep '1' # Wait because my system is SO slow
     killall "${KILLLIST[@]}"
-    if [ "$(countclients)" -gt 0 ]; then # there are clients that refuse to die
-        i3-msg mode "device.force [SRL]"
+    sleep '1' # Wait because my system is SO slow
+    if clientsrunning; then # there are clients that refuse to die
+        i3-msg mode "device.force [SRL[xc]]"
     fi
     barpid=""
     N=0
-    while [ "$(countclients)" -gt 0 ]; do
-        if [ "$((N%5))" = 0 ]; then
+    while clientsrunning; do
+        # canceled?
+        if [ -n "$barpid" ] && [ ! -e "/proc/$barpid" ]; then
+            wait
+            return 1
+        fi
+
+        if [ "$((N%50))" = 0 ]; then
             [ -n "$barpid" ] && kill "$barpid"
             i3-nagbar -t warning \
-                -m "The following clients refused to close: $(listclients)" \
-                -b 'Logout' 'i3-msg exit' \
-                -b 'Shutdown' "/bin/bash '$THIS' shutdown_force" \
-                -b 'Reboot' "/bin/bash '$THIS' reboot_force" \
-                -b 'Cancel' "/bin/bash -c 'killall \"$THIS\"'" & disown
+                -m "The following clients refused to close: $(join_comma "${!CLIENTS[@]}")" \
+                -B 'Logout' "/bin/bash '$THIS' logout_force" \
+                -B 'Shutdown' "/bin/bash '$THIS' shutdown_force" \
+                -B 'Reboot' "/bin/bash '$THIS' reboot_force" & disown
             barpid="$!"
         fi
         sleep 0.1
@@ -414,7 +437,7 @@ case "$1" in
         lock
         ;;
     logout)
-        killapps; i3-msg exit
+        killapps && i3-msg exit
         ;;
     logout_force)
         i3-msg exit
@@ -429,13 +452,13 @@ case "$1" in
         check_for_backup; hybrid
         ;;
     reboot)
-        killapps; do_reboot
+        killapps && do_reboot
         ;;
     reboot_force)
         do_reboot
         ;;
     shutdown)
-        killapps; do_shutdown
+        killapps && do_shutdown
         ;;
     shutdown_force)
         do_shutdown
@@ -444,7 +467,8 @@ case "$1" in
         listclients true
         ;;
     count_clients)
-        countclients
+        listclients >/dev/null
+        echo "${#CLIENTS[@]}"
         ;;
 
     notify_pause)
