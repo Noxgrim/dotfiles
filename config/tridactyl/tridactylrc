@@ -177,20 +177,18 @@ autocmd DocLoad ^https://github.com/tridactyl/tridactyl/issues/new$ issue
 autocmd TriStart .* source_quiet
 
 " Logging
-set logging.autocmds undefined
-set logging.cmdline undefined
-set logging.containers undefined
-set logging.controller undefined
-set logging.excmd undefined
-set logging.hinting undefined
-set logging.messaging undefined
-set logging.native undefined
-set logging.performance undefined
-set logging.state undefined
-set logging.styling undefined
+set logging.autocmds warning
+set logging.cmdline warning
+set logging.containers warning
+set logging.controller warning
+set logging.excmd warning
+set logging.hinting warning
+set logging.messaging warning
+set logging.native warning
+set logging.performance warning
+set logging.state warning
+set logging.styling warning
 
-" For syntax highlighting see https://github.com/tridactyl/vim-tridactyl
-" vim: set filetype=tridactyl
 
 """ CUSTOM STUFF
 " Bindings
@@ -200,6 +198,8 @@ unbind _vp
 unbind <C-7>
 unbind <C-m>
 unbind <C-M>
+unbind <C-x>
+unbind <C-X>
 autocmddelete DocLoad .*
 autocmddelete HistoryState .*
 
@@ -220,8 +220,8 @@ bindurl piped.adminforge.de N js tri.excmds.urlmodify("-t", "piped.adminforge.de
 bindurl piped.video         N js tri.excmds.urlmodify("-t", "piped.video",         "piped.adminforge.de")
 bindurl inv.tux.pizza       N js tri.excmds.urlmodify("-t", "inv.tux.pizza",       "piped.video")
 
-bind <C-x> mouse_mode
-bind <C-S-m> no_mouse_mode
+bind x mouse_mode
+bind X no_mouse_mode
 
 " Autocmds
 " autocmd DocStart ^http(s?)://www.youtube.com/watch js tri.excmds.urlmodify("-t", "www.youtube.com", "piped.kavin.rocks")
@@ -231,3 +231,6 @@ autocmd DocLoad      .* no_mouse_mode
 autocmd HistoryState .* no_mouse_mode
 autocmd DocLoad      .*.* js -r video_notifier.js
 autocmd HistoryState .*.* js -r video_notifier.js
+
+" For syntax highlighting see https://github.com/tridactyl/vim-tridactyl
+" vim: set filetype=tridactyl
