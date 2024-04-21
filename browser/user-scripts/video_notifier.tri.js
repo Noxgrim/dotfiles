@@ -2,7 +2,7 @@
 // @name         Video Notifier “Backend”
 // @namespace    http://tridactyl.xyz/
 // @version      80
-// @description  Receive messages about video notifications from the local website and make changes to local file syste,
+// @description  Receive messages about video notifications from the local website and make changes to local file system
 // @author       Noxgrim
 // @match        *://*/*
 // @updateURL    http://localhost:8023/user-scripts/video_notifier.tri.js

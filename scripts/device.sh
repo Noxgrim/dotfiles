@@ -34,10 +34,11 @@ pre_screen_save() {
         xdotool key XF86WWW
         exit 0
     fi
-    if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 | read -r; then
+    if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin -1 | read -r; then
         xdotool key XF86WWW
         exit 0
     fi
+    find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin +1 -delete
 }
 
 close_firefox() {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Notifier Frontend
 // @namespace    http://tampermonkey.net/
-// @version      80
+// @version      81
 // @description  Send a message to another (tridactyl) script if a video about the playback state of videos
 // @author       Noxgrim
 // @match        *://*/*
@@ -29,9 +29,10 @@
         // which) may be blocked
         // Because CSP we also have to use "*" here (a changing parent should
         // still receive our messages)
-        if (last !== playing) {
+        if (playing || last !== playing) {
             const state = playing ? "playing" : "stopped";
-            console.debug(`ssuspend.w: ${state} ${name}`)
+            const heartbeat = last === playing ? " (heartbeat)" : "";
+            console.debug(`ssuspend.w: ${state} ${name}${heartbeat}`)
             window.parent.postMessage({
                 _my_namespace: "noxgrim_video_notifier_worker",
                 uuid: name,
@@ -132,5 +133,7 @@
         })
     };
     observer.observe(document, {childList: true, subtree: true});
+    // ping everey 60 seconds as a kind of heartbeat
+    setInterval(checkVideos, 60 * 1000, null);
     console.debug(`ssuspend.w: loaded video notify worker loaded for frame ${window.location} (${name})`);
 })();
