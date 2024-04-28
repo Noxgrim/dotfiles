@@ -29,18 +29,53 @@ check_for_backup() {
     fi
 }
 
-pre_screen_save() {
+
+should_screen_save() {
     if ! xset q | grep -q "DPMS is Enabled"; then
-        xdotool key XF86WWW
-        exit 0
+        return 1
     fi
     if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin -1 | read -r; then
-        xdotool key XF86WWW
-        exit 0
+        xset dpms   0   0   0
+        xset dpms 120 120 120
+        return 1
     fi
     find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin +1 -delete
+    return 0
 }
 
+screen_save_untick() {
+    [ -d "/tmp/$USER/" ] || mkdir -p "/tmp/$USER/"
+    local TICK_FILE="/tmp/$USER/ssuspend.tick"
+
+    local -i TICKS
+    TICKS="$(cat "$TICK_FILE" 2>/dev/null || echo 0)"
+
+    if [ $TICKS -ge 2 ]; then
+        call brightness restore 20
+    fi
+    echo "0" > "$TICK_FILE"
+}
+
+screen_save_tick() {
+    [ -d "/tmp/$USER/" ] || mkdir -p "/tmp/$USER/"
+    local TICK_FILE="/tmp/$USER/ssuspend.tick"
+
+    local -i TICKS
+    TICKS="$(cat "$TICK_FILE" || echo 0)"
+
+    if should_screen_save; then
+        TICKS="$((TICKS+1))"
+        if [ $TICKS == 2 ]; then
+            call brightness save set 1 5000
+        fi
+    else
+        TICKS=0
+    fi
+    echo "$TICKS" > "$TICK_FILE"
+}
+
+
+# shellcheck disable=SC2317
 close_firefox() {
     local WIN_IDS
     WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
@@ -394,261 +429,267 @@ run() {
     done
 }
 
-while [ $# -gt 0 ]; do
-case "$1" in
-    ";") ;;
-    schedule)
-        if [ -n "${2-}" ]; then
-            schedule_cmd "$2"
-            shift 1
-        else
-            echo "Which command?" >&2
-            exit
-        fi
-        ;;
-    schedule_what)
-        schedule_cmd
-        ;;
-    schedule_at)
-        if [ -n "${2-}" ] || [ -n "${3-}" ]; then
-            schedule_cmd "$3" "$2" 'true'
-            shift 2
-        else
-            echo "Which command and when?" >&2
-            exit
-        fi
-        ;;
-    schedule_in)
-        if [ -n "${2-}" ] || [ -n "${3-}" ]; then
-            schedule_cmd "$3" "$2" 'false'
-            shift 2
-        else
-            echo "Which command and when?" >&2
-            exit
-        fi
-        ;;
-    execute_what)
-        CMD="$( print_possible_commands | rofi -theme solarized -dmenu -i -async-pre-read 0 -multi-select -p "Execute device command" | tr '\n' ' ')"
-        if [ -z "$CMD" ]; then
-            return
-        fi
-        xargs "$0" <<< "$CMD"
-        ;;
-    lock)
-        lock
-        ;;
-    logout)
-        killapps && i3-msg exit
-        ;;
-    logout_force)
-        i3-msg exit
-        ;;
-    suspend|sleep)
-        check_for_backup; do_suspend
-        ;;
-    hibernate)
-        check_for_backup; hibernate
-        ;;
-    hybrid)
-        check_for_backup; hybrid
-        ;;
-    reboot)
-        killapps && do_reboot
-        ;;
-    reboot_force)
-        do_reboot
-        ;;
-    shutdown)
-        killapps && do_shutdown
-        ;;
-    shutdown_force)
-        do_shutdown
-        ;;
-    list_clients)
-        listclients true
-        ;;
-    count_clients)
-        listclients >/dev/null
-        echo "${#CLIENTS[@]}"
-        ;;
+call() {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            ";") ;;
+            schedule)
+                if [ -n "${2-}" ]; then
+                    schedule_cmd "$2"
+                    shift 1
+                else
+                    echo "Which command?" >&2
+                    exit
+                fi
+                ;;
+            schedule_what)
+                schedule_cmd
+                ;;
+            schedule_at)
+                if [ -n "${2-}" ] || [ -n "${3-}" ]; then
+                    schedule_cmd "$3" "$2" 'true'
+                    shift 2
+                else
+                    echo "Which command and when?" >&2
+                    exit
+                fi
+                ;;
+            schedule_in)
+                if [ -n "${2-}" ] || [ -n "${3-}" ]; then
+                    schedule_cmd "$3" "$2" 'false'
+                    shift 2
+                else
+                    echo "Which command and when?" >&2
+                    exit
+                fi
+                ;;
+            execute_what)
+                CMD="$( print_possible_commands | rofi -theme solarized -dmenu -i -async-pre-read 0 -multi-select -p "Execute device command" | tr '\n' ' ')"
+                if [ -z "$CMD" ]; then
+                    return
+                fi
+                xargs "$0" <<< "$CMD"
+                ;;
+            lock)
+                lock
+                ;;
+            logout)
+                killapps && i3-msg exit
+                ;;
+            logout_force)
+                i3-msg exit
+                ;;
+            suspend|sleep)
+                check_for_backup; do_suspend
+                ;;
+            hibernate)
+                check_for_backup; hibernate
+                ;;
+            hybrid)
+                check_for_backup; hybrid
+                ;;
+            reboot)
+                killapps && do_reboot
+                ;;
+            reboot_force)
+                do_reboot
+                ;;
+            shutdown)
+                killapps && do_shutdown
+                ;;
+            shutdown_force)
+                do_shutdown
+                ;;
+            list_clients)
+                listclients true
+                ;;
+            count_clients)
+                listclients >/dev/null
+                echo "${#CLIENTS[@]}"
+                ;;
 
-    notify_pause)
-        notify-send -t 2000 -u low "Paused notifications"
-        sleep 3
-        killall -SIGUSR1 dunst
-        ;;
-    notify_resume)
-        killall -SIGUSR2 dunst
-        notify-send -t 2000 -u low "Resumed notifications"
-        ;;
-    screen_off)
-        screen_off
-        ;;
-    output)
-        shift 1
-        "$TDIR/output_layout.sh" "${@:1:3}"
-        shift 3
-        ;&
-    wallpaper)
-        if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
-            "$HOME/.device_specific/wallpaper_command.sh"
-        elif [ -d "$HOME/Documents/.wallpaper" ]; then
-            "$SCRIPT_ROOT/scripts/wallpaper_command.sh"
-        else
-            find "$HOME" -maxdepth 1 -iname '.wallpaper*' -print0 | sort -Rz | xargs -0 feh --bg-scale
-        fi
-        ;;
-    wallpaper_arg)
-        shift 1
-        if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
-            "$HOME/.device_specific/wallpaper_command.sh" "$1"
-        elif [ -d "$HOME/Documents/.wallpaper" ]; then
-            "$SCRIPT_ROOT/scripts/wallpaper_command.sh" "$1"
-        else
-            find "$HOME" -maxdepth 1 -iname '.wallpaper*'"$1"'*' -print0 | sort -Rz | xargs -0 feh --bg-scale
-        fi
-        ;;
-    volume)
-        shift 1
-        "$TDIR/volume.sh" "${@:1:3}"
-        shift 2
-        ;;
-    discord)
-        "$TDIR/discord.sh" "$2"
-        shift
-        ;;
-    dpms_off)
-            if xset q | grep -q "DPMS is Enabled"; then
-                notify-send -u low "Disabled DPMS"
-            fi
-            xset s off -dpms
-        ;;
-    dpms_on)
-            if ! xset q | grep -q "DPMS is Enabled"; then
-                notify-send -u low "Enabled DPMS"
-            fi
-            xset s on +dpms
-        ;;
-    dpms_toggle)
-        if xset q | grep -q "DPMS is Enabled"; then
-            xset s off -dpms
-            notify-send -u low "Disabled DPMS"
-        else
-            xset s on  +dpms
-            notify-send -u low "Enabled DPMS"
-        fi
-        ;;
-    keyboard_off)
-        if [ "$2" != '!' ]; then
-            echo "DANGEROUS OPERATION! Append argument '!' to force!" >&2
-            break
-        else
-            shift 1
-        fi
+            notify_pause)
+                notify-send -t 2000 -u low "Paused notifications"
+                sleep 3
+                killall -SIGUSR1 dunst
+                ;;
+            notify_resume)
+                killall -SIGUSR2 dunst
+                notify-send -t 2000 -u low "Resumed notifications"
+                ;;
+            screen_off)
+                screen_off
+                ;;
+            output)
+                shift 1
+                "$TDIR/output_layout.sh" "${@:1:3}"
+                shift 3
+                ;&
+            wallpaper)
+                if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
+                    "$HOME/.device_specific/wallpaper_command.sh"
+                elif [ -d "$HOME/Documents/.wallpaper" ]; then
+                    "$SCRIPT_ROOT/scripts/wallpaper_command.sh"
+                else
+                    find "$HOME" -maxdepth 1 -iname '.wallpaper*' -print0 | sort -Rz | xargs -0 feh --bg-scale
+                fi
+                ;;
+            wallpaper_arg)
+                shift 1
+                if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
+                    "$HOME/.device_specific/wallpaper_command.sh" "$1"
+                elif [ -d "$HOME/Documents/.wallpaper" ]; then
+                    "$SCRIPT_ROOT/scripts/wallpaper_command.sh" "$1"
+                else
+                    find "$HOME" -maxdepth 1 -iname '.wallpaper*'"$1"'*' -print0 | sort -Rz | xargs -0 feh --bg-scale
+                fi
+                ;;
+            volume)
+                shift 1
+                "$TDIR/volume.sh" "${@:1:3}"
+                shift 2
+                ;;
+            discord)
+                "$TDIR/discord.sh" "$2"
+                shift
+                ;;
+            dpms_off)
+                    if xset q | grep -q "DPMS is Enabled"; then
+                        notify-send -u low "Disabled DPMS"
+                    fi
+                    xset s off -dpms
+                ;;
+            dpms_on)
+                    if ! xset q | grep -q "DPMS is Enabled"; then
+                        notify-send -u low "Enabled DPMS"
+                    fi
+                    xset s on +dpms
+                ;;
+            dpms_toggle)
+                if xset q | grep -q "DPMS is Enabled"; then
+                    xset s off -dpms
+                    notify-send -u low "Disabled DPMS"
+                else
+                    xset s on  +dpms
+                    notify-send -u low "Enabled DPMS"
+                fi
+                ;;
+            keyboard_off)
+                if [ "$2" != '!' ]; then
+                    echo "DANGEROUS OPERATION! Append argument '!' to force!" >&2
+                    break
+                else
+                    shift 1
+                fi
 
-        xinput | grep 'slave\s*keyboard' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-            xinput set-prop "$ID" "Device Enabled" 0
-        done
-        ;;
-    keyboard_on)
-        xinput | grep 'slave\s*keyboard' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-            xinput set-prop "$ID" "Device Enabled" 1
-        done
-        ;;
-    mouse_off)
-        DIR='/tmp/'"$USER"'/'
-        [ -d "$DIR" ] || mkdir -p "$DIR"
-        xdotool getmouselocation --shell > "$DIR/mouse"
-        xdotool mousemove 9001 9001
-        xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-            xinput set-prop "$ID" "Device Enabled" 0
-        done
-        ;;
-    mouse_on)
-        DIR='/tmp/'"$USER"'/'
-        if [ -f "$DIR/mouse" ]; then
-        (
-            source "$DIR/mouse"
-            xdotool mousemove "$X" "$Y"
-        )
-            rm "$DIR/mouse"
-        fi
-        xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-            xinput set-prop "$ID" "Device Enabled" 1
-        done
-        ;;
-    mouse_toggle)
-        DIR='/tmp/'"$USER"'/'
-        [ -d "$DIR" ] || mkdir -p "$DIR"
-        if [ -f "$DIR/mouse" ]; then
-        (
-            source "$DIR/mouse"
-            xdotool mousemove "$X" "$Y"
-        )
-            rm "$DIR/mouse"
-            SETTING=1
-        else
-            SETTING=0
-        fi
-        xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-            xinput set-prop "$ID" "Device Enabled" "$SETTING"
-        done
-        ;;
-    list_all_commands)
-        print_possible_commands | sed '/\<\(\(output\|discord\)\>.*\|volume\)\s\+$/d;/^\s*$/d'
-        ;;
-    check_for_backup)
-        check_for_backup
-        ;;
-    if_should_screen_save|if_should_pre_screen_save)
-        pre_screen_save
-        ;;
-    run|run_as)
-        [ "$1" == run_as ] && export USER="$2" && shift 1
+                xinput | grep 'slave\s*keyboard' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                    xinput set-prop "$ID" "Device Enabled" 0
+                done
+                ;;
+            keyboard_on)
+                xinput | grep 'slave\s*keyboard' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                    xinput set-prop "$ID" "Device Enabled" 1
+                done
+                ;;
+            mouse_off)
+                DIR='/tmp/'"$USER"'/'
+                [ -d "$DIR" ] || mkdir -p "$DIR"
+                xdotool getmouselocation --shell > "$DIR/mouse"
+                xdotool mousemove 9001 9001
+                xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                    xinput set-prop "$ID" "Device Enabled" 0
+                done
+                ;;
+            mouse_on)
+                DIR='/tmp/'"$USER"'/'
+                if [ -f "$DIR/mouse" ]; then
+                (
+                    source "$DIR/mouse"
+                    xdotool mousemove "$X" "$Y"
+                )
+                    rm "$DIR/mouse"
+                fi
+                xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                    xinput set-prop "$ID" "Device Enabled" 1
+                done
+                ;;
+            mouse_toggle)
+                DIR='/tmp/'"$USER"'/'
+                [ -d "$DIR" ] || mkdir -p "$DIR"
+                if [ -f "$DIR/mouse" ]; then
+                (
+                    source "$DIR/mouse"
+                    xdotool mousemove "$X" "$Y"
+                )
+                    rm "$DIR/mouse"
+                    SETTING=1
+                else
+                    SETTING=0
+                fi
+                xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                    xinput set-prop "$ID" "Device Enabled" "$SETTING"
+                done
+                ;;
+            list_all_commands)
+                print_possible_commands | sed '/\<\(\(output\|discord\)\>.*\|volume\)\s\+$/d;/^\s*$/d'
+                ;;
+            check_for_backup)
+                check_for_backup
+                ;;
+            screen_save_tick)
+                screen_save_tick
+                ;;
+            screen_save_untick)
+                screen_save_untick
+                ;;
+            run|run_as)
+                [ "$1" == run_as ] && export USER="$2" && shift 1
+                shift 1
+                ARGS=()
+                while [ -n "${1+"?"}" ] && [ "$1" != ';' ]; do
+                    ARGS+=("'${1//"'"/"'\\''"}'")
+                    shift 1
+                done
+                run "${ARGS[@]}"
+                ;;
+            action)
+                if [ -x "$HOME/.device_specific/actions/$2.sh" ]; then
+                    "$HOME/.device_specific/actions/$2.sh" &>/dev/null& disown
+                elif [ -x "$SCRIPT_ROOT/actions/$2.sh" ]; then
+                    "$SCRIPT_ROOT/actions/$2.sh" &>/dev/null& disown
+                fi
+                shift 1
+                ;;
+            brightness)
+                shift
+                shift "$(setsid "$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3)" 2>&1
+                ;;
+            send_all)
+                shopt -s lastpipe
+                while xbindkeys -k  | sed -n '$ {s/\s*//g;s/Mod2+//;p}' | read -r C; do
+                    F="$(xdotool getwindowfocus)"
+                    xdotool search --name "$2" | xargs -I{} xdotool windowfocus --sync {} key --window {} "$C"
+                    xdotool windowfocus --sync "$F"
+                done
+                shift
+                ;;
+            *) {
+                echo "Unknown command: $1"
+                echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
+                echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|brightness ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off}+"
+                echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
+                echo "Usage: $0 schedule {<command>|'<commands>'}"
+                echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"
+                echo "Usage: $0 schedule_what|execute_what"
+                echo "Usage: $0 run ARSGS ;"
+                echo "Usage: $0 run_as USERANDARSGS ;"
+                echo "Usage: $0 action ACTION_NAME"
+            } >&2
+                exit 2
+        esac
         shift 1
-        ARGS=()
-        while [ -n "${1+"?"}" ] && [ "$1" != ';' ]; do
-            ARGS+=("'${1//"'"/"'\\''"}'")
-            shift 1
-        done
-        run "${ARGS[@]}"
-        ;;
-    action)
-        if [ -x "$HOME/.device_specific/actions/$2.sh" ]; then
-            "$HOME/.device_specific/actions/$2.sh" &>/dev/null& disown
-        elif [ -x "$SCRIPT_ROOT/actions/$2.sh" ]; then
-            "$SCRIPT_ROOT/actions/$2.sh" &>/dev/null& disown
-        fi
-        shift 1
-        ;;
-    brightness)
-        shift
-        shift "$(setsid "$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3)" 2>&1
-        ;;
-    send_all)
-        shopt -s lastpipe
-        while xbindkeys -k  | sed -n '${s/\s*//g;s/Mod2+//;p}' | read -r C; do
-            F="$(xdotool getwindowfocus)"
-            xdotool search --name "$2" | xargs -I{} xdotool windowfocus --sync {} key --window {} "$C"
-            xdotool windowfocus --sync "$F"
-        done
-        shift
-        ;;
-    *) {
-        echo "Unknown command: $1"
-        echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-        echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|brightness ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off}+"
-        echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
-        echo "Usage: $0 schedule {<command>|'<commands>'}"
-        echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"
-        echo "Usage: $0 schedule_what|execute_what"
-        echo "Usage: $0 run ARSGS ;"
-        echo "Usage: $0 run_as USERANDARSGS ;"
-        echo "Usage: $0 action ACTION_NAME"
-    } >&2
-        exit 2
-esac
-shift 1
-done
+    done
+}
 
+call "$@"
 exit 0

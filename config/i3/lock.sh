@@ -39,6 +39,7 @@ post_lock() {
     [ -e "$IMG" ] && rm "$IMG"
     [ -f "/tmp/$USER/user_suspended"  ] && rm "/tmp/$USER/user_suspended"
     [ -f "/tmp/$USER/user_hibernated" ] && rm "/tmp/$USER/user_hibernated"
+    device screen_save_untick
     return
 }
 
