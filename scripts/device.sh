@@ -5,14 +5,6 @@ TDIR="$(dirname "$THIS")"
 SUSPEND_ACTION='suspend'
 HIBERNATE_ACTION='hibernate'
 
-contains() {
-    local V
-    for V in "${@:2}"; do
-        [ "$V" == "$1" ] && return 0
-    done
-    return 1
-}
-
 lock() {
     loginctl lock-session
 }
@@ -51,9 +43,10 @@ screen_save_untick() {
     TICKS="$(cat "$TICK_FILE" 2>/dev/null || echo 0)"
 
     if [ $TICKS -ge 2 ]; then
-        call brightness restore 20
+        call brightness restore 20&
     fi
     echo "0" > "$TICK_FILE"
+    wait
 }
 
 screen_save_tick() {
@@ -66,12 +59,13 @@ screen_save_tick() {
     if should_screen_save; then
         TICKS="$((TICKS+1))"
         if [ $TICKS == 2 ]; then
-            call brightness save set 1 5000
+            call brightness save set 1 5000&
         fi
     else
         TICKS=0
     fi
     echo "$TICKS" > "$TICK_FILE"
+    wait
 }
 
 
@@ -137,6 +131,7 @@ listclients() {
     "${1-false}" || join_comma "${!CLIENTS[@]}"
 }
 
+# shellcheck disable=SC2317
 waitclientcleanup() {
     for CLIENT in "${WAITLIST[@]}"; do
         #shellcheck disable=2086
@@ -676,7 +671,7 @@ call() {
             *) {
                 echo "Unknown command: $1"
                 echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-                echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|brightness ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off}+"
+                echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|brightness ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off|screen_save_untick}+"
                 echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
                 echo "Usage: $0 schedule {<command>|'<commands>'}"
                 echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"
