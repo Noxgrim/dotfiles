@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Notifier Frontend
 // @namespace    http://tampermonkey.net/
-// @version      81
+// @version      82
 // @description  Send a message to another (tridactyl) script if a video about the playback state of videos
 // @author       Noxgrim
 // @match        *://*/*
@@ -23,6 +23,7 @@
     const name = self.crypto.randomUUID();
     let last = false;
     let lastHref = document.location.href;
+    let specialTreatments = new Array()
     const write = function (playing) {
         // to avoid being cancelled or being blocked we use the power of
         // tridactyl to call some local commands (instead of a REST-ish interface
@@ -46,7 +47,7 @@
         // i.e. the video is playing (not ended or buffering), in a focussed tab with actual video (and not just
         // audio, as supported by Piped or Invidious)
         if (document.visibilityState !== 'hidden' && !/[&?]listen=(1|true)\b/i.test(window.location.search.substring(1))) {
-            for (const v of document.querySelectorAll('video')) {
+            for (const v of [...document.querySelectorAll('video')].concat(specialTreatments)) {
                 playing = playing || ((v !== null)
                     && !v.paused && v.error === null
                     && !v.ended && v.readyState > 2);
@@ -73,21 +74,46 @@
             for (const chld of mut.addedNodes) {
                 if (chld.nodeName === 'VIDEO') {
                     initEvents(chld);
+                } else if (chld.nodeName === 'DISNEY-WEB-PLAYER') {
+                    initEvents(chld.mediaElement);
+                    specialTreatments.push(chld.mediaElement);
                 } else if (chld.querySelectorAll) {
                     chld.querySelectorAll('video').forEach(initEvents);
+                    chld.querySelectorAll('disney-web-player').forEach(e => {
+                        initEvents(e.mediaElement);
+                        specialTreatments.push(e.mediaElement);
+                    });
                 }
             }
             // a video node was sneakily removed
             for (const chld of mut.removedNodes) {
-                if (chld.nodeName === 'VIDEO') {
+                if (chld.nodeName === 'DISNEY-WEB-PLAYER') {
+                    const idx = specialTreatments.indexOf(chld.mediaElement);
+                    if (idx > -1) {
+                        specialTreatments.splice(idx, 1);
+                        if (!didCheck) {
+                            checkVideos(null);
+                            didCheck = true;
+                        }
+                    }
+                }
+                if (chld.nodeName === 'VIDEO' && !didCheck) {
                     checkVideos(null);
                     didCheck = true;
-                    break;
                 } else if (chld.querySelectorAll) {
-                    if (chld.querySelectorAll('video').length > 0) {
+                    chld.querySelectorAll('disney-web-player').forEach(e => {
+                        const idx = specialTreatments.indexOf(e.mediaElement);
+                        if (idx > -1) {
+                            specialTreatments.splice(idx, 1);
+                            if (!didCheck) {
+                                checkVideos(null);
+                                didCheck = true;
+                            }
+                        }
+                    });
+                    if (chld.querySelectorAll('video').length > 0 && !didCheck) {
                         checkVideos(_);
                         didCheck = true;
-                        break;
                     }
                 }
             }
