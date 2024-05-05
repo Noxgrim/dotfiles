@@ -298,7 +298,7 @@ if [ -n "$CHAPTER_FILE" ]; then
                 THIS=$((LAST+1))
             fi
             if [ "$THIS" = "$LAST" ] && [ -z "$SPLIT" ]; then
-                echo "$i: There already was a line with the same file number; line must define a split point!" >&2
+                echo "$i: There already was a line with the same file number ($THIS); line must define a split point!" >&2
                 exit 1
             elif [ "$THIS" -lt "$LAST" ]; then
                 echo "$i: File number is smaller than previous file number!" >&2

@@ -211,7 +211,7 @@ restore [TIME [STPES]]:
 kill:   kill backlight change in progress
 notify: send a notification about the current brightness
 [as root] init|reload:
-        setup relevant files,
+        setup relevant files
 [debug] report:
         print number of arguments consumed to stderr
         (excluding this one)
