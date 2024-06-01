@@ -167,6 +167,7 @@ done
 echo '
 P fm
 + mnt/home
++ mnt/home-uncrompr
 ! mnt/*
 '
 )                                       \
@@ -201,7 +202,7 @@ case "$EXIT" in
         MESSAGE_HEAD="Backup completed"
         MESSAGE_BODY=""
         ;;
-    1) # Waring
+    1) # Warning
         CONTINUE=true
         MESSAGE_URGENCY=low
         MESSAGE_HEAD="Backup completed"
