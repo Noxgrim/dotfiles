@@ -9,13 +9,17 @@ pgrep -u "$USER" xss-lock     || xss-lock -l -- "$SCRIPT_ROOT/config/i3/lock.sh"
 pgrep -u "$USER" nm-applet    || nm-applet &
 pgrep -u "$USER" -f 'browser_bridge_[s]erv.py' || "$SCRIPT_ROOT/browser/browser_bridge_serv.py" &
 
-xset s 120 0
-xset dpms 120 120 120
+eval "$(grep '^SSV_\w*=' "$(which device)")"
+
+OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS))"
+
+xset s "$OFFSEC" 0
+xset dpms "$OFFSEC" "$OFFSEC" "$OFFSEC"
 
 pgrep -u "$USER" xidlelock    || {
   declare -a XIH_ARGS=()
-  declare TICK_FREQ=30
-  for (( i=0; i<3570; i+=TICK_FREQ )); do
+  declare TICK_FREQ=$SSV_TICK_LENGTH MAX="$((60*60-SSV_TICK_LENGTH))"
+  for (( i=0; i<MAX; i+=TICK_FREQ )); do
     XIH_ARGS+=(
       --timer "$TICK_FREQ"
       'device screen_save_tick&disown'

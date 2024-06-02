@@ -4,6 +4,9 @@ THIS="$(readlink -f "$(command -v "$0")")" # path to script
 TDIR="$(dirname "$THIS")"
 SUSPEND_ACTION='suspend'
 HIBERNATE_ACTION='hibernate'
+SSV_TICK_LENGTH=30
+SSV_DIM_TICKS=2
+SSV_OFF_TICKS=4
 
 lock() {
     loginctl lock-session
@@ -22,13 +25,48 @@ check_for_backup() {
 }
 
 
+list_usb() {
+    local LSUSB ID F
+    LSUSB="$(lsusb)"
+    for F in /sys/bus/usb/devices/*; do
+        ID="$(cat "$F/idVendor" 2>/dev/null):$(cat "$F/idProduct" 2>/dev/null)"
+        echo "$(grep "$ID" -m 1 <<< "$LSUSB")  $F"
+    done | grep -v Linux
+}
+
+reset_usb() {
+    local -a DEV_NAMES
+    local USBS USB DEV_FILES=""
+    USBS="$(list_usb)"
+    if [ $# = 0 ]; then
+        mapfile -t DEV_NAMES < "$SCRIPT_ROOT/data/shared/usb_data"
+    else
+        DEV_NAMES=( "$@" )
+    fi
+    for PATTERN in "${DEV_NAMES[@]}"; do
+        USB="$(grep -F "$PATTERN" -m1 <<< "$USBS")"
+        if [ -n "$USB" ]; then
+            DEV_FILES="$DEV_FILES ${USB##*/}"
+        fi
+    done
+    DEV_FILES="${DEV_FILES:1}"
+    if [ -n "$DEV_FILES" ]; then
+        echo "reset_usb $DEV_FILES" > /tmp/"$USER"/service
+    fi
+}
+
+
 should_screen_save() {
+    if [ "$(loginctl show-session --property=PreparingForSleep | cut -d= -f2)" == 'yes' ]; then
+        return 1
+    fi
     if ! xset q | grep -q "DPMS is Enabled"; then
         return 1
     fi
     if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin -1 | read -r; then
-        xset dpms   0   0   0
-        xset dpms 120 120 120
+        xset dpms 0 0 0
+        local OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS))"
+        xset dpms "$OFFSEC" "$OFFSEC" "$OFFSEC"
         return 1
     fi
     find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin +1 -delete
@@ -42,7 +80,14 @@ screen_save_untick() {
     local -i TICKS
     TICKS="$(cat "$TICK_FILE" 2>/dev/null || echo 0)"
 
-    if [ $TICKS -ge 2 ]; then
+    if [ $TICKS -ge 1 ]; then
+        if [ -f "/tmp/$USER/locked" ]; then
+            if [ -f "/tmp/$USER/user_suspended" ] || [ -f "/tmp/$USER/user_hibernated" ] || [ -f "/tmp/$USER/system_sleeped" ]; then
+                notify-send -a noxgrim:generic_bar -u critical ' ' -t 1
+            fi
+        fi
+    fi
+    if [ $TICKS -ge $SSV_DIM_TICKS ]; then
         call brightness restore 20&
     fi
     echo "0" > "$TICK_FILE"
@@ -54,12 +99,38 @@ screen_save_tick() {
     local TICK_FILE="/tmp/$USER/ssuspend.tick"
 
     local -i TICKS
+    local WAKEUP_STATE=none WAKEUP_STATE_PROGRESSIVE=noning
     TICKS="$(cat "$TICK_FILE" || echo 0)"
 
     if should_screen_save; then
         TICKS="$((TICKS+1))"
-        if [ $TICKS == 2 ]; then
-            call brightness save set 1 5000&
+        if [ $TICKS -ge 1 ] && [ -f "/tmp/$USER/locked" ]; then
+            if [ -f "/tmp/$USER/user_suspended" ]; then
+                WAKEUP_STATE=suspend
+                WAKEUP_STATE_PROGRESSIVE=suspending
+            elif [ -f "/tmp/$USER/user_hibernated" ]; then
+                WAKEUP_STATE=hibernate
+                WAKEUP_STATE_PROGRESSIVE=hibernating
+            elif [ -f "/tmp/$USER/system_sleeped" ]; then
+                WAKEUP_STATE=suspend
+                WAKEUP_STATE_PROGRESSIVE="system initiated suspending"
+            fi
+            if [ "$WAKEUP_STATE" != none ]; then
+                local -a NARGS
+                [ "$TICKS" -gt $SSV_OFF_TICKS ] && NARGS=( -t 1 )
+                reset_usb
+                notify-send -a noxgrim:generic_bar -u critical 'No input!' \
+                    "${WAKEUP_STATE_PROGRESSIVE^} again in $((SSV_TICK_LENGTH*(SSV_OFF_TICKS-TICKS)))s" \
+                    -h "int:value:$((25*(SSV_OFF_TICKS-TICKS)))" "${NARGS[@]}"
+            fi
+        fi
+        if [ $TICKS -ge $SSV_DIM_TICKS ]; then
+            if [ "$(call brightness get 2>&1 | cut -d@ -f2 | sort -n | tail -n1)" -gt 1 ]; then
+                call brightness save set 1 5000&
+            fi
+            if [ $TICKS -ge $SSV_OFF_TICKS ] && [ -f "/tmp/$USER/locked" ]; then
+                call "$WAKEUP_STATE"
+            fi
         fi
     else
         TICKS=0
@@ -402,7 +473,7 @@ schedule_cmd() {
             notify-send -u low "1 minute" "until scheduled '$CMD'"
             TIME=60
         fi
-        sleep $TIME
+        sleep "$TIME"
         rm "$DIR/$CMD"
         xargs "$0" <<< "$CMD"
         )& disown && echo "$! $SECS" > "$PATH_NAME"
@@ -459,6 +530,7 @@ call() {
                 fi
                 ;;
             execute_what)
+                local CMD
                 CMD="$( print_possible_commands | rofi -theme solarized -dmenu -i -async-pre-read 0 -multi-select -p "Execute device command" | tr '\n' ' ')"
                 if [ -z "$CMD" ]; then
                     return
@@ -587,7 +659,7 @@ call() {
                 done
                 ;;
             mouse_off)
-                DIR='/tmp/'"$USER"'/'
+                local DIR='/tmp/'"$USER"'/'
                 [ -d "$DIR" ] || mkdir -p "$DIR"
                 xdotool getmouselocation --shell > "$DIR/mouse"
                 xdotool mousemove 9001 9001
@@ -596,7 +668,7 @@ call() {
                 done
                 ;;
             mouse_on)
-                DIR='/tmp/'"$USER"'/'
+                local DIR='/tmp/'"$USER"'/'
                 if [ -f "$DIR/mouse" ]; then
                 (
                     source "$DIR/mouse"
@@ -609,7 +681,7 @@ call() {
                 done
                 ;;
             mouse_toggle)
-                DIR='/tmp/'"$USER"'/'
+                local DIR='/tmp/'"$USER"'/' SETTING
                 [ -d "$DIR" ] || mkdir -p "$DIR"
                 if [ -f "$DIR/mouse" ]; then
                 (
@@ -640,7 +712,7 @@ call() {
             run|run_as)
                 [ "$1" == run_as ] && export USER="$2" && shift 1
                 shift 1
-                ARGS=()
+                local ARGS=()
                 while [ -n "${1+"?"}" ] && [ "$1" != ';' ]; do
                     ARGS+=("'${1//"'"/"'\\''"}'")
                     shift 1
@@ -662,12 +734,28 @@ call() {
             send_all)
                 shopt -s lastpipe
                 while xbindkeys -k  | sed -n '$ {s/\s*//g;s/Mod2+//;p}' | read -r C; do
-                    F="$(xdotool getwindowfocus)"
+                    local F; F="$(xdotool getwindowfocus)"
                     xdotool search --name "$2" | xargs -I{} xdotool windowfocus --sync {} key --window {} "$C"
                     xdotool windowfocus --sync "$F"
                 done
                 shift
                 ;;
+            list_usb)
+                list_usb
+                ;;
+            reset_usb)
+                reset_usb
+                ;;
+            reset_usb_args)
+                shift 1
+                local ARGS=()
+                while [ -n "${1+"?"}" ] && [ "$1" != ';' ]; do
+                    ARGS+=("'${1//"'"/"'\\''"}'")
+                    shift 1
+                done
+                reset_usb "${ARGS[@]}"
+                ;;
+            none);;
             *) {
                 echo "Unknown command: $1"
                 echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"

@@ -84,6 +84,13 @@
     foreground = "#f9e88e"
     timeout = 0
 
+[generic_bar]
+    appname = "noxgrim:generic_bar"
+    format = "<b>%s</b>\n%b"
+    history_ignore = yes
+    set_stack_tag = "generic_bar"
+    set_transient = yes
+
 [volume]
     appname = "noxgrim:volume"
     format = "%s%n%b"

@@ -20,7 +20,12 @@ pre_lock() {
 prepare_lock() {
     if [ -f "/tmp/$USER/user_suspended" ] || [ -f "/tmp/$USER/user_hibernated" ]; then
         mpc pause -q
+    elif [ "$(loginctl show-session --property=PreparingForSleep | cut -d= -f2)" == 'yes' ]; then
+        mpc pause -q
+        touch "/tmp/$USER/system_sleeped"
     fi
+    [ -f  "/tmp/$USER/locked" ] || xset s reset
+    touch "/tmp/$USER/locked"
     device dpms_on # always reset this once we're locking
     # shellcheck disable=2015
     # [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -delete || true
@@ -39,7 +44,8 @@ post_lock() {
     [ -e "$IMG" ] && rm "$IMG"
     [ -f "/tmp/$USER/user_suspended"  ] && rm "/tmp/$USER/user_suspended"
     [ -f "/tmp/$USER/user_hibernated" ] && rm "/tmp/$USER/user_hibernated"
-    device screen_save_untick
+    [ -f "/tmp/$USER/system_sleeped"  ] && rm "/tmp/$USER/system_sleeped"
+    [ -f "/tmp/$USER/locked"          ] && rm "/tmp/$USER/locked"
     return
 }
 

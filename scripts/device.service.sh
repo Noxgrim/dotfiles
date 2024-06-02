@@ -18,9 +18,9 @@ service() {
   while [ -p "$FIFO" ]; do
     read -r CMD < "$FIFO"
     echo "Executing $CMD"
+    DIFF=$(($(date +%s)-LAST))
     case "$CMD" in
       'brightness reload')
-        DIFF=$(($(date +%s)-LAST))
         if [ "$DIFF" -lt 120 ]; then
           echo "Refusing to serve after only $DIFF seconds!" >&2
         elif [ -x '/root/brightness.sh'  ]; then
@@ -29,11 +29,26 @@ service() {
         fi
         ;;
       trigger_backup)
-        DIFF=$(($(date +%s)-LAST))
         if [ "$DIFF" -lt 600 ]; then
           echo "Refusing to serve after only $DIFF seconds!" >&2
         elif [ -f '/etc/systemd/system/backup.service' ]; then
           systemctl start backup.service
+          LAST="$(date +%s)"
+        fi
+        ;;
+      'reset_usb '*)
+        if [ "$DIFF" -lt 20 ]; then
+          echo "Refusing to serve after only $DIFF seconds!" >&2
+        else
+          IFS=' ' read -r -a ARGS <<< "$CMD"
+          for ARG in "${ARGS[@]:1}"; do
+            F="/sys/bus/usb/devices/$ARG/authorized"
+            if [ -e "$F" ]; then
+              echo 0 > "$F"
+              sleep 0.1
+              echo 1 > "$F"
+            fi
+          done
           LAST="$(date +%s)"
         fi
         ;;
