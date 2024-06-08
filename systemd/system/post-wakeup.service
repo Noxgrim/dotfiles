@@ -1,0 +1,13 @@
+[Unit]
+Description=Run post wakeup command
+After=sleep.target
+StopWhenUnneeded=true
+
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/sh -c 'source /root/notify.sh; execute zsh -c "~/.local/bin/device post_wakeup"'
+
+[Install]
+WantedBy=sleep.target

@@ -5,6 +5,7 @@ notify() {
         eval "$(grep -z ^USER /proc/"$pid"/environ | tr '\000' '\n')"
         eval export "$(grep -z ^DISPLAY /proc/"$pid"/environ | tr '\000' '\n')"
         eval export "$(grep -z ^DBUS_SESSION_BUS_ADDRESS /proc/"$pid"/environ | tr '\000' '\n')"
+        eval export "$(grep -z ^SCRIPT_ROOT /proc/"$pid"/environ | tr '\000' '\n')"
 
         export IFS=' '
         if [ "$(whoami)" = "$USER" ]; then
@@ -21,6 +22,7 @@ execute() {
         eval "$(grep -z ^USER /proc/"$pid"/environ | tr '\000' '\n')"
         eval export "$(grep -z ^DISPLAY /proc/"$pid"/environ | tr '\000' '\n')"
         eval export "$(grep -z ^DBUS_SESSION_BUS_ADDRESS /proc/"$pid"/environ | tr '\000' '\n')"
+        eval export "$(grep -z ^SCRIPT_ROOT /proc/"$pid"/environ | tr '\000' '\n')"
 
         export IFS=' '
         if [ "$(whoami)" = "$USER" ]; then

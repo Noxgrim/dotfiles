@@ -18,17 +18,14 @@ pre_lock() {
 
 # Prepare the actual locking
 prepare_lock() {
-    if [ -f "/tmp/$USER/user_suspended" ] || [ -f "/tmp/$USER/user_hibernated" ]; then
+    if [ -f "/tmp/$USER/state/user_suspended" ] || [ -f "/tmp/$USER/state/user_hibernated" ]; then
         mpc pause -q
-    elif [ "$(loginctl show-session --property=PreparingForSleep | cut -d= -f2)" == 'yes' ]; then
+    elif [ "$(loginctl show-session --property=PreparingForSleep | cut -d= -f2)" == 'yes' ] || [ -f "/tmp/$USER/state/wokeup" ]; then
         mpc pause -q
-        touch "/tmp/$USER/system_sleeped"
+        touch "/tmp/$USER/state/system_sleeped"
     fi
-    [ -f  "/tmp/$USER/locked" ] || xset s reset
-    touch "/tmp/$USER/locked"
-    device dpms_on # always reset this once we're locking
-    # shellcheck disable=2015
-    # [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -delete || true
+    touch "/tmp/$USER/state/locked"
+    device dpms_on screen_off # always reset this once we're locking and turn off screen
     killall rofi rofi-theme-selector dmenu 2>/dev/null || true
     if grep -q 00black "$HOME/.fehbg"; then
         ARGS=( -C 000000 )
@@ -42,10 +39,11 @@ prepare_lock() {
 # Run after the locker exits
 post_lock() {
     [ -e "$IMG" ] && rm "$IMG"
-    [ -f "/tmp/$USER/user_suspended"  ] && rm "/tmp/$USER/user_suspended"
-    [ -f "/tmp/$USER/user_hibernated" ] && rm "/tmp/$USER/user_hibernated"
-    [ -f "/tmp/$USER/system_sleeped"  ] && rm "/tmp/$USER/system_sleeped"
-    [ -f "/tmp/$USER/locked"          ] && rm "/tmp/$USER/locked"
+    [ -f "/tmp/$USER/state/user_suspended"  ] && rm "/tmp/$USER/state/user_suspended"
+    [ -f "/tmp/$USER/state/user_hibernated" ] && rm "/tmp/$USER/state/user_hibernated"
+    [ -f "/tmp/$USER/state/system_sleeped"  ] && rm "/tmp/$USER/state/system_sleeped"
+    [ -f "/tmp/$USER/state/wokeup"          ] && rm "/tmp/$USER/state/wokeup"
+    [ -f "/tmp/$USER/state/locked"          ] && rm "/tmp/$USER/state/locked"
     return
 }
 

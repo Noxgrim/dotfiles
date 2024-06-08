@@ -57,6 +57,9 @@ reset_usb() {
 
 
 should_screen_save() {
+    if [ -e "/tmp/$USER/state/wokeup" ] && [ -e "/tmp/$USER/state/locked" ]; then
+        return 0
+    fi
     if [ "$(loginctl show-session --property=PreparingForSleep | cut -d= -f2)" == 'yes' ]; then
         return 1
     fi
@@ -81,10 +84,8 @@ screen_save_untick() {
     TICKS="$(cat "$TICK_FILE" 2>/dev/null || echo 0)"
 
     if [ $TICKS -ge 1 ]; then
-        if [ -f "/tmp/$USER/locked" ]; then
-            if [ -f "/tmp/$USER/user_suspended" ] || [ -f "/tmp/$USER/user_hibernated" ] || [ -f "/tmp/$USER/system_sleeped" ]; then
-                notify-send -a noxgrim:generic_bar -u critical ' ' -t 1
-            fi
+        if [ -f "/tmp/$USER/state/locked" ] && [ -f "/tmp/$USER/state/wokeup" ]; then
+            notify-send -a noxgrim:generic_bar -u critical ' ' -t 1
         fi
     fi
     if [ $TICKS -ge $SSV_DIM_TICKS ]; then
@@ -104,16 +105,19 @@ screen_save_tick() {
 
     if should_screen_save; then
         TICKS="$((TICKS+1))"
-        if [ $TICKS -ge 1 ] && [ -f "/tmp/$USER/locked" ]; then
-            if [ -f "/tmp/$USER/user_suspended" ]; then
+        if [ $TICKS -ge 1 ] && [ -f "/tmp/$USER/state/locked" ] && [ -f "/tmp/$USER/state/wokeup" ]; then
+            if [ -f "/tmp/$USER/state/user_suspended" ]; then
                 WAKEUP_STATE=suspend
                 WAKEUP_STATE_PROGRESSIVE=suspending
-            elif [ -f "/tmp/$USER/user_hibernated" ]; then
+            elif [ -f "/tmp/$USER/state/user_hibernated" ]; then
                 WAKEUP_STATE=hibernate
                 WAKEUP_STATE_PROGRESSIVE=hibernating
-            elif [ -f "/tmp/$USER/system_sleeped" ]; then
+            elif [ -f "/tmp/$USER/state/system_sleeped" ]; then
                 WAKEUP_STATE=suspend
                 WAKEUP_STATE_PROGRESSIVE="system initiated suspending"
+            else
+                WAKEUP_STATE=suspend
+                WAKEUP_STATE_PROGRESSIVE="system(?) initiated suspending"
             fi
             if [ "$WAKEUP_STATE" != none ]; then
                 local -a NARGS
@@ -128,7 +132,7 @@ screen_save_tick() {
             if [ "$(call brightness get 2>&1 | cut -d@ -f2 | sort -n | tail -n1)" -gt 1 ]; then
                 call brightness save set 1 5000&
             fi
-            if [ $TICKS -ge $SSV_OFF_TICKS ] && [ -f "/tmp/$USER/locked" ]; then
+            if [ $TICKS -ge $SSV_OFF_TICKS ] && [ -f "/tmp/$USER/state/locked" ] && [ -f "/tmp/$USER/state/wokeup" ]; then
                 call "$WAKEUP_STATE"
             fi
         fi
@@ -137,6 +141,15 @@ screen_save_tick() {
     fi
     echo "$TICKS" > "$TICK_FILE"
     wait
+}
+
+post_wakeup() {
+    [ -d '/tmp/'"$USER"'/state' ] || mkdir -p '/tmp/'"$USER"'/state'
+    touch '/tmp/'"$USER"'/state/wokeup'
+    xset s reset
+    call reset_usb
+    sleep 1s # reset is async
+    call action reset_xinput
 }
 
 
@@ -276,14 +289,14 @@ do_reboot() {
 }
 
 announce_hibernate() {
-    [ -d '/tmp/'"$USER"'' ] || mkdir -p '/tmp/'"$USER"''
-    touch '/tmp/'"$USER"'/user_hibernated'
+    [ -d '/tmp/'"$USER"'/state' ] || mkdir -p '/tmp/'"$USER"'/state'
+    touch '/tmp/'"$USER"'/state/user_hibernated'
 }
 
 announce_suspend() {
     # tell the timers waking the PC up that they can suspend again
-    [ -d '/tmp/'"$USER"'' ] || mkdir -p '/tmp/'"$USER"''
-    touch '/tmp/'"$USER"'/user_suspended'
+    [ -d '/tmp/'"$USER"'/state' ] || mkdir -p '/tmp/'"$USER"'/state'
+    touch '/tmp/'"$USER"'/state/user_suspended'
 }
 
 do_suspend() {
@@ -730,6 +743,9 @@ call() {
             brightness)
                 shift
                 shift "$(setsid "$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3)" 2>&1
+                ;;
+            post_wakeup)
+                post_wakeup
                 ;;
             send_all)
                 shopt -s lastpipe

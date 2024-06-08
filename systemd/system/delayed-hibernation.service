@@ -11,7 +11,7 @@ StopWhenUnneeded=true
 Type=oneshot
 RemainAfterExit=yes
 Environment="WAKEALARM=/sys/class/rtc/rtc0/wakealarm"
-Environment="SLEEPLENGTH=+30min"
+Environment="SLEEPLENGTH=+20min"
 ExecStart=-/usr/bin/sh -c 'echo -n "alarm set for "; date +%%s -d$SLEEPLENGTH | tee $WAKEALARM'
 ExecStop=-/usr/bin/sh -c '\
   alarm=$(cat $WAKEALARM); \
