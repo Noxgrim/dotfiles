@@ -3,24 +3,25 @@ execute() {
     set -- "${@//"'"/"'\\''"}"; set -- "${@/#/"'"}"; set -- "${@/%/"'"}"
     local -a TARGETS
     if pgrep -x i3 >/dev/null; then
-        TARGETS+=(i3)
+        TARGETS+=('[i]3')
     fi
     if pgrep -x ksmserver >/dev/null; then
-        TARGETS+=(ksmserver)
+        TARGETS+=('[k]smserver')
     fi
     if [ "${#TARGETS[@]}" = 0 ]; then
-        TARGETS+=(zsh)
+        TARGETS+=('[z]sh')
     fi
     (
     for TARGET in "${TARGETS[@]}"; do
         for pid in $(pgrep -x "$TARGET" -u "$(id -u "$USER")"); do
+            local CMD
+            IFS=' ' CMD="$*"
             eval export "$(sed -z "s/'/'\\\\''/g"';s/=\(.*\)$/='"'\\1'/" /proc/"$pid"/environ | tr '\000' ' ')"
 
-            export IFS=' '
             if [ "$(whoami)" = "$USER" ]; then
-                sh -c "$*"
+                sh -c "$CMD"
             else
-                su "$USER" -c "$*"
+                su "$USER" -c "$CMD"
             fi
             return "$?"
         done
