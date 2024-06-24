@@ -792,5 +792,8 @@ call() {
     done
 }
 
+# check for device specific overrides
+[ -e "$HOME/.device_specific/device_override.sh" ] && source "$HOME/.device_specific/device_override.sh"
+
 call "$@"
 exit 0
