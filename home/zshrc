@@ -1,6 +1,5 @@
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME"/.oh-my-zsh
-export SCRIPT_ROOT="$HOME/dotfiles"
 
 # Set name of the theme to load.
 # Look in ~/.oh-my-zsh/themes/
@@ -31,7 +30,7 @@ plugins=(git vi-mode)
 
 # User configuration
 
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:$HOME/.local/bin"
+export MPD_HOST="$(grep -Po '(?<=^password ")[^@]*' "$SCRIPT_ROOT/config/mpd/password.conf")@localhost"
 export MANPATH="/usr/local/man:$MANPATH"
 export GOPATH="$HOME/.cache/go"
 export XDG_CACHE_HOME="$HOME/.cache" XDG_CONFIG_HOME="$HOME/.config"
@@ -118,13 +117,6 @@ export MANPAGER="nvim  --cmd 'let g:is_manpage=1' -c 'set ft=man' -c 'Man!' -"
 
 #Load autojump
 . /usr/share/autojump/autojump.zsh
-
-if [ -d "$HOME/.local/bin" ]; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
-if [ -d "$SCRIPT_ROOT/bin" ]; then
-    PATH="$SCRIPT_ROOT/bin:$PATH"
-fi
 
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 

@@ -1,0 +1,12 @@
+export SCRIPT_ROOT="$HOME/dotfiles"
+export PATH="$PATH/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:$HOME/.local/bin"
+if [ -d "$HOME/.local/bin" ]; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+if [ -d "$SCRIPT_ROOT/bin" ]; then
+    PATH="$SCRIPT_ROOT/bin:$PATH"
+fi
+
+if [[ "$TTY" =~ /dev/tty[0-9]* ]]; then
+    device volume set 20
+fi
