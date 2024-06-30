@@ -34,15 +34,15 @@ execute() {
         fi
     }
 
-    local __CMD ACTIVE_TTY
-    ACTIVE_TTY="$(</sys/class/tty/tty0/active)"
-    ACTIVE_TTY="${ACTIVE_TTY#tty}"
+    local __CMD __ACTIVE_TTY
+    __ACTIVE_TTY="$(</sys/class/tty/tty0/active)"
+    __ACTIVE_TTY="${__ACTIVE_TTY#tty}"
     IFS=$'\n'
     # shellcheck disable=2030
     for __TARGET in "${TARGETS[@]}"; do
         for __PID in $(pgrep -x "$__TARGET" -u "$__TARGET_USER_ID"); do
             eval "$(grep -z '^XDG_VTNR=' /proc/"$__PID"/environ | tr '\000' ' ')"
-            if [ "$XDG_VTNR" != "$ACTIVE_TTY" ]; then
+            if [ "$XDG_VTNR" != "$__ACTIVE_TTY" ]; then
                 unset XDG_VTNR
                 continue
             fi
