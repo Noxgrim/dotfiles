@@ -51,6 +51,7 @@ export EDITOR=nvim
 # export LD_PRELOAD="$LD_PRELOAD:noxgrim_sssniffer.so"
 
 
+alias ls='eza -b' cat=bat du=dust
 alias gcd1='git clone --recurse-submodules --depth 1'
 alias glg='git log'
 alias grbik='git rebase -i --committer-date-is-author-date'
@@ -192,6 +193,7 @@ function daysspanning() {
   local DAYS="$(((($(date -d"${2-00:00}" +%s))-($(date -d"${1?"Need date."}" +%s))+60*60*12)/(60*60*24)))"
   printf '%s\n' "$((${DAYS#-}+1))"
 }
+
 function installbandcamp() {
     local MINUS_ARTIST NUM_LEN PWD_OLD A BASENAME EXT FILE NEW_NAME ALBUM_ARTIST ALBUM
     for A in "$@"; do
