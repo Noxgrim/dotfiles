@@ -1,0 +1,277 @@
+###########
+## BASIC ##
+###########
+
+# The UUID of the backup device (partition)
+# It can be found by issuing `ls -la /dev/disk/by-uuid`
+# This partition/device may be destructively formated during setup (after user
+# approval). This value may be changed appropriately during install (if new
+# volumes were created)
+DEVICEUUID='PleasePu-tDev-UUID-Here-AndEnjoyLife'
+# Where the backup device should be mounted, will be created if it does not
+# exist
+MOUNTLOC='/your/mountpoint'
+# Path to the repository on the backup device, empty creates the files at the
+# root
+REPOSITORY_PATH=''
+
+# Send notification when backup starts and ends
+# Recommended, because so you know when it's save to disconnect the device
+# and when to shut down, etc
+# Keep in mind that backup errors will alway be reported
+NOTIFY_START=true
+NOTIFY_END=true
+
+# Timeout for user interaction in seconds. Currently has two effeccts:
+# 1. The time after which notification actions are not processed anymore. The
+#    script will wait until the user has taken an action or the notification is
+#    dismissed, blockingly. (Thus this value shoudln't be too high)
+# 2. The timeout of the Pinentry dialogue for the keepass password.
+INTERACTION_TIMEOUT=60
+
+
+##############
+## SKIPPING ##
+##############
+
+# Allow the user to suspend backing up, i.e. stop the backup until reboot
+# by creating the file /tmp/backup_suspend
+ALLOW_SUSPEND=true
+# Allow the user to disable backing up.
+# This is the same as suspension except that the script will not send any
+# notifications or do any extra actions except for increasing the skip count.
+# Backup can be disabled by creating /tmp/backup_disable
+# (the file must be owned by root)
+ALLOW_DISABLE=false
+# Add actions for suspension and disabling into 'Backup not possible'
+# notifications
+ENABLE_NOTIFCATION_ACTIONS=true
+# Other host in the network which should be checked for doing the backup
+HOSTS=(  )
+# Number of skips and their associated notification levels
+# Will be checked in reverse order. Use `false` to disable the notification type
+SKIPS_NOTIFICATION_LOW=1
+SKIPS_NOTIFICATION_NORMAL=4
+SKIPS_NOTIFICATION_CRITICAL=10
+
+# Select files at random to encrypt after a specified number of skips to push
+# the user by force to consider backing up again. Use `false` to disable.
+# Will disabled *once* when backup was suspended/disabled before as a grace
+# period
+SKIPS_RANSOM=20
+# Increase the number of files held ransom each time a ransom action is done by
+# this amount
+SKIPS_RANSOM_INCREASE=1
+# Directories which may be considered to find files to ransom
+# This should NOT contain any directory needed for smooth system operation!
+SKIPS_RANSOM_TARGETS=(
+     "$USER_TARGET_DESKTOP"
+     "$USER_TARGET_DOWNLOAD"
+     "$USER_TARGET_DOCUMENTS"
+     "$USER_TARGET_MUSIC"
+     "$USER_TARGET_PICTURES"
+     "$USER_TARGET_VIDEOS"
+)
+
+
+################
+## ENCRYPTION ##
+################
+
+# Whether to encrypt backups.
+# STRONGLY RECOMMENDED!
+USE_ENCRYPTION=true
+# Whether to encrypt the backup device using full disk encryption (dm-crypt).
+# STRONGLY RECOMMENDED!
+USE_FULL_DISK_ENCRYPTION=true
+
+
+##############
+## PASSWORD ##
+##############
+
+# Set set method to acquire the password for decryption. Possible values are:
+# manager:
+#   Use a password manager
+#   Requires PASSWORD_MANAGER to be set
+#   STRONGLY RECOMMENDED!
+# file:
+#   Read password from file
+#   Requires PASSWORD_FILE to be set
+#   May use PASSWORD_WAIT_FOR, defaults to 300
+#     wait for PASSWORD_FILE
+# variable:
+#   Read password from a variable specified in this file.
+#   Requires PASSWORD_VAR to be set
+#   STRONGLY DISCOURAGED!
+PASSWORD_METHOD='manager'
+
+# Password manager to use. Possible values are:
+# pass:
+#   Requires PASS_PATH to be set
+#   May use PASS_STORE, defaults to "$USER_TARGET_HOME/.password-store"
+#   May use PASSWORD_WAIT_FOR, defaults to 300
+#     wait for PASS_STORE
+# keepass:
+#   Requires KEEPASS_PATH to be set
+#   Requires KEEPASS_DB to be set
+#   May use PASSWORD_WAIT_FOR, defaults to 300
+#     wait for KEEPASS_DB
+PASSWORD_MANAGER='pass'
+# Value for pass' PASSWORD_STORE_DIR
+PASS_STORE="$USER_TARGET_HOME/.password-store"
+# The path to the password in pass
+PASS_PATH='/path/to/backup-keys'
+
+# Location of the Keepass database file
+KEEPASS_DB='/path/to/Passwords.kdbx'
+# Path of the password in the Keepass database
+KEEPASS_PATH='/path/to/backup-keys'
+
+# The file holding the password must only be readable/writeable by root
+PASSWORD_FILE='/path/to/keyfile'
+
+# The hardcoded password in plain text
+# Make sure this config file is only readable by the root user
+# STRONGLY DISCOURAGED!
+PASSWORD_VAR='Would would ever read boring configuration files?'
+
+# The time to wait in seconds for the needed file to appear (for example if it
+# is located on an external device)
+PASSWORD_WAIT_FOR=300
+
+# The password is cached using systemd-creds.
+# This value controls how long this value is valid.
+# `false` disables caching,
+# `nolimit` keeps the cache until it is deleted
+PASSWORD_CACHE_TIME='+7d'
+# Passed to systemd-creds --with-key
+PASSWORD_CACHE_WITH_KEY='auto'
+
+
+
+
+############
+############
+## BACKUP ##
+############
+############
+
+# Whether to try an unattended repair if backup device is locked.
+# May be destructive.
+BACKUP_TRY_REPAIR=false
+#
+# Archive name to use, see borg-placeholders
+BACKUP_ARCHIVE_NAME='{hostname}-{now:%Y-%m-%d_%H:%M}'
+
+# Type of compression to use
+# See borg-create --compression
+BACKUP_COMPRESSION='auto,zstd'
+
+
+##############################
+## Include/Exclude patterns ##
+##############################
+
+# See borg-create --patterns-from, borg-patterns
+# Will be constructed by the following variables in order
+
+# Backup include roots
+# (If you add anything here, you should make sure that it is findable by the
+#  locate command. By default, locate will ignore `/mnt` completely. Please edit
+#  /etc/updatedb.conf's PRUNEPATHS field, replacing `/mnt` by all
+#  subdirectories you do not want to search, e.g  `/mnt/external` and
+#  `/mnt/esp`. See BACKUP_PATTERN_POST_EXCLUDE_FILE for an example how to
+#  include your desired `/mnt` locations correctly)
+BACKUP_PATTERN_ROOTS='
+R /home
+R /etc
+R /root
+R /var
+R /mnt
+'
+# Will be inserted before the content of exclude files, with a lower priority
+# than them
+BACKUP_PATTERN_PRE_EXCLUDE_FILE=''
+# Files containing excluded paths
+# Empty files exclude the whole directory they are contained in
+# Nonempty files contain patterns relative to the directory they are contained
+# in to exclude.
+# At the line start ..: is interpreted as the pattern type, if not present
+# defaults to 'fm'
+# Example content:
+#  fm:*.img
+#  *.iso
+BACKUP_EXCLUDE_FILE='.backup_exclude'
+# Will be after before the content of exclude files, with a higher priority
+# than them.
+# Can for example be used exclude whole file roots
+# (This includes `/mnt/hdd` and `/mnt/2nd_ssd` and excludes everything else.)
+BACKUP_PATTERN_POST_EXCLUDE_FILE='
+P fm
++ mnt/hdd
++ mnt/2nd_ssd
+! mnt/*
+'
+# Arguments passed directly to borg-create
+BACKUP_ARGS=(
+        --exclude-caches
+        --exclude '/mnt/2nd_ssd/*/.cache'
+        --exclude '/mnt/2nd_ssd/*/.ccache'
+        --exclude '/mnt/hdd/*/.cache'
+        --exclude '/mnt/hdd/*/.ccache'
+        --exclude '/home/*/.cache'
+        --exclude '/home/*/.ccache'
+        --exclude '/var/cache/*'
+        --exclude '/var/tmp/*'
+        --exclude '/home/lost+found'
+        --exclude '__pycache__'
+        --exclude 'chache'
+        --exclude 'chaches'
+        --exclude '*.img'
+        --exclude '*.iso'
+)
+
+
+################
+## Keep/Prune ##
+################
+
+# Pattern to which archives apply the keep rules
+BACKUP_KEEP_ARCHIVE_PATTERN='{hostname}-*'
+
+# These settings are used for the respective borg-prune arguments
+# A value of -1 means do not prune
+BACKUP_KEEP_HOURLY=16
+BACKUP_KEEP_DAILY=7
+BACKUP_KEEP_WEEKLY=4
+BACKUP_KEEP_MONTHLY=12
+BACKUP_KEEP_YEARLY=-1
+
+
+###########
+## SETUP ##
+###########
+
+# The device path to use for the backup data. This is only used when
+# DEVICEUUID is empty or does not exist during setup. This partition/device may
+# be destructively formated (after user approval)
+DEVICEPATH="/dev/sdc2"
+
+# How often to back up
+# Possible values: valid systemd timer OnCalendar value
+#
+# See systemd.time
+BACKUP_FREQUENCY=hourly
+
+# Create entries in fstab, crypttab and a udev rule that make mounting via
+# udiskie impossible.
+# This should prevent userspace malware (like ransomware) from mounting the
+# device and destroying your precious backups anyways. Keep in mind that this
+# does not prevent such attacks if the malware runs with root privileges and is
+# only one more security hurdle.
+# This will make mounting the device in file managers impossible. Use the
+# script's browse feature instead.
+ENFORCE_ROOT_MOUNT=true
+
+# vim: ft=zsh
