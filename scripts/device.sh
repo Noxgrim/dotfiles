@@ -378,12 +378,14 @@ to_secs() {
 
     [ -z "$FMT" ] && return
 
+    [ -z "${FMT##[0-9]}" ] && FMT="${FMT}m"
+
     if ! grep -q '^[ 0-9smhd]*$' <<< "$FMT"; then
         # date format (fixed)
         FMT="$(date +%s -d "$FMT")"
         if [ -n "$FMT" ]; then
             NOW="$(date +%s)"
-            FMT=$((fmt-now))
+            FMT=$((FMT-NOW))
             if [ $FMT -lt 0 ]; then
                 notify "Must not be a past date" -a '[system]'
                 exit 1
