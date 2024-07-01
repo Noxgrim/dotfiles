@@ -8,6 +8,9 @@ SSV_TICK_LENGTH=30
 SSV_DIM_TICKS=2
 SSV_OFF_TICKS=4
 
+# shellcheck disable=SC1091
+source "$TDIR/notify.sh"
+
 lock() {
     loginctl lock-session
 }
@@ -19,7 +22,7 @@ join_comma() {
 
 check_for_backup() {
     if systemctl is-active backup.service -q; then
-        notify-send -u low "Waiting for backup to finish…"
+        notify -u low "Waiting for backup to finish…" -a '[system]'
         sleep 3
     fi
 }
@@ -85,7 +88,7 @@ screen_save_untick() {
 
     if [ $TICKS -ge 1 ]; then
         if [ -f "/tmp/$USER/state/locked" ] && [ -f "/tmp/$USER/state/wokeup" ]; then
-            notify-send -a noxgrim:generic_bar -u critical ' ' -t 1
+            notify -a noxgrim:generic_bar -u critical ' ' -t 1
         fi
     fi
     if [ $TICKS -ge $SSV_DIM_TICKS ]; then
@@ -123,7 +126,7 @@ screen_save_tick() {
                 local -a NARGS
                 [ "$TICKS" -gt $SSV_OFF_TICKS ] && NARGS=( -t 1 )
                 reset_usb
-                notify-send -a noxgrim:generic_bar -u critical 'No input!' \
+                notify -a noxgrim:generic_bar -u critical 'No input!' \
                     "${WAKEUP_STATE_PROGRESSIVE^} again in $((SSV_TICK_LENGTH*(SSV_OFF_TICKS-TICKS)))s" \
                     -h "int:value:$((25*(SSV_OFF_TICKS-TICKS)))" "${NARGS[@]}"
             fi
@@ -382,12 +385,12 @@ to_secs() {
             NOW="$(date +%s)"
             FMT=$((fmt-now))
             if [ $FMT -lt 0 ]; then
-                notify-send "Must not be a past date"
+                notify "Must not be a past date" -a '[system]'
                 exit 1
             fi
             echo "$FMT"
         else
-            notify-send "Invalid format"
+            notify "Invalid format" -a '[system]'
             exit 1
         fi
     else
@@ -396,7 +399,7 @@ to_secs() {
         M="$(grep -oiP '^[0-9]+\s*(?=m)' <<< "$FMT")"; FMT="$(perl -pe 's/^[0-9]+\s*[mM]\s*//'<<<"$FMT")"
         S="$(grep -oiP '^[0-9]+\s*(?=s?)' <<< "$FMT")"; FMT="$(perl -pe 's/^[0-9]+\s*[sS]?\s*//'<<<"$FMT")"
         if [ -n "$FMT" ] || [ -z "$D" ] && [ -z "$H" ] && [ -z "$M" ] && [ -z "$S" ]; then
-            notify-send "Invalid format: '$FMT'"
+            notify "Invalid format: '$FMT'" -a '[system]'
             exit 1
         fi
         echo $((S+60*M+3600*H+86400*D))
@@ -451,7 +454,7 @@ schedule_cmd() {
             kill -SIGTERM "$OLD_PID"
         fi
         rm "$PATH_NAME"
-        [ -z "$SECS" ] && notify-send -u low "Canceled '$CMD'"
+        [ -z "$SECS" ] && notify -u low "Canceled '$CMD'" -a '[system]'
     fi
     [ -z "$SECS" ] && exit
 
@@ -459,13 +462,13 @@ schedule_cmd() {
     M="$(bc <<< "$SECS % 3600 / 60")"
     S="$(bc <<< "$SECS % 60")"
     DATE=$(date +'%Y-%m-%d %H:%M:%S' --date="$SECS seconds")
-    notify-send -u low "$(printf "Schulded '%s' in %d:%02d:%02d" "$CMD" "$H" "$M" "$S")" "($DATE)"
+    notify -u low "$(printf "Schulded '%s' in %d:%02d:%02d" "$CMD" "$H" "$M" "$S")" "($DATE)" -a '[system]'
     if [ "$AT" = true ]; then
         if [ "$((SECS-300))" -gt 0 ]; then
-            schedule_systemd "$((SECS-300))" "$UNIT_NAME-5" run notify-send -u low "5 minutes" "until scheduled '$CMD'"
+            schedule_systemd "$((SECS-300))" "$UNIT_NAME-5" run notify -u low "5 minutes" "until scheduled '$CMD'" -a '[system]'
         fi
         if [ "$((SECS-60))" -gt 0 ]; then
-            schedule_systemd "$((SECS-60))" "$UNIT_NAME-1" run notify-send -u low "1 minute" "until scheduled '$CMD'"
+            schedule_systemd "$((SECS-60))" "$UNIT_NAME-1" run notify -u low "1 minute" "until scheduled '$CMD'" -a '[system]'
         fi
         # shellcheck disable=SC2086
         schedule_systemd "$SECS" "$UNIT_NAME-0" run rm -r "$PATH_NAME" ';' $CMD
@@ -476,13 +479,13 @@ schedule_cmd() {
         ALARM=$((TIME-300))
         if [ $ALARM -ge 0 ]; then
             sleep $ALARM
-            notify-send -u low "5 minutes" "until scheduled '$CMD'"
+            notify -u low "5 minutes" "until scheduled '$CMD'" -a '[system]'
             TIME=300
         fi
         ALARM=$((TIME-60))
         if [ $ALARM -ge 0 ]; then
             sleep $ALARM
-            notify-send -u low "1 minute" "until scheduled '$CMD'"
+            notify -u low "1 minute" "until scheduled '$CMD'" -a '[system]'
             TIME=60
         fi
         sleep "$TIME"
@@ -493,18 +496,10 @@ schedule_cmd() {
 }
 
 run() {
-    for pid in $(pgrep -x 'i3'  -u "$(id -u "$USER")"); do
-        eval "$(grep -z ^USER /proc/"$pid"/environ | tr '\000' '\n')"
-        eval export "$(grep -z ^DISPLAY /proc/"$pid"/environ | tr '\000' '\n')"
-        eval export "$(grep -z ^DBUS_SESSION_BUS_ADDRESS /proc/"$pid"/environ | tr '\000' '\n')"
-
-        local IFS=' '
-        if [ "$(whoami)" = "$USER" ]; then
-            sh -c "$*"
-        else
-            su "$USER" -c "$*"
-        fi
-    done
+    case "$1" in
+        notify) "$@";;
+        *) execute "$@";;
+    esac
 }
 
 call() {
@@ -588,13 +583,13 @@ call() {
                 ;;
 
             notify_pause)
-                notify-send -t 2000 -u low "Paused notifications"
+                notify -t 2000 -u low "Paused notifications" -a '[system]'
                 sleep 3
                 killall -SIGUSR1 dunst
                 ;;
             notify_resume)
                 killall -SIGUSR2 dunst
-                notify-send -t 2000 -u low "Resumed notifications"
+                notify -t 2000 -u low "Resumed notifications" -a '[system]'
                 ;;
             screen_off)
                 screen_off
@@ -634,23 +629,23 @@ call() {
                 ;;
             dpms_off)
                     if xset q | grep -q "DPMS is Enabled"; then
-                        notify-send -u low "Disabled DPMS"
+                        notify -u low "Disabled DPMS" -a '[system]'
                     fi
                     xset s off -dpms
                 ;;
             dpms_on)
                     if ! xset q | grep -q "DPMS is Enabled"; then
-                        notify-send -u low "Enabled DPMS"
+                        notify -u low "Enabled DPMS" -a '[system]'
                     fi
                     xset s on +dpms
                 ;;
             dpms_toggle)
                 if xset q | grep -q "DPMS is Enabled"; then
                     xset s off -dpms
-                    notify-send -u low "Disabled DPMS"
+                    notify -u low "Disabled DPMS" -a '[system]'
                 else
                     xset s on  +dpms
-                    notify-send -u low "Enabled DPMS"
+                    notify -u low "Enabled DPMS" -a '[system]'
                 fi
                 ;;
             keyboard_off)
@@ -722,14 +717,16 @@ call() {
                 screen_save_untick
                 ;;
             run|run_as)
+                local OLD="$USER"
                 [ "$1" == run_as ] && export USER="$2" && shift 1
                 shift 1
                 local ARGS=()
                 while [ -n "${1+"?"}" ] && [ "$1" != ';' ]; do
-                    ARGS+=("'${1//"'"/"'\\''"}'")
+                    ARGS+=("$1")
                     shift 1
                 done
                 run "${ARGS[@]}"
+                USER="$OLD"
                 ;;
             action)
                 if [ -x "$HOME/.device_specific/actions/$2.sh" ]; then

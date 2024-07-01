@@ -5,6 +5,7 @@
 # in order of priority.
 # shellcheck source=/home/noxgrim/.device_specific/default_sink.sh
 source "$HOME/.device_specific/default_sink.sh"
+source "$SCRIPT_ROOT/scripts/notify.sh"
 
 STEP=2
 MAX=100
@@ -120,8 +121,8 @@ else MUTED='muted'; fi
 
 if [ -n "$INS" ] || [ $USE_MUTE ]; then
     if [ -n "$INS" ]; then
-        notify-send -a 'noxgrim:volume' -u low -h "int:value:$NEW" 'Volume ' "%$MUTED"
+        notify -a 'noxgrim:volume' -u low -h "int:value:$NEW" 'Volume ' "%$MUTED"
     else
-        notify-send -a 'noxgrim:volume:mute_action' -u low 'Volume ' "$MUTED"
+        notify -a 'noxgrim:volume:mute_action' -u low 'Volume ' "$MUTED"
     fi
 fi

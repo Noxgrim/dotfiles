@@ -15,6 +15,8 @@ PLAYLIST_FORMAT='%position%. [[[%artist% • ][%album% • ][%title%]]|[%file%]]
 FIND_AUDIO_EXTENSIONS=( -iname "*.mp3" -o -iname "*.flac" -o -iname "*.wma" -o -iname "*.wav" -o -iname "*.ogg" )
 EMPTY_EXECUTE=( 't' )
 
+source "$SCRIPT_ROOT/scripts/notify.sh"
+
 if [ ! -d "$AU_DIR" ]; then
     mkdir -p "$AU_DIR"
 fi
@@ -208,7 +210,7 @@ pl_add() {
             return
         fi
         done  < <( $MPC lsplaylists )
-        notify-send -u low 'No matching playlist found!'
+        notify -u low 'No matching playlist found!' -a "$PROVIDER"
   fi
 }
 del_num() {
@@ -263,10 +265,10 @@ clean_output() {
 query_playing() {
     sleep 0.1 # Wait until mopidy or mpd update their indices
     if [ -z "$( mpc current )" ]; then
-        notify-send -u low 'No track playing'
+        notify -u low 'No track playing' -a "$PROVIDER"
     elif [ -z "$( mpc -f '%time%' current )" ]; then # Most probably a radio station
-        notify-send "$( mpc -f '%title%' current)"\
-            "$( mpc -f '%name%' current | clean_html )"
+        notify "$( mpc -f '%title%' current)"\
+            "$( mpc -f '%name%' current | clean_html )" -a "$PROVIDER"
     else
         local CURRENT
         CURRENT="$( mpc -f "%file%" current | clean_output )"
@@ -296,7 +298,7 @@ query_playing() {
 
         BODY="$(echo "$BODY" | clean_html)"
 
-        notify-send -a "$APP" "$SUMMARY" "$BODY" "${ICON_ARG[@]}"
+        notify -a "$APP" "$SUMMARY" "$BODY" "${ICON_ARG[@]}" -a "$PROVIDER"
     fi
 }
 clean_html() {
@@ -329,13 +331,13 @@ change_notify() {
     local LAST=
     if [ -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
         xargs kill -SIGKILL < "$AU_DIR/AUDIO_LOOP_PID"
-        notify-send -u low 'Stopped change notifications!'
+        notify -u low 'Stopped change notifications!' -a "$PROVIDER"
         rm "$AU_DIR/AUDIO_LOOP_PID"
     else
         (
         while [[ "$( mpc 2>&1 >/dev/null )" == *"Connection refused"* ]]; do
             sleep 0.5; done
-        notify-send -u low 'Started change notifications!'
+        notify -u low 'Started change notifications!' -a "$PROVIDER"
 
         while true; do
             if [ -z "$( mpc -f '%time%' current )" ]; then #Stream
@@ -354,9 +356,9 @@ change_notify() {
 
             if [[ "$( mpc current &>/dev/null )" ==\
                   *"Connection refused"* ]]; then
-                notify-send -u critical 'Stopped change notifications!' \
-                    "Mpc couldn't connect to $PROVIDER_NAME. $PROVIDER_NAME most likely died."
-                kill "$(pgrep $PROVIDER)" && echo "Killed $PROVIDER_NAME!"
+                notify -u critical 'Stopped change notifications!' \
+                    "Mpc couldn't connect to $PROVIDER_NAME. $PROVIDER_NAME most likely died." -a "$PROVIDER"
+                kill "$(pgrep "$PROVIDER")" && echo "Killed $PROVIDER_NAME!"
                 rm "$AU_DIR/AUDIO_LOOP_PID"
                 break
             fi
@@ -528,7 +530,7 @@ EOF
         esac
         ((ARGS_START++))
     else
-        if [ $PROVIDER_PENDING ]; then
+        if [ "$PROVIDER_PENDING" ]; then
             PROVIDER_PENDING=
             PROVIDER="$ARG"
             ((ARGS_START++))
@@ -555,7 +557,7 @@ if [ ! "$( pgrep "$PROVIDER" )" ] && [ ! "$AUTOSTART" ]; then
     echo "$PROVIDER_NAME not running!"
     exit 1
 elif [ ! "$( pgrep "$PROVIDER" )" ]; then
-    notify-send "Starting $PROVIDER_NAME!"
+    notify "Starting $PROVIDER_NAME!" -a 'audio'
     case "$PROVIDER" in
         mpd)
             systemctl --user restart mpd.service
@@ -580,7 +582,7 @@ fi
 
 COMMAND="${!ARGS_START}"
 ((ARGS_START++))
-for C in $( echo $COMMAND | grep -o . ); do
+while read -r C; do
     case "$C" in
         p)
             PLAY_ACTION=1
@@ -675,8 +677,8 @@ for C in $( echo $COMMAND | grep -o . ); do
             ;;
         v)
             $MPC volume ${!ARGS_START}
-            notify-send -a 'noxgrim:volume' -u low -h "int:value:$($MPC volume | grep -oP '\d+')"\
-                "$PROVIDER_NAME volume " '%'
+            notify -a 'noxgrim:volume' -u low -h "int:value:$($MPC volume | grep -oP '\d+')"\
+                "$PROVIDER volume " '%'
             ((ARGS_START++))
             ;;
         S)
@@ -716,12 +718,12 @@ for C in $( echo $COMMAND | grep -o . ); do
             echo 'See -h for more info.'
             exit 1
     esac
-done
+done < <(grep -o . <<< "$COMMAND")
 
 # Non-stackable commands
 if [ "$UPDATE" ]; then
     $MPC update --wait
-    notify-send -u low 'Updated database.'
+    notify -u low 'Updated database.' -a "$PROVIDER"
 fi
 case "$ACTION" in
     1) # Add
@@ -731,7 +733,7 @@ case "$ACTION" in
                 if [ -n "$RESULT" ]; then
                     echo "$RESULT" | $MPC add
                 else
-                    notify-send -u low 'Nothing found.'
+                    notify -u low 'Nothing found.' -a "$PROVIDER"
                 fi
                 ;;
             2) # Find
@@ -739,7 +741,7 @@ case "$ACTION" in
                 if [ -n "$RESULT" ]; then
                     echo "$RESULT" | $MPC add
                 else
-                    notify-send -u low 'Nothing found.'
+                    notify -u low 'Nothing found.' -a "$PROVIDER"
                 fi
                 ;;
             5) # Browse
