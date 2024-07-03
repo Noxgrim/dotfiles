@@ -2,7 +2,7 @@
 #shellcheck disable=2155
 readonly THISDIR="$(dirname "$(readlink -f "$0")")"
 #shellcheck disable=1091
-source "$THISDIR/backup.conf"
+readonly CONFIG_WORLD="$THISDIR/backup.conf.world"
 
 check_can_run() {
 	if [ -e "/dev/disk/by-uuid/$DEVICEUUID" ] && systemctl is-enabled -q backup.timer; then
@@ -19,8 +19,7 @@ check_can_run() {
 	fi
 }
 
-check_can_run
-
+[ -r "$CONFIG_WORLD" ] && check_can_run
 
 echo 'Will not back back up.'
 exit 1
