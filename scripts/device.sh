@@ -443,8 +443,8 @@ schedule_cmd() {
     SECS="$(to_secs "$DIRTY_TIME")"
 
     PATH_NAME="$DIR/${CMD:0:256}"
-    UNIT_NAME="_$(systemd-escape "${PATH_NAME}")"
-    UNIT_NAME="${UNIT_NAME:0:246}" # 255 -"-<ID>" - ".service"
+    UNIT_NAME="_$(systemd-escape -p "${PATH_NAME}")"
+    UNIT_NAME="${UNIT_NAME:0:244}" # 255 -"-<ID>" - ".service"
     if [ -e "$PATH_NAME" ]; then
         OLD_PID="$( grep -o '^[0-9]*' "$PATH_NAME")"
         if [ -z "$OLD_PID" ]; then
