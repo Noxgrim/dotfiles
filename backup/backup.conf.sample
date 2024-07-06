@@ -3,7 +3,7 @@
 ###########
 
 # The UUID of the backup device (partition)
-# It can be found by issuing `ls -la /dev/disk/by-uuid`
+# It can be found by issuing `lsblk -f`
 # This partition/device may be destructively formated during setup (after user
 # approval). This value may be changed appropriately during install (if new
 # volumes were created)
@@ -160,7 +160,9 @@ PASSWORD_CACHE_WITH_KEY='auto'
 # Whether to try an unattended repair if backup device is locked.
 # May be destructive.
 BACKUP_TRY_REPAIR=false
-#
+# Archive name to use for the first backup created, see borg-placeholders
+# This can be used to never discard the first archive created
+BACKUP_ARCHIVE_NAME_FIRST='init-{hostname}-{now:%Y-%m-%d_%H:%M}'
 # Archive name to use, see borg-placeholders
 BACKUP_ARCHIVE_NAME='{hostname}-{now:%Y-%m-%d_%H:%M}'
 
@@ -238,6 +240,8 @@ BACKUP_ARGS=(
 ################
 
 # Pattern to which archives apply the keep rules
+# This pattern is also used to determine whether any backups exist. See
+# BACKUP_ARCHIVE_NAME_FIRST_PREFIX.
 BACKUP_KEEP_ARCHIVE_PATTERN='{hostname}-*'
 
 # These settings are used for the respective borg-prune arguments
@@ -273,5 +277,36 @@ BACKUP_FREQUENCY=hourly
 # This will make mounting the device in file managers impossible. Use the
 # script's browse feature instead.
 ENFORCE_ROOT_MOUNT=true
+
+# Install desktop files (i.e. entries for an application laucher) to be able to
+# easily start backup actions from a graphical environment. This includes
+# starting a backup and (un)mounting backup archives.
+# The files will be installed system wide.
+INSTALL_DESKTOP_FILES=true
+# Install separate desktop files for each action (backup, mount, umount) instead
+# of defining desktop actions in one desktop file. Desktop actions are supported
+# by must lauchers but may have to be enabled (e.g. by using
+# `-drun-show-actions` for rofi)
+INSTALL_DESKTOP_FILES_FILES_FOR_ACTIONS=false
+
+
+###################
+## ARCHIVE MOUNT ##
+###################
+
+# Where to mount a borg archive.
+# If this is empty *AND* ARCHIVE_MOUNT_NON_ROOT_READ is 'true',
+# "/run/media/$USER_TARGET/backup_archive" will be used.
+# Otherwise an empty string will fail.
+ARCHIVE_MOUNTLOC=''
+# Whether to allow non-root users to see the mounted repository
+ARCHIVE_MOUNT_NON_ROOT_READ=true
+# Mount the whole repository by default
+# This can be controlled on a individual basis by using the '-r' and '-a' flags
+# of the 'mount' subcommand
+ARCHIVE_MOUNT_REPO=false
+# A filter for repositories offered to the user
+# You could set this to "$BACKUP_KEEP_ARCHIVE_PATTERN"
+ARCHIVE_MOUNT_FILTER_PATTERN=''
 
 # vim: ft=zsh

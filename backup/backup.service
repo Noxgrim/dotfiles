@@ -6,7 +6,7 @@ Type=simple
 Nice=19
 IOSchedulingClass=2
 IOSchedulingPriority=7
-ExecStart=-/usr/bin/sh -c 'systemd-inhibit --what=sleep:shutdown --mode delay --who Backup --why "Ensure backup completion" /usr/bin/env USER_TARGET="$(getent passwd 1000 | cut -d: -f1)" "$(getent passwd backup | cut -d: -f6)/backup.sh"'
+ExecStart=-/usr/bin/sh -c 'systemd-inhibit --what=sleep:shutdown --mode delay --who Backup --why "Ensure backup completion" /usr/bin/env USER_TARGET="$(id -nu 1000)" "$(getent passwd backup | cut -d: -f6)/backup.sh"'
 
 [Install]
 RequiredBy=multi-user.target

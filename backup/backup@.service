@@ -1,0 +1,12 @@
+[Unit]
+Description=User Backup Action: %i
+
+[Service]
+Type=simple
+Nice=19
+IOSchedulingClass=2
+IOSchedulingPriority=7
+ExecStart=-/usr/bin/sh -c '/usr/bin/env USER_TARGET="$(id -nu 1000)" "$(getent passwd backup | cut -d: -f6)/backup.sh" "%i"'
+
+[Install]
+RequiredBy=multi-user.target
