@@ -22,10 +22,14 @@ REPOSITORY_PATH=''
 NOTIFY_START=true
 NOTIFY_END=true
 
-# Timeout for user interaction in seconds. Currently has two effeccts:
+# Add actions for notifications:
+# * suspension and disabling into 'Backup not possible'
+# * opening the mount location when mounting an archive
+ENABLE_NOTIFCATION_ACTIONS=true
+# Timeout for user interaction in seconds. Currently has two effects:
 # 1. The time after which notification actions are not processed anymore. The
 #    script will wait until the user has taken an action or the notification is
-#    dismissed, blockingly. (Thus this value shoudln't be too high)
+#    dismissed, blockingly. (Thus this value shouldn't be too high)
 # 2. The timeout of the Pinentry dialogue for the keepass password.
 INTERACTION_TIMEOUT=60
 
@@ -43,9 +47,6 @@ ALLOW_SUSPEND=true
 # Backup can be disabled by creating /tmp/backup_disable
 # (the file must be owned by root)
 ALLOW_DISABLE=false
-# Add actions for suspension and disabling into 'Backup not possible'
-# notifications
-ENABLE_NOTIFCATION_ACTIONS=true
 # Other host in the network which should be checked for doing the backup
 HOSTS=(  )
 # Number of skips and their associated notification levels
@@ -105,7 +106,6 @@ USE_FULL_DISK_ENCRYPTION=true
 #   Requires PASSWORD_VAR to be set
 #   STRONGLY DISCOURAGED!
 PASSWORD_METHOD='manager'
-
 # Password manager to use. Possible values are:
 # pass:
 #   Requires PASS_PATH to be set
@@ -118,6 +118,7 @@ PASSWORD_METHOD='manager'
 #   May use PASSWORD_WAIT_FOR, defaults to 300
 #     wait for KEEPASS_DB
 PASSWORD_MANAGER='pass'
+
 # Value for pass' PASSWORD_STORE_DIR
 PASS_STORE="$USER_TARGET_HOME/.password-store"
 # The path to the password in pass
@@ -160,9 +161,10 @@ PASSWORD_CACHE_WITH_KEY='auto'
 # Whether to try an unattended repair if backup device is locked.
 # May be destructive.
 BACKUP_TRY_REPAIR=false
-# Archive name to use for the first backup created, see borg-placeholders
+
+# Archive name prefix to use for the first backup created, see borg-placeholders
 # This can be used to never discard the first archive created
-BACKUP_ARCHIVE_NAME_FIRST='init-{hostname}-{now:%Y-%m-%d_%H:%M}'
+BACKUP_ARCHIVE_NAME_FIRST_PREFIX='init-'
 # Archive name to use, see borg-placeholders
 BACKUP_ARCHIVE_NAME='{hostname}-{now:%Y-%m-%d_%H:%M}'
 
@@ -278,7 +280,7 @@ BACKUP_FREQUENCY=hourly
 # script's browse feature instead.
 ENFORCE_ROOT_MOUNT=true
 
-# Install desktop files (i.e. entries for an application laucher) to be able to
+# Install desktop files (i.e. entries for an application launcher) to be able to
 # easily start backup actions from a graphical environment. This includes
 # starting a backup and (un)mounting backup archives.
 # The files will be installed system wide.
@@ -308,5 +310,9 @@ ARCHIVE_MOUNT_REPO=false
 # A filter for repositories offered to the user
 # You could set this to "$BACKUP_KEEP_ARCHIVE_PATTERN"
 ARCHIVE_MOUNT_FILTER_PATTERN=''
+# Automatically open mount location after mount
+# If this is set to ‘false’ the mount notification may provide an action to open
+# the mount location depending on the ENABLE_NOTIFCATION_ACTIONS setting.
+ARCHIVE_MOUNT_FILTER_OPEN=false
 
 # vim: ft=zsh
