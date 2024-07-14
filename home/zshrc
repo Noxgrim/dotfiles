@@ -33,6 +33,7 @@ plugins=(git vi-mode)
 export MPD_HOST="$(grep -Po '(?<=^password ")[^@]*' "$SCRIPT_ROOT/config/mpd/password.conf")@localhost"
 export MANPATH="/usr/local/man:$MANPATH"
 export GOPATH="$HOME/.cache/go"
+export R_LIBS_USER="$HOME/.local/lib/R/library"
 export XDG_CACHE_HOME="$HOME/.cache" XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share" XDG_STATE_HOME="$HOME/.local/state"
 [ -d "$HOME/.local/share/zsh/complete" ] && fpath=( "$HOME/.local/share/zsh/complete" $fpath )
