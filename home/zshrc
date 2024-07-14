@@ -176,8 +176,35 @@ function qbgx() {
 function rqbgx() {
     xournalpp "$@"&>/dev/null&disown
 }
+function bulk() {
+  [[ "${1--}" != '-'* ]] && set -- -iname "$@"
+  local TEMP ESC="s/'/'\\''/g;s/^/'/;s/$/'/" IFS=''
+  local -A DIRS
+  TEMP="$(mktemp -t --suffix=.txt .bulkrename.XXXXXX)"
+  chmod 600 "$TEMP"
+  trap "rm -f '$TEMP'" 0               # EXIT
+  trap "rm -f '$TEMP'; exit 1" 2       # INT
+  trap "rm -f '$TEMP'; exit 1" 1 15    # HUP TERM
+  find . -mindepth 1 "$@" | sort | sed 's,^\./,,' > "$TEMP"
+  $EDITOR "$TEMP"
+  [ ! -s "$TEMP" ] && echo 'File empty, aborting' && return
+  find . -mindepth 1 "$@" | sort | sed 's,^\./,,;'"$ESC" | while read OLD && read NEW <&3; do
+    [ "$OLD" = "$NEW" ] && continue
+    if [ "$NEW" = "''" ]; then
+      echo "rm -rf $OLD"
+    else
+      eval "DIR=$NEW"
+      DIR="$(dirname "$DIR")"
+      if "${DIRS[$DIR]-true}" && [ ! -d "$DIR" ]; then
+        echo "mkdir -p $(sed "$ESC"<<<"$DIR")"
+      fi
+      DIRS[$DIR]=false
+      echo "mv -vi $OLD $NEW"
+    fi
+  done 3< <(sed "$ESC" < "$TEMP") | bash
+}
 
-compdef qbg=time rqbg=qbg qbgz=zathura rqbgz=qbgz qbgx=xournalpp rqbgx=qbgx 2>/dev/null
+compdef qbg=time rqbg=qbg qbgz=zathura rqbgz=qbgz qbgx=xournalpp rqbgx=qbgx bulk=find 2>/dev/null
 
 function mvln() {
     if [ -d "$2" ]; then
