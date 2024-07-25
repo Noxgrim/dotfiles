@@ -344,7 +344,7 @@ get_password() {
             fi
             PASSWORD="$(request_password)" || exit 1
             systemd-creds encrypt - "$THISDIR/key" "${CREDS_ENC_ARGS[@]}" <<< "$PASSWORD"
-            cmod 600 "$THISDIR/key"
+            chmod 600 "$THISDIR/key"
         fi
         echo "$PASSWORD"
     fi
