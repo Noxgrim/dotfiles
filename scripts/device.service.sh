@@ -24,6 +24,7 @@ service() {
         if [ "$DIFF" -lt 120 ]; then
           echo "Refusing to serve after only $DIFF seconds!" >&2
         elif [ -x '/root/brightness.sh'  ]; then
+          sleep 5 # wait for monitors to wake uo I guess
           '/root/brightness.sh' reload || true
           LAST="$(date +%s)"
         fi
