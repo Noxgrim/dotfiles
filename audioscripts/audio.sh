@@ -279,8 +279,6 @@ query_playing() {
         if [ -f "$MUSIC_DIR/$DIR/.cover_mpd.png" ]; then
             ln -sfr "$MUSIC_DIR/$DIR/.cover_mpd.png" "$AU_DIR/current_cover"
             ICON_ARG=( '-i' "$AU_DIR/current_cover" )
-        else
-            ICON_ARG=( '--' )
         fi
 
         local SUMMARY
