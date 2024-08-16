@@ -267,8 +267,8 @@ query_playing() {
     if [ -z "$( mpc current )" ]; then
         notify -u low 'No track playing' -a "$PROVIDER"
     elif [ -z "$( mpc -f '%time%' current )" ]; then # Most probably a radio station
-        notify "$( mpc -f '%title%' current)"\
-            "$( mpc -f '%name%' current | clean_html )" -a "$PROVIDER"
+        notify  -a "$PROVIDER" -- "$( mpc -f '%title%' current)"\
+            "$( mpc -f '%name%' current | clean_html )"
     else
         local CURRENT
         CURRENT="$( mpc -f "%file%" current | clean_output )"
@@ -296,7 +296,7 @@ query_playing() {
 
         BODY="$(echo "$BODY" | clean_html)"
 
-        notify -a "$APP" "$SUMMARY" "$BODY" "${ICON_ARG[@]}" -a "$PROVIDER"
+        notify -a "$APP" "${ICON_ARG[@]}" -a "$PROVIDER" -- "$SUMMARY" "$BODY"
     fi
 }
 clean_html() {
