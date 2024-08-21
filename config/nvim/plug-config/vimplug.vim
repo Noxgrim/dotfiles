@@ -47,6 +47,7 @@ if ! exists('g:is_manpage') || ! g:is_manpage
     Plug 'rhysd/vim-grammarous'
     Plug 'scrooloose/nerdtree'
     Plug 'sheerun/vim-polyglot'
+    Plug 'tpope/vim-abolish'
     Plug 'tpope/vim-commentary'
     Plug 'tpope/vim-fugitive'
     Plug 'tpope/vim-repeat'
