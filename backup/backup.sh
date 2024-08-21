@@ -94,7 +94,7 @@ undo_ransom() {
 
 message_actions() {
     local ACTION
-    readonly URG="$1" HEAD="$2" BODY="$3"
+    readonly LURG="$1" LHEAD="$2" LBODY="$3"
     shift 3
 
     if [ $# -gt 0 ]; then
@@ -104,12 +104,12 @@ message_actions() {
             echo "$*"
         }
         export    -f send_message notify execute
-        read -r ACTION < <( timeout -s USR1 "${INTERACTION_TIMEOUT}s" bash -c "$(escape send_message "$URG" "$HEAD" "$BODY" "$@")" || echo; )
+        read -r ACTION < <( timeout -s USR1 "${INTERACTION_TIMEOUT}s" bash -c "$(escape send_message "$LURG" "$LHEAD" "$LBODY" "$@")" || echo; )
         export -n -f send_message notify execute
         unset -f escape
         echo "$ACTION"
     else
-        send_message "$URG" "$HEAD" "$BODY"
+        send_message "$LURG" "$LHEAD" "$LBODY"
     fi
 }
 
