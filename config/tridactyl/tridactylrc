@@ -213,12 +213,10 @@ bind ;x3 hint      -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmd
 bind ;X3 hint -c * -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 3")}
 bindurl piped.kavin.rocks   n js tri.excmds.urlmodify("-t", "piped.kavin.rocks",   "piped.adminforge.de")
 bindurl piped.adminforge.de n js tri.excmds.urlmodify("-t", "piped.adminforge.de", "piped.video")
-bindurl piped.video         n js tri.excmds.urlmodify("-t", "piped.video",         "inv.tux.pizza")
-bindurl inv.tux.pizza       n js tri.excmds.urlmodify("-t", "inv.tux.pizza",       "piped.kavin.rocks")
-bindurl piped.kavin.rocks   N js tri.excmds.urlmodify("-t", "piped.kavin.rocks",   "inv.tux.pizza")
+bindurl piped.video         n js tri.excmds.urlmodify("-t", "piped.video",         "piped.kavin.rocks")
+bindurl piped.kavin.rocks   N js tri.excmds.urlmodify("-t", "piped.kavin.rocks",   "piped.video")
 bindurl piped.adminforge.de N js tri.excmds.urlmodify("-t", "piped.adminforge.de", "piped.kavin.rocks")
 bindurl piped.video         N js tri.excmds.urlmodify("-t", "piped.video",         "piped.adminforge.de")
-bindurl inv.tux.pizza       N js tri.excmds.urlmodify("-t", "inv.tux.pizza",       "piped.video")
 
 bind x mouse_mode
 bind X no_mouse_mode
