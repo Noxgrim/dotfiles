@@ -61,7 +61,7 @@ case "$password" in
         close
 EOF
     if ! $choose; then
-        if pgrep '\<[g]it\>' &>/dev/null; then
+        if pgrep '\<[s]sh\>' &>/dev/null; then
             password_only=true
         else
             exit
@@ -108,4 +108,32 @@ else
              s/~/'"$keycmd"'asciitilde/g' |
         sed 's/^\x00*//' | sed -z 's/\n$//' |
         xargs -0 -n 5 xdotool
+fi
+
+lastpassimp=${XDG_CACHE_DIR-$HOME/.cache}/passmenu-importantlast
+if [ -z "$(find "$lastpassimp" -mtime -7 -print)" ]; then
+    while read -r imp; do
+        pinentry_commands="
+SETTITLE Password Reminder
+SETDESC Enter password for $imp
+SETTIMEOUT 300
+GETPIN
+BYE
+"
+        pinentry_out="$(pinentry <<< "$pinentry_commands" | sed '/^OK/d')"
+        source "$SCRIPT_ROOT/scripts/notify.sh"
+        if grep '^D ' <<< "$pinentry_out" -q; then
+            if [ "$(sed -n '/^D /s/^D //p' <<< "$pinentry_out")" == "$(pass show "$imp" | head -n 1)" ]; then
+                continue
+            else
+                # sed -n '/^D /s/^D //p' <<< "$pinentry_out"
+                # pass show "$imp" | head -n 1
+                notify 'Password incorrect' 'Will ask next time!' -u critical -a 'passmenu'
+            fi
+        else
+                notify 'Password skipped' 'Will ask next time!' -u critical -a 'passmenu'
+        fi
+        exit 1
+    done < "$SCRIPT_ROOT/data/shared/passimportant"
+    touch "$lastpassimp"
 fi
