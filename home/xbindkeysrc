@@ -1,10 +1,11 @@
 "$SCRIPT_ROOT/audioscripts/audio.sh t"
-    XF86AudioPlay
-"$SCRIPT_ROOT/audioscripts/audio.sh t"
     XF86AudioPause
 "$SCRIPT_ROOT/audioscripts/audio.sh t"
-    m:0x10 + c:208
-    Mod2 + XF86AudioPlay
+    XF86AudioPlay
+"$SCRIPT_ROOT/audioscripts/audio.sh t"
+    Mod4 + XF86AudioPlay
+"$SCRIPT_ROOT/audioscripts/audio.sh t!"
+    ShiftMod4 + XF86AudioPlay
 "$SCRIPT_ROOT/audioscripts/audio.sh h"
     XF86AudioStop
 "$SCRIPT_ROOT/audioscripts/audio.sh j"

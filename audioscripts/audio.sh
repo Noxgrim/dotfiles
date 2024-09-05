@@ -13,6 +13,7 @@ RADIO_QUERY_RES=5
 #PLAYLIST_FORMAT='%position%. %artist% • %title%'
 PLAYLIST_FORMAT='%position%. [[[%artist% • ][%album% • ][%title%]]|[%file%]]'
 FIND_AUDIO_EXTENSIONS=( -iname "*.mp3" -o -iname "*.flac" -o -iname "*.wma" -o -iname "*.wav" -o -iname "*.ogg" )
+BLOCKING=false
 EMPTY_EXECUTE=( 't' )
 
 source "$SCRIPT_ROOT/scripts/notify.sh"
@@ -263,11 +264,14 @@ clean_output() {
     echo -e "$OUT"
 }
 query_playing() {
-    sleep 0.1 # Wait until mopidy or mpd update their indices
+    local PREFIX=''
+    if $BLOCKING; then
+        PREFIX='(!) '
+    fi
     if [ -z "$( mpc current )" ]; then
-        notify -u low 'No track playing' -a "$PROVIDER"
+        notify -u low "$PREFIX"'No track playing' -a "$PROVIDER"
     elif [ -z "$( mpc -f '%time%' current )" ]; then # Most probably a radio station
-        notify  -a "$PROVIDER" -- "$( mpc -f '%title%' current)"\
+        notify  -a "$PROVIDER" -- "$PREFIX$( mpc -f '%title%' current)"\
             "$( mpc -f '%name%' current | clean_html )"
     else
         local CURRENT
@@ -296,7 +300,7 @@ query_playing() {
 
         BODY="$(echo "$BODY" | clean_html)"
 
-        notify -a "$APP" "${ICON_ARG[@]}" -a "$PROVIDER" -- "$SUMMARY" "$BODY"
+        notify -a "$APP" "${ICON_ARG[@]}" -a "$PROVIDER" -- "$PREFIX$SUMMARY" "$BODY"
     fi
 }
 clean_html() {
@@ -365,6 +369,25 @@ change_notify() {
         ) & disown && echo $! > "$AU_DIR/AUDIO_LOOP_PID"
     fi
 }
+handle_play() {
+    if [ "$(mpc status '%state%')" == 'playing' ]; then
+        (
+        systemd-inhibit --why "Playing audio" --what=idle:sleep:handle-lid-switch \
+            --who audio sleep infinity&
+        touch "$AU_DIR/BLOCKING"
+        PID=$!
+        while $MPC idle player &>/dev/null; do
+            if [ "$($MPC status '%state%')" != 'playing' ]; then
+                break
+            fi
+        done
+        kill $PID || true
+        rm -f "$AU_DIR/BLOCKING"
+    )& disown
+    else
+        BLOCKING=false
+    fi
+}
 
 ARGS_START=1
 AUTOSTART=1
@@ -418,6 +441,8 @@ Commands:
                  Last to be executed)
   p mpc play
   t mpc toggle
+  ! if playing, make play blocking 'idle:sleep:handle-lid-switch'
+     until pausing again
   h mpc stop (mnemonic Halt)
   b mpc pause (mnemonic Break)
   q Display a notification with the current title, artist and album; will
@@ -610,7 +635,9 @@ while read -r C; do
                 QUERY=1
             fi
             ;;
-
+        '!')
+            BLOCKING=true
+            ;;
         k)
             $MPC prev
             if [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
@@ -826,6 +853,9 @@ if [ "$INFORM" ]; then
 fi
 if [ "$STATS" ]; then
     mpc stats
+fi
+if $BLOCKING; then
+    handle_play
 fi
 if [ -n "$QUERY" ] && [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ] ||\
     [ "$QUERY" = 2 ]; then

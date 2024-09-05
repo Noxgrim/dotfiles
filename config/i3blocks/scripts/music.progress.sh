@@ -1,1 +1,5 @@
-mpc status  | sed "2q;d" | grep -o '[0-9]*:[0-9:/]*'
+if [ -e "/tmp/$USER/audio_control/BLOCKING" ]; then
+    mpc status '%currenttime%/%totaltime%*'
+else
+    mpc status '%currenttime%/%totaltime%'
+fi
