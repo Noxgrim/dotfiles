@@ -52,7 +52,7 @@ separator=false
 
 [music.progress]
 command="$SCRIPT_ROOT/config/i3blocks/scripts/music.progress.sh"
-interval=1
+interval=5
 
 # Memory usage
 #
@@ -142,7 +142,7 @@ separator=false
 
 [time]
 command=date '+ %a %Y-%m-%d  %H:%M:%S'
-interval=1
+interval=5
 
 # Generic media player support
 #

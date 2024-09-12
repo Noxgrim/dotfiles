@@ -377,7 +377,7 @@ handle_play() {
         touch "$AU_DIR/BLOCKING"
         PID=$!
         while $MPC idle player &>/dev/null; do
-            if [ "$($MPC status '%state%')" != 'playing' ]; then
+            if [ "$(mpc status '%state%')" != 'playing' ]; then
                 break
             fi
         done
