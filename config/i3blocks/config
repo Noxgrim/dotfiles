@@ -40,7 +40,7 @@ markup=none
 label=
 instance=Master
 #instance=PCM
-interval=3
+interval=1
 #interval=once
 #signal=10
 separator=false
@@ -52,7 +52,7 @@ separator=false
 
 [music.progress]
 command="$SCRIPT_ROOT/config/i3blocks/scripts/music.progress.sh"
-interval=5
+interval=1
 
 # Memory usage
 #
@@ -137,12 +137,12 @@ interval=30
 # Date Time
 [time_JP]
 command=env TZ=Asia/Tokyo date '+日本%H:%M'
-interval=30
+interval=1
 separator=false
 
 [time]
 command=date '+ %a %Y-%m-%d  %H:%M:%S'
-interval=5
+interval=1
 
 # Generic media player support
 #
