@@ -6,6 +6,8 @@
     Mod4 + XF86AudioPlay
 "$SCRIPT_ROOT/audioscripts/audio.sh t!"
     Shift + Mod4 + XF86AudioPlay
+"$SCRIPT_ROOT/audioscripts/audio.sh !"
+    Shift + Mod4 + XF86AudioStop
 "$SCRIPT_ROOT/audioscripts/audio.sh h"
     XF86AudioStop
 "$SCRIPT_ROOT/audioscripts/audio.sh j"

@@ -372,7 +372,7 @@ change_notify() {
 handle_play() {
     if [ "$(mpc status '%state%')" == 'playing' ]; then
         (
-        systemd-inhibit --why "Playing audio" --what=idle:sleep:handle-lid-switch \
+        systemd-inhibit --why "Playing audio" --what=idle:handle-lid-switch \
             --who audio sleep infinity&
         touch "$AU_DIR/BLOCKING"
         PID=$!
@@ -441,7 +441,7 @@ Commands:
                  Last to be executed)
   p mpc play
   t mpc toggle
-  ! if playing, make play blocking 'idle:sleep:handle-lid-switch'
+  ! if playing, make play blocking 'idle:handle-lid-switch'
      until pausing again
   h mpc stop (mnemonic Halt)
   b mpc pause (mnemonic Break)
