@@ -230,7 +230,7 @@ function bulk() {
   done 3< <(sed "$ESC" < "$TEMP") | bash
 }
 
-compdef qbg=time rqbg=qbg qbgz=zathura rqbgz=qbgz qbgx=xournalpp rqbgx=qbgx bulk=find 2>/dev/null
+compdef qbg=time rqbg=qbg qbgz=zathura rqbgz=qbgz qbgx=xournalpp rqbgx=qbgx bulk=find blocking=systemd-inhibit 2>/dev/null
 
 function mvln() {
     if [ -d "$2" ]; then
