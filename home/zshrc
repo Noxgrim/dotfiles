@@ -65,7 +65,6 @@ alias audio="$SCRIPT_ROOT/audioscripts/audio.sh -C"
 alias ncmpcpp='ncmpcpp --host=$MPD_HOST'
 alias r='ranger'
 alias v='nvim'
-alias mpv='mpv --no-audio-display'
 alias dps='docker ps | less -S'
 alias blocking='systemd-inhibit --why "Blocking execution" --what=idle:sleep:handle-lid-switch'
 # uni stuff
@@ -175,6 +174,33 @@ function qbgx() {
 }
 function rqbgx() {
     xournalpp "$@"&>/dev/null&disown
+}
+function mpv() {
+  local SUSPEND=false DIR=/tmp/"$USER" CMD="${MPV_WHAT-suspend}" IN="${MPV_IN-1h}"
+  for F in "$@"; do
+    case "$F" in -*) continue;; esac
+    case "$(file --mime-type -b "$F")" in
+      video/*)
+        SUSPEND=true
+        break
+        ;;
+    esac
+  done
+  if $SUSPEND && [ "$IN" != 'cancel' ] && [ -n "$IN" ]; then
+    device schedule_in "$IN" "$CMD"
+    cp -ra "$DIR"/{device_scheduled/"$CMD",mpd_scheduled}
+  fi
+
+  /usr/bin/mpv --no-audio-display "$@"
+
+  if $SUSPEND; then
+    if [ -e "$DIR/device_scheduled/$CMD" ] &&
+       [ ! "$DIR/device_scheduled/$CMD" -nt "$DIR/mpd_scheduled" ] &&
+       [ -n "$(find "$DIR/mpd_scheduled" -mmin -"$(($(device _to_secs "$IN")/60+1))" -print)" ]; then
+           device schedule_in cancel "$CMD"
+    fi
+    rm -f "$DIR/mpd_scheduled"
+  fi
 }
 function bulk() {
   [[ "${1--}" != '-'* ]] && set -- -iname "$@"

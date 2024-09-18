@@ -378,7 +378,7 @@ to_secs() {
 
     [ -z "$FMT" ] && return
 
-    [ -z "${FMT##[0-9]}" ] && FMT="${FMT}m"
+    [ -z "${FMT//[0-9]}" ] && FMT="${FMT}m"
 
     if ! grep -q '^[ 0-9smhd]*$' <<< "$FMT"; then
         # date format (fixed)
@@ -440,7 +440,11 @@ schedule_cmd() {
         DIRTY_TIME="$(rofi -theme solarized -dmenu -i -p "Schedule '$CMD' in")"
     fi
 
-    SECS="$(to_secs "$DIRTY_TIME")"
+    if [ "$DIRTY_TIME" != 'cancel' ]; then
+        SECS="$(to_secs "$DIRTY_TIME")"
+    else
+        SECS=''
+    fi
 
     PATH_NAME="$DIR/${CMD:0:256}"
     UNIT_NAME="_$(systemd-escape -p "${PATH_NAME}")"
@@ -548,6 +552,10 @@ call() {
                     echo "Which command and when?" >&2
                     exit
                 fi
+                ;;
+            _to_secs)
+                to_secs "$2"
+                shift
                 ;;
             execute_what)
                 local CMD
