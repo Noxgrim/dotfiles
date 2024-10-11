@@ -204,17 +204,16 @@ function mpv() {
 }
 function bulk() {
   [[ "${1--}" != '-'* ]] && set -- -iname "$@"
-  local TEMP ESC="s/'/'\\''/g;s/^/'/;s/$/'/" IFS=''
+  local TEMP ESC="s/'/'\\\\''/g;s/^/'/;s/$/'/" IFS=''
   local -A DIRS
   TEMP="$(mktemp -t --suffix=.txt .bulkrename.XXXXXX)"
   chmod 600 "$TEMP"
-  trap "rm -f '$TEMP'" 0               # EXIT
-  trap "rm -f '$TEMP'; exit 1" 2       # INT
-  trap "rm -f '$TEMP'; exit 1" 1 15    # HUP TERM
+  trap "rm -f '$TEMP'" EXIT
+  trap "rm -f '$TEMP'; exit 1" INT HUP TERM
   find . -mindepth 1 "$@" | sort | sed 's,^\./,,' > "$TEMP"
   $EDITOR "$TEMP"
   [ ! -s "$TEMP" ] && echo 'File empty, aborting' && return
-  find . -mindepth 1 "$@" | sort | sed 's,^\./,,;'"$ESC" | while read OLD && read NEW <&3; do
+  find . -mindepth 1 "$@" | sort | sed 's,^\./,,;'"$ESC" | while read -r OLD && read -r NEW <&3; do
     [ "$OLD" = "$NEW" ] && continue
     if [ "$NEW" = "''" ]; then
       echo "rm -rf $OLD"
