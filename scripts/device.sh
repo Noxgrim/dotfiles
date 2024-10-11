@@ -414,7 +414,7 @@ schedule_systemd() {
     shift 2
     systemd-run --slice-inherit --timer-property=AccuracySec=1us --user -q \
         -u "$NAME" --on-calendar="$(date -d "now+$SECS seconds" -Iseconds |\
-        sed 's/T/ /g;s/[+-][0-9][0-9]:[0-9][0-9]$//')" "$0" "$@"
+        sed 's/T/ /g;s/[+-][0-9][0-9]:[0-9][0-9]$//')" "env" "SCRIPT_ROOT=$SCRIPT_ROOT" "$0" "$@"
 }
 
 schedule_cmd() {
@@ -470,16 +470,24 @@ schedule_cmd() {
     M="$(bc <<< "$SECS % 3600 / 60")"
     S="$(bc <<< "$SECS % 60")"
     DATE=$(date +'%Y-%m-%d %H:%M:%S' --date="$SECS seconds")
+    INTRUSIVE=false
     REMINDER_5_URG=low
     REMINDER_1_URG=low
+    REMINDER_SET_URG=low
     case "$CMD" in
         # intrusive cases
         *lock*|*logout*|*suspend*|*sleep*|*hibernate*|*hybrid*|*reboot*|*shutdown*|*screen_off*)
+        INTRUSIVE=true
             REMINDER_5_URG=normal
             REMINDER_1_URG=critical
             ;;
     esac
-    notify -u low "$(printf "Schulded '%s' in %d:%02d:%02d" "$CMD" "$H" "$M" "$S")" "($DATE)" -a '[system]'
+    if $INTRUSIVE && [ "$SECS" -le 60 ]; then
+        REMINDER_SET_URG=critical
+    elif $INTRUSIVE && [ "$SECS" -le 300 ]; then
+        REMINDER_SET_URG=normal
+    fi
+    notify -u "$REMINDER_SET_URG" "$(printf "Schulded '%s' in %d:%02d:%02d" "$CMD" "$H" "$M" "$S")" "($DATE)" -a '[system]'
     if [ "$AT" = true ]; then
         if [ "$((SECS-300))" -gt 0 ]; then
             schedule_systemd "$((SECS-300))" "$UNIT_NAME-5" run notify -u "$REMINDER_5_URG" "5 minutes" "until scheduled '$CMD'" -a '[system]'
@@ -496,13 +504,13 @@ schedule_cmd() {
         ALARM=$((TIME-300))
         if [ $ALARM -ge 0 ]; then
             sleep $ALARM
-            notify -u low "5 minutes" "until scheduled '$CMD'" -a '[system]'
+            notify -u "$REMINDER_5_URG" "5 minutes" "until scheduled '$CMD'" -a '[system]'
             TIME=300
         fi
         ALARM=$((TIME-60))
         if [ $ALARM -ge 0 ]; then
             sleep $ALARM
-            notify -u low "1 minute" "until scheduled '$CMD'" -a '[system]'
+            notify -u "$REMINDER_1_URG" "1 minute" "until scheduled '$CMD'" -a '[system]'
             TIME=60
         fi
         sleep "$TIME"
