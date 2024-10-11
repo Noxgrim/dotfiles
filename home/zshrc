@@ -274,7 +274,6 @@ function installbandcamp() {
                             fi
                         done
                     done
-                MINUS_ARTIST=
                 cd "$PWD_OLD" || exit
                 ;;
         esac
