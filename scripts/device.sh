@@ -69,7 +69,7 @@ should_screen_save() {
     fi
     if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin -1 | read -r; then
         xset dpms 0 0 0
-        local OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS))"
+        local OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS+10))"
         xset dpms "$OFFSEC" "$OFFSEC" "$OFFSEC"
         return 1
     fi
@@ -129,7 +129,9 @@ screen_save_tick() {
                     -h "int:value:$((25*(SSV_OFF_TICKS-TICKS)))" "${NARGS[@]}"
             fi
         fi
-        if [ $TICKS -ge $SSV_DIM_TICKS ]; then
+        if [ $TICKS -ge $SSV_OFF_TICKS ]; then
+            screen_off
+        elif [ $TICKS -ge $SSV_DIM_TICKS ]; then
             if [ "$(call brightness get 2>&1 | cut -d@ -f2 | sort -n | tail -n1)" -gt 1 ]; then
                 call brightness save set 1 5000&
             fi
