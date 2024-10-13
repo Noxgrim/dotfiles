@@ -8,12 +8,10 @@ SSV_TICK_LENGTH=30
 SSV_DIM_TICKS=2
 SSV_OFF_TICKS=4
 
+QUIET=false
+
 # shellcheck disable=SC1091
 source "$TDIR/notify.sh"
-
-lock() {
-    loginctl lock-session
-}
 
 # the ugliest implementation of join you have ever seen...
 join_comma() {
@@ -282,6 +280,11 @@ killapps() {
     return 0
 }
 
+lock() {
+    loginctl lock-session
+}
+
+
 do_shutdown() {
     systemctl poweroff
 }
@@ -318,8 +321,85 @@ hybrid() {
 }
 
 screen_off() {
-    sleep 1 &&
+    lock
+    sleep 2 &&
     xset dpms force off
+}
+
+notify_mode() {
+    local -i LEVEL OLD_LEVEL USED_LEVEL
+    local MODE
+    [ -d "/tmp/$USER" ] || mkdir -p "/tmp/$USER"
+    OLD_LEVEL="$(< "/tmp/$USER/notify_mode")"
+    LEVEL="$(dunstctl get-pause-level)"
+
+    case "${1-toggle}" in
+        restore)
+            dunstctl set-pause-level "$OLD_LEVEL"
+            USED_LEVEL=$OLD_LEVEL
+            ;;
+        all)
+            dunstctl set-pause-level   0
+            ;;
+        lock)
+            dunstctl set-pause-level   1
+            ;;
+        !lock)
+            if [ $LEVEL -lt 1 ]; then
+                dunstctl set-pause-level  1
+            elif [ $LEVEL == 1 ]; then
+                dunstctl set-pause-level   0
+            fi
+            ;;
+        focus)
+            dunstctl set-pause-level  50
+            ;;
+        !focus)
+            if [ $LEVEL -lt 50 ]; then
+                dunstctl set-pause-level  50
+            elif [ $LEVEL == 50 ]; then
+                dunstctl set-pause-level   0
+            fi
+            ;;
+        off)
+            dunstctl set-pause-level  95
+            ;;
+        toggle|!off)
+            if [ $LEVEL -lt 95 ]; then
+                dunstctl set-pause-level  95
+            else
+                dunstctl set-pause-level   0
+            fi
+            ;;
+        FORCE_OFF!)
+            dunstctl set-pause-level 100
+            ;;
+        usage)
+            for arg in focus off all toggle '!focus' 'lock' '!lock' 'FORCE_OFF'; do
+                echo "$arg"
+            done
+            return 0
+            ;;
+        *)
+            echo "Unknown notify mode: $1" >&2 && return 1
+            ;;
+    esac
+    if ! $QUIET; then
+        USED_LEVEL="$(dunstctl get-pause-level)"
+        if [ $USED_LEVEL    ==   0 ]; then
+            MODE="all"
+        elif [ $USED_LEVEL -le   1 ]; then
+            MODE="lock"
+        elif [ $USED_LEVEL -le  50 ]; then
+            MODE="focus"
+        elif [ $USED_LEVEL -le  95 ]; then
+            MODE="off"
+        else
+            MODE="completely off"
+        fi
+        notify -a 'noxgrim:notification_mode' -u low "Notification mode “$MODE”"
+    fi
+    echo "$LEVEL" > "/tmp/$USER/notify_mode"
 }
 
 print_possible_commands() {
@@ -350,6 +430,9 @@ print_possible_commands() {
     local OUTPUT_OPTIONS OUTPUT_VARIANTS=''
     OUTPUT_OPTIONS="$("$TDIR/output_layout.sh" usage 2>&1 | tail +3 | cut -d\  -f2-)"$'\n'
     sed '/MHDL/{s/\s*\(MHDL.\|<[^>]*>\)\s*//g;s/$/ /}' <<< "$OUTPUT_OPTIONS" | sed 's/^/output /' | head -n-1
+    printf '\n'
+
+    notify_mode usage | sed 's/\.sh$//g;s/^/notify_mode /'
     printf '\n'
 
     eval  "$(grep '\<MONITORS=' "$HOME/.device_specific/monitor_names.sh" | sed 's/export/local/')"
@@ -610,15 +693,15 @@ call() {
                 listclients >/dev/null
                 echo "${#CLIENTS[@]}"
                 ;;
-
-            notify_pause)
-                notify -t 2000 -u low "Paused notifications" -a '[system]'
-                sleep 3
-                killall -SIGUSR1 dunst
+            q)
+                QUIET=true
                 ;;
-            notify_resume)
-                killall -SIGUSR2 dunst
-                notify -t 2000 -u low "Resumed notifications" -a '[system]'
+            notify)
+                notify_mode 'toggle'
+                ;;
+            notify_mode)
+                shift
+                notify_mode "${1-toggle}"
                 ;;
             screen_off)
                 screen_off
@@ -803,7 +886,7 @@ call() {
             *) {
                 echo "Unknown command: $1"
                 echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-                echo "Usage: $0 {notify_pause|notify_resume|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off|screen_save_untick}+"
+                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off|screen_save_untick}+"
                 echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
                 echo "Usage: $0 schedule {<command>|'<commands>'}"
                 echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"

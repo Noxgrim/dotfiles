@@ -1,6 +1,8 @@
 #! /bin/bash
 device wallpaper
 numlockx on
+[ -d  "/tmp/$USER" ] || mkdir -p "/tmp/$USER"
+touch "/tmp/$USER/picom_lock.conf"
 pgrep -u "$USER" dunst        || dunst &
 pgrep -u "$USER" keynav       || keynav &
 pgrep -u "$USER" picom        || picom &

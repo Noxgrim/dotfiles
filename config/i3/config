@@ -217,8 +217,8 @@ mode "$device" {
         bindsym Shift+h exec $scriptdir/device.sh hybrid,          mode "default"
         bindsym r       exec $scriptdir/device.sh reboot,          mode "default"
 
-        bindsym n       exec $scriptdir/device.sh notify_pause,    mode "default"
-        bindsym Shift+n exec $scriptdir/device.sh notify_resume,   mode "default"
+        bindsym n       exec $scriptdir/device.sh notify,          mode "default"
+        bindsym Shift+n exec $scriptdir/device.sh notify_mode all, mode "default"
 
         bindsym $mod+s  exec $scriptdir/device.sh screen_off,      mode "default"
         bindsym $mod+e  exec $scriptdir/device.sh dpms_toggle,     mode "default"
@@ -271,8 +271,8 @@ mode "$schedule" {
         bindsym Shift+h exec $scriptdir/device.sh schedule "hybrid",          mode "default"
         bindsym r       exec $scriptdir/device.sh schedule "reboot",          mode "default"
 
-        bindsym n       exec $scriptdir/device.sh schedule "notify_pause",    mode "default"
-        bindsym Shift+n exec $scriptdir/device.sh schedule "notify_resume",   mode "default"
+        bindsym n       exec $scriptdir/device.sh schedule "notify",          mode "default"
+        bindsym Shift+n exec $scriptdir/device.sh schedule "notify_mode all", mode "default"
 
         bindsym $mod+s  exec $scriptdir/device.sh schedule "screen_off",      mode "default"
         bindsym $mod+e  exec $scriptdir/device.sh schedule "dpms_toggle",     mode "default"

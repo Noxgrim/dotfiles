@@ -2,6 +2,7 @@ home/vim/*
 !home/vim/patches
 !home/vim/colors/
 config/mpd/password.conf
+config/picom/lock.conf
 data
 .stignore
 .stfolder/
