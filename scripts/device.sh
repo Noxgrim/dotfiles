@@ -711,7 +711,11 @@ call() {
             output)
                 shift 1
                 "$TDIR/output_layout.sh" "${@:1:3}"
-                shift 3
+                if [ $# -ge 3 ]; then
+                    shift 3
+                else
+                    shift $#
+                fi
                 ;&
             wallpaper)
                 if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
@@ -735,7 +739,11 @@ call() {
             volume)
                 shift 1
                 "$TDIR/volume.sh" "${@:1:3}"
-                shift 2
+                if [ $# -ge 3 ]; then
+                    shift 3
+                else
+                    shift $#
+                fi
                 ;;
             discord)
                 "$TDIR/discord.sh" "$2"
@@ -852,7 +860,7 @@ call() {
                 ;;
             brightness)
                 shift
-                shift "$(setsid "$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3)" 2>&1
+                shift "$(setsid "$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3 | tail -n 1)" 2>&1
                 ;;
             brightness_reload)
                 echo 'brightness reload' > /tmp/"$USER"/service
@@ -888,7 +896,7 @@ call() {
             *) {
                 echo "Unknown command: $1"
                 echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 2ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off|screen_save_untick}+"
+                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 3ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off|screen_save_untick}+"
                 echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
                 echo "Usage: $0 schedule {<command>|'<commands>'}"
                 echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"

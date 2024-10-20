@@ -9,6 +9,7 @@ HOME="$(getent passwd 1000 | cut -d: -f6)"
 DIR="/tmp/$USER/"
 [ -d "$DIR" ] || su "$USER" -c "mkdir -p '$DIR'"
 FIFO="$DIR/service"
+WORKING="$DIR/service.working"
 
 
 service() {
@@ -24,8 +25,10 @@ service() {
         if [ "$DIFF" -lt 120 ]; then
           echo "Refusing to serve after only $DIFF seconds!" >&2
         elif [ -x '/root/brightness.sh'  ]; then
+          touch "$WORKING"
           sleep 5 # wait for monitors to wake uo I guess
           '/root/brightness.sh' reload || true
+          rm -f "$WORKING"
           LAST="$(date +%s)"
         fi
         ;;
@@ -33,7 +36,9 @@ service() {
         if [ "$DIFF" -lt 600 ]; then
           echo "Refusing to serve after only $DIFF seconds!" >&2
         elif [ -f '/etc/systemd/system/backup.service' ]; then
+          touch "$WORKING"
           systemctl start backup.service
+          rm -f "$WORKING"
           LAST="$(date +%s)"
         fi
         ;;
@@ -41,6 +46,7 @@ service() {
         if [ "$DIFF" -lt 20 ]; then
           echo "Refusing to serve after only $DIFF seconds!" >&2
         else
+          touch "$WORKING"
           IFS=' ' read -r -a ARGS <<< "$CMD"
           for ARG in "${ARGS[@]:1}"; do
             F="/sys/bus/usb/devices/$ARG/authorized"
@@ -50,6 +56,7 @@ service() {
               echo 1 > "$F"
             fi
           done
+          rm -f "$WORKING"
           LAST="$(date +%s)"
         fi
         ;;

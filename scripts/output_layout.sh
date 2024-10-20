@@ -13,7 +13,8 @@ LAST_ACTIVE=
 LAST_ACTIVE_SOURCE=
 #LAST_ACTIVE_DEFAULT=
 
-ACTIVE_MONITORS=0
+NUM_ACTIVE_MONITORS=0
+declare -A ACTIVE_MONITORS=()
 CONNECTED_MONTORS=""
 for NO in $(seq $MONITORS); do
     eval "ACTIVE=1;
@@ -33,8 +34,9 @@ for NO in $(seq $MONITORS); do
         eval "CONNECTED_MONTORS=\"\$CONNECTED_MONTORS\$MONITOR_${NO}_SOURCE"$'\n"'
     fi
     if [ -n "$ACTIVE" ]; then
-        ((ACTIVE_MONITORS+=1))
+        ((NUM_ACTIVE_MONITORS+=1))
         LAST_ACTIVE="$NO"
+        ACTIVE_MONITORS["$NO"]="$NO"
         eval "LAST_ACTIVE_SOURCE=\"\$MONITOR_${NO}_SOURCE\""
         eval "LAST_ACTIVE_DEFAULT=\"\$MONITOR_${NO}_DEFAULT\""
     fi
@@ -142,6 +144,7 @@ fi
 case "$1" in
     default)
         LAST=
+        declare -A ACTIVE_MONITORS
         for NO in $(seq $MONITORS); do
             eval "ACTIVE=\"\$MONITOR_${NO}_ACTIVE\";CONNECTED=\"\$MONITOR_${NO}_CONNECTED\";SOURCE=\"\$MONITOR_${NO}_SOURCE\";DEFAULT=\"\$MONITOR_${NO}_DEFAULT\""
             [ -z "$CONNECTED" ] && DEFAULT=off
@@ -156,6 +159,7 @@ case "$1" in
                         xrandr --output "$SOURCE" --auto --right-of "$LAST"
                     fi
                     LAST="$SOURCE"
+                    ACTIVE_MONITORS["$NO"]="$NO"
                     ;;
                 primary)
                     if [ -z "$LAST" ]; then
@@ -248,10 +252,11 @@ case "$1" in
             eval "ACTIVE=\"\$MONITOR_${2}_ACTIVE\";CONNECTED=\"\$MONITOR_${2}_CONNECTED\";SOURCE=\"\$MONITOR_${2}_SOURCE\";DEFAULT=\"\$MONITOR_${2}_DEFAULT\""
             if [ -n "$ACTIVE" ]; then
                 HARD_REDRAW=true
-                if [ "$ACTIVE_MONITORS" -le 1 ]; then
-                    "$HOME"/.i3/device.sh screen_off
+                if [ "$NUM_ACTIVE_MONITORS" -le 1 ]; then
+                    device screen_off
                 else
                     xrandr --output "$SOURCE" --off
+                    unset ACTIVE_MONITORS["$2"]
                     if [ "$PRIMARY" = "$2" ]; then
                         for NO in $(seq $MONITORS); do
                             eval "ACTIVE=\"\$MONITOR_${NO}_ACTIVE\";CONNECTED=\"\$MONITOR_${NO}_CONNECTED\";SOURCE=\"\$MONITOR_${NO}_SOURCE\";DEFAULT=\"\$MONITOR_${NO}_DEFAULT\""
@@ -263,6 +268,7 @@ case "$1" in
                     fi
                 fi
             elif [ -n "$CONNECTED" ]; then
+                ACTIVE_MONITORS["$2"]="$2"
                 if [ "$LAST_ACTIVE" -lt "$2" ]; then
                     xrandr --output "$SOURCE" --right-of "$LAST_ACTIVE_SOURCE" --auto
                 elif [ "$LAST_ACTIVE" -gt "$2" ]; then
@@ -278,6 +284,7 @@ case "$1" in
         if [ "$2" -le "$MONITORS" ]; then
             eval "ACTIVE=\"\$MONITOR_${2}_ACTIVE\";CONNECTED=\"\$MONITOR_${2}_CONNECTED\";SOURCE=\"\$MONITOR_${2}_SOURCE\";DEFAULT=\"\$MONITOR_${2}_DEFAULT\""
             if [ -z "$ACTIVE" ] && [ -n "$CONNECTED" ]; then
+                ACTIVE_MONITORS["$2"]="$2"
                 if [ "$LAST_ACTIVE" -lt "$2" ]; then
                     xrandr --output "$SOURCE" --right-of "$LAST_ACTIVE_SOURCE" --auto
                 elif [ "$LAST_ACTIVE" -gt "$2" ]; then
@@ -294,9 +301,10 @@ case "$1" in
             eval "ACTIVE=\"\$MONITOR_${2}_ACTIVE\";SOURCE=\"\$MONITOR_${2}_SOURCE\";DEFAULT=\"\$MONITOR_${2}_DEFAULT\""
             if [ -n "$ACTIVE" ]; then
                 HARD_REDRAW=true
-                if [ "$ACTIVE_MONITORS" -le 1 ]; then
-                    "$HOME"/.i3/device.sh screen_off
+                if [ "$NUM_ACTIVE_MONITORS" -le 1 ]; then
+                    device screen_off
                 else
+                    unset ACTIVE_MONITORS["$2"]
                     xrandr --output "$SOURCE" --off
                     if [ "$PRIMARY" = "$2" ]; then
                         for NO in $(seq $MONITORS); do
@@ -371,10 +379,15 @@ CONNECTED_MONTORS_FILE="/tmp/$USER/connected_montors"
 touch "$CONNECTED_MONTORS_FILE"
 if ! sort -u <<< "${CONNECTED_MONTORS%$'\n'}" | diff <(sort -u "$CONNECTED_MONTORS_FILE") -; then
     echo 'brightness reload' > "/tmp/$USER/service"
+    sleep .1
+    while [ -f "/tmp/$USER/service.working" ]; do
+        sleep 1
+    done
 fi
+device brightness select "${!ACTIVE_MONITORS[@]}"
 printf '%s' "$CONNECTED_MONTORS" > "$CONNECTED_MONTORS_FILE"
 
-if [ "${HARD_REDRAW:-false}" = true ] && [ "${XORG_TTY:=1}" -ge 0 ]; then
+if false && [ "${HARD_REDRAW:-false}" = true ] && [ "${XORG_TTY:=1}" -ge 0 ]; then
     xrefresh -black
     sudo chvt 16
     sudo chvt "$XORG_TTY"

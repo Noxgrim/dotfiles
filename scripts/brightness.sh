@@ -23,7 +23,9 @@ setup() {
 
   modprobe -r ddcci_backlight ddcci
   modprobe i2c-dev
-  ddcutil detect -t | sed '/\/dev/{s,.*/i2c-\([0-9]*\),\1@i2c-\1,;:a;{N;/\n\s*Monitor/be;s/\n.*//;ba};:e;s/\n[^:]*:\s*\([^:*]*:[^:]*\).*/@\1/;b};d' > "$DIR/data"
+  ddcutil detect -t | sed '/\/dev/{s,.*/i2c-\([0-9]*\),\1@i2c-\1,;:a;{N;/\n\s*Monitor/be;s/\n.*//;ba};:e;s/\n[^:]*:\s*\([^:*]*:[^:]*:.*\)/@\1/;b};d' > "$DIR/data"
+  cp "$DIR/data" "$DIR/selected"
+  chown "$USER:$USER" "$DIR/selected"
   while IFS=@ read -r _ DEV _; do
     echo 'ddcci 0x37' > "/sys/bus/i2c/devices/$DEV/new_device" 2>/dev/null || true
   done < "$DIR/data"
@@ -69,7 +71,46 @@ setup() {
     cat "${CACHE}_new" >> "$CACHE"
     rm "${CACHE}_new"
   fi
-  chown 1000:1000 "$CACHE"
+  chown "$USER:$USER" "$CACHE"
+}
+
+_select() {
+  source "$HOME/.device_specific/monitor_names.sh"
+  local INPUT
+  INPUT="$(
+    local -i LINE_NO=0
+    while IFS=@ read -r NO DEV ID; do
+    ((LINE_NO++))
+    local MNO="${ID_MHDL["$ID"]-'?'}" SEL=0
+    if grep '^[^@]*@[^@]*@'"$ID" "$DIR/selected" -q; then
+      SEL=1
+    fi
+    printf '%s\t%s\t(%s)\t%s\n' "$MNO" "$SEL" "$ID" "$LINE_NO"
+  done < "$DIR/data")"
+  if [ $# = 0 ]; then
+    sed "$(sort -n <<< "$INPUT" | rofi -dmenu -multi-select -no-custom -p 'Brightness control: ' -display-columns 1,3 \
+      -a "$(sort -n <<< "$INPUT" | cut -f2 | grep 1 -n | cut -d: -f1 | while read -r I; do echo "$((I-1))"; done | tr '\n' ,)" | \
+      cut -f4 | tr '\n' ';' | sed 's/;/p;/g')" "$DIR/data" -n > "$DIR/selected"
+  else
+    USED="$#"
+    sed "$(cut -f1,4 <<< "$INPUT" | grep -E "^($(printf '|%s' "$@" | cut -c2-))"$'\t' | cut -f2 | tr '\n' ';' | sed 's/;/p;/g')" \
+      "$DIR/data" -n > "$DIR/selected"
+  fi
+}
+
+find_no() {
+  shopt -s nullglob extglob
+  local NO=
+  case "$DEV" in
+    ddcci*)
+      NO="${DEV##*([^0-9])}"
+      ;;
+    *)
+      NO="$(find "/sys/class/backlight/$DEV/" -follow -maxdepth 2 -iname 'i2c-*' -printf '%f' -quit 2>/dev/null||true)"
+      NO="${NO##*([^-])-}"
+      ;;
+  esac
+  echo "$NO"
 }
 
 _notify() {
@@ -85,7 +126,14 @@ _notify() {
   if [ "$(wc -l <<< "$BOT")" = 1 ]; then
     notify -a 'noxgrim:brightness' -u low -h "int:value:$NEW" 'Brightness ' '%' >/dev/null
   else
-    notify -a 'noxgrim:brightness' -u low -h "int:value:$NEW" 'Brightness ' '%'$'\n'"<i>$(sed 's/@/: /;s/$/%/' <<< "$DATA")</i>" >/dev/null
+    notify -a 'noxgrim:brightness' -u low -h "int:value:$NEW" 'Brightness ' '%'$'\n'"<i>$(
+      source "$HOME/.device_specific/monitor_names.sh"
+      shopt -s extglob
+      while IFS=@ read -r DEV VAL; do
+        NAME="${ID_MHDL["$(grep "^$(find_no "$DEV")@" "$DIR/data" | cut -d@ -f3-)"]-"$DEV"}"
+        echo "$NAME: $VAL%"
+      done <<< "$DATA" | sort -n
+    )</i>" >/dev/null
   fi
 }
 
@@ -102,19 +150,12 @@ _set() {
   for DEV in /sys/class/backlight/*; do
     DEV="${DEV##*/}"
     (
-      case "$DEV" in
-        ddcci*)
-          NO="${DEV##*([^0-9])}"
-          ;;
-        *)
-          NO="$(find "/sys/class/backlight/$DEV/" -follow -maxdepth 2 -iname 'i2c-*' -printf '%f' -quit 2>/dev/null||true)"
-          NO="${NO##*([^-])-}"
-          ;;
-      esac
+      NO="$(find_no "$DEV")"
       if [ -z "$NO" ]; then
         echo "Couldn't find number for device $DEV!"
         TIME_STEP=0
       else
+        grep "^$NO@" "$DIR/selected" -q &> /dev/null || exit
         TIME_STEP="$(grep -m1 " $(grep "^$NO@" "$DIR/data" | cut -d@ -f3-)$" "$CACHE" | cut -d\  -f1)"
       fi
       if [ "$((STEPS*TIME_STEP))" -gt "$TIME" ]; then
@@ -178,6 +219,11 @@ while [ $# -gt 0 ]; do
     kill)
       [ -f "$DIR/PID" ] && kill "$(cat "$DIR/PID")" || true
       ;;
+    select|enable)
+      _select "$@"
+      TOTAL=$((TOTAL+USED))
+      shift "$USED"
+      ;;
     set|inc|dec)
       _set "$ARG" "$@"
       TOTAL=$((TOTAL+USED))
@@ -199,15 +245,20 @@ while [ $# -gt 0 ]; do
     help)
       cat << EOF
 set VALUE [TIME [STPES]]:
-        set all devices to value
+        set all enabled devices to value
 inc VALUE [TIME [STPES]]:
-        increase all devices by value
+        increase all enabled devices by value
 dec VALUE [TIME [STPES]]:
-        deccrease all devices by value
+        decrease all enabled devices by value
 reset: [TIME [STPES]] short for 'set 100 TIME STEPS'
 save:   save current state
 restore [TIME [STPES]]:
-        restore previous state
+        restore previous state of enabled devices
+select [MHDL…]:
+        enable monitos with given handle for brightness control
+        and disable others
+        if no arguments are given, let users decide interactively
+        with rofi
 kill:   kill backlight change in progress
 notify: send a notification about the current brightness
 [as root] init|reload:
