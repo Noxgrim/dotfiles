@@ -120,7 +120,7 @@ _notify() {
     source "$SCRIPT_ROOT/scripts/notify.sh"
   fi
   local DATA BOT NEW
-  DATA="$(_get get)"
+  DATA="$(_get true get)"
   BOT="$(sort -nut@ -k2,2 <<< "$DATA")"
   NEW="$(head -n 1 <<< "$BOT" | cut -d@ -f2)"
   if [ "$(wc -l <<< "$BOT")" = 1 ]; then
@@ -177,7 +177,11 @@ _get() {
   shopt -s nullglob
   for DEV in /sys/class/backlight/*; do
     DEV="${DEV##*/}"
-    echo "$DEV@$(xbacklight -ctrl "$DEV" -"$1")"&
+    local NO="$(find_no "$DEV")"
+    if "$1" && [ -n "$NO" ] && grep "^$NO@" "$DIR/selected" -qv &> /dev/null; then
+      continue
+    fi
+    echo "$DEV@$(xbacklight -ctrl "$DEV" -"$2")"&
   done
   wait
   shopt -u nullglob
@@ -211,10 +215,13 @@ while [ $# -gt 0 ]; do
       setup
       ;;
     save)
-      _get getf > "$DIR/save"
+      _get false getf > "$DIR/save"
       ;;
     get|getf|get-steps)
-      _get "$ARG"
+      _get true "$ARG"
+      ;;
+    get-all|getf-all|get-steps-all)
+      _get false "${ARG%-all}"
       ;;
     kill)
       [ -f "$DIR/PID" ] && kill "$(cat "$DIR/PID")" || true
@@ -266,6 +273,11 @@ notify: send a notification about the current brightness
 [debug] report:
         print number of arguments consumed to stderr
         (excluding this one)
+[debug] get|getf|get-steps:
+        return the values of all enabled devices as percent, fraction
+        and total supported steps respectively
+[debug] get-all|getf-all|get-steps-all:
+        same as get* but include all devices, also disabled ones
 EOF
       exit
       ;;
