@@ -860,7 +860,9 @@ call() {
                 ;;
             brightness)
                 shift
-                shift "$(setsid "$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3 | tail -n 1)" 2>&1
+                {
+                    shift "$(setsid "$TDIR/brightness.sh" report "$@" 3>&2 2>&1 1>&3 | tail -n 1)"
+                } 2>&1
                 ;;
             brightness_reload)
                 echo 'brightness reload' > /tmp/"$USER"/service

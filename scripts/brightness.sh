@@ -121,6 +121,10 @@ _notify() {
   fi
   local DATA BOT NEW
   DATA="$(_get true get)"
+  if [ -z "$DATA" ]; then
+    notify -a 'noxgrim:brightness' -u low 'No brightness devices' '!' >/dev/null
+    return
+  fi
   BOT="$(sort -nut@ -k2,2 <<< "$DATA")"
   NEW="$(head -n 1 <<< "$BOT" | cut -d@ -f2)"
   if [ "$(wc -l <<< "$BOT")" = 1 ]; then
@@ -178,7 +182,7 @@ _get() {
   for DEV in /sys/class/backlight/*; do
     DEV="${DEV##*/}"
     local NO="$(find_no "$DEV")"
-    if "$1" && [ -n "$NO" ] && grep "^$NO@" "$DIR/selected" -qv &> /dev/null; then
+    if "$1" && [ -n "$NO" ] && ! grep "^$NO@" "$DIR/selected" -q &> /dev/null; then
       continue
     fi
     echo "$DEV@$(xbacklight -ctrl "$DEV" -"$2")"&
