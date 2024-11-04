@@ -32,35 +32,12 @@ ln -sfr .git-precommit '.git/hooks/pre-commit' # The censorer
 
 # backup services
 if ! id backup &>/dev/null; then
-  sudo useradd backup --home '/home/.backup' --shell '/home/.backup/connected.sh'
-  sudo mkdir -p '/home/.backup/.ssh'
-  sudo chown backup:backup '/home/.backup'
-  sudo chmod 700 '/home/.backup'
-  sudo cp backup/{connected,backup}.sh '/home/.backup'
-  sudo cp scripts/notify.sh /root
-  sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
-  sudo cp backup/backup.{service,timer} /etc/systemd/system
   if [ -e "data/$HOSTNAME/backup.conf" ]; then
-    sudo cp "data/$HOSTNAME/backup.conf" '/home/.backup'
+    sudo backup/backup.sh setup "data/$HOSTNAME/backup.conf"
   elif [ -e "data/shared/backup.conf" ]; then
-    sudo cp "data/shared/backup.conf" '/home/.backup'
+    sudo backup/backup.sh setup 'data/shared/backup.conf'
   else
-    printf '\e[1;31mPlease install /home/.backup/backup.conf (press any button after you'\''re done)\e[0m\n'
-    read -r
-  fi
-  if [ ! -e "$HOME/.ssh/backup_ed25519.pub" ]; then
-    printf '\e[1;31mPlease install SSH key %s/.ssh/backup_ed25519.pub (press any button after you'\''re done)\e[0m\n' "$HOME"
-    read -r
-  fi
-  if [ -e "$HOME/.ssh/backup_ed25519.pub" ]; then
-    sudo cp "$HOME/.ssh/backup_ed25519.pub" '/home/.backup/.ssh/authorized_keys'
-  fi
-  if [ -e "$HOME/.ssh/backup_ed25519.pub" ] && [ -f  '/home/.backup/backup.conf' ]; then
-    sudo systemctl enable backup.timer
-    sudo systemctl start backup.timer
-    printf '\e[1;32mInstalled backup; make sure ".backup_exclude" files are found by locate\e[0m\n'
-  else
-    printf '\e[1;91mSSH key or config are missing, backup not enabled\e[0m\n'
+    printf '\e[1;31mSkipped installing backup, please provide data/*/backup.conf and rerun if you want to use it\e[0m\n'
   fi
 fi
 
@@ -86,7 +63,7 @@ sudo cp scripts/{brightness,notify}.sh /root
 sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
 sudo 'scripts/brightness.sh' reload
 if [ -n "$(find /sys/class/backlight -mindepth 1 -iname '*' -print -quit)"  ]; then
-  pacman -Qi acpilight >/dev/null || sudo pacman -Sy acpilight
+  pacman -Qi acpilight >/dev/null || sudo paru -Syu --needed acpilight ddcci-driver-linux-dkms ddcutil
   [ -d '/etc/udev/rules.d' ] || mkdir -p '/etc/udev/rules.d'
   sudo cp -a {,/etc/}'udev/rules.d/90-backlight.rules'
   sudo usermod -aG video "$USER"
