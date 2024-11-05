@@ -202,10 +202,9 @@ bindsym $mod+Shift+p exec      passmenu
 bindsym $mod+Ctrl+p exec       passmenu --type --choose
 bindsym $mod+Shift+Ctrl+p exec passmenu --choose
 
-set $device device [+][x][sSlLhHrF][mMnN][d]❖[dh]❖[se] ❖[rR]
+set $device device [+][x][sSlLhHrF][mMnN]❖[dh]❖[se] ❖[rR]
 set $force device.force [SRL[xc]]
 set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
-set $discord device.discord status: [o]nline (a)idle d[n]d [i]nvisible | actions: [g]o come-[b]ack | call: [j]oin{-(J)video} [c]all{-[v]ideo (V)stop} [r]eject [l]eave | share: [s]creen-share [S]top | audio: [m]ute [d]eafen
 bindsym $mod+Shift+x mode "$device"
 mode "$device" {
         # power control
@@ -246,7 +245,6 @@ mode "$device" {
 
         bindsym Shift+f mode "$force"
         bindsym plus    mode "$schedule"
-        bindsym d       mode "$discord"
         bindsym Return  mode "default"
         bindsym Escape  mode "default"
 
@@ -283,33 +281,6 @@ mode "$schedule" {
 
         bindsym plus    exec $scriptdir/device.sh schedule_what,              mode "default"
         bindsym x       exec $scriptdir/device.sh schedule "execute_what",    mode "default"
-
-        bindsym Return  mode "$device"
-        bindsym Escape  mode "$device"
-}
-mode "$discord" {
-        # online status
-        bindsym o       exec $scriptdir/discord.sh "online",         mode "default"
-        bindsym a       exec $scriptdir/discord.sh "idle",           mode "default"
-        bindsym n       exec $scriptdir/discord.sh "do-not-disturb", mode "default"
-        bindsym i       exec $scriptdir/discord.sh "invisible",      mode "default"
-        # calls
-        bindsym j       exec $scriptdir/discord.sh "join-voice",     mode "default"
-        bindsym Shift+j exec $scriptdir/discord.sh "join-video",     mode "default"
-        bindsym c       exec $scriptdir/discord.sh "voice-call",     mode "default"
-        bindsym v       exec $scriptdir/discord.sh "video-call",     mode "default"
-        bindsym Shift+v exec $scriptdir/discord.sh "video-stop",     mode "default"
-        bindsym r       exec $scriptdir/discord.sh "reject",         mode "default"
-        bindsym l       exec $scriptdir/discord.sh "leave",          mode "default"
-        # sharing the screen
-        bindsym s       exec $scriptdir/discord.sh "share-screen",   mode "default"
-        bindsym Shift+S exec $scriptdir/discord.sh "stop-share",     mode "default"
-        # combined actions
-        bindsym g       exec $scriptdir/discord.sh "go-away",        mode "default"
-        bindsym b       exec $scriptdir/discord.sh "come-back",      mode "default"
-        # audio
-        bindsym m       exec $scriptdir/discord.sh "mute",           mode "default"
-        bindsym d       exec $scriptdir/discord.sh "deafen",         mode "default"
 
         bindsym Return  mode "$device"
         bindsym Escape  mode "$device"

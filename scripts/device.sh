@@ -414,10 +414,6 @@ print_possible_commands() {
         sed 's/\.sh$//g;s/^/action /' | sort -u
     printf '\n'
 
-    "$TDIR/discord.sh" usage 2>&1 | tail +2 | cut -d\  -f2- |\
-        sed 's/^\s*//;s/[,|]/\n/g' | sed 's/^/discord /'
-    printf '\n'
-
     "$TDIR/brightness.sh" help 2>&1 |\
         sed 's/^\(\w\+\):.*/\1/;t;s/^\(\w\+\) .*/\1 /;t;d' | sed 's/^/brightness /'
     printf '\n'
@@ -745,10 +741,6 @@ call() {
                     shift $#
                 fi
                 ;;
-            discord)
-                "$TDIR/discord.sh" "$2"
-                shift
-                ;;
             dpms_off)
                     if xset q | grep -q "DPMS is Enabled"; then
                         notify -u low "Disabled DPMS" -a '[system]'
@@ -827,7 +819,7 @@ call() {
                 done
                 ;;
             list_all_commands)
-                print_possible_commands | sed '/\<\(\(output\|discord\)\>.*\|volume\)\s\+$/d;/^\s*$/d'
+                print_possible_commands | sed '/\<\(\(output\)\>.*\|volume\)\s\+$/d;/^\s*$/d'
                 ;;
             check_for_backup)
                 check_for_backup
@@ -898,7 +890,7 @@ call() {
             *) {
                 echo "Unknown command: $1"
                 echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 3ARGS|discord ARG|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off|screen_save_untick}+"
+                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 3ARGS|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off|screen_save_untick}+"
                 echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
                 echo "Usage: $0 schedule {<command>|'<commands>'}"
                 echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"
