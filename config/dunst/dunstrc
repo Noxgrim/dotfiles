@@ -29,9 +29,9 @@
     progress_bar_min_width = 150
     progress_bar_max_width = 300
     width = 300
-    height = 65536
+    height = (0, 65536)
     origin = top-right
-    offset = 10x10
+    offset = (10, 10)
     separator_height = 2
     padding = 8
     horizontal_padding = 8
