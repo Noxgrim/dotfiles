@@ -92,6 +92,10 @@ screen_save_untick() {
     if [ $TICKS -ge $SSV_DIM_TICKS ]; then
         call brightness restore 20&
     fi
+    if [ -f "/tmp/$USER/state/screen_off" ]; then
+        pkill -SIGUSR1 picom
+        rm "/tmp/$USER/state/screen_off"
+    fi
     echo "0" > "$TICK_FILE"
     wait
 }

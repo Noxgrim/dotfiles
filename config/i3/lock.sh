@@ -36,9 +36,10 @@ I3LOCK_ARGS=(
     --custom-key-commands
     --cmd-media-play  "$SCRIPT_ROOT/audioscripts/audio.sh t"
     --cmd-media-pause "$SCRIPT_ROOT/audioscripts/audio.sh t"
-    --cmd-media-stop  "$SCRIPT_ROOT/audioscripts/audio.sh !"
+    --cmd-media-stop  "$SCRIPT_ROOT/audioscripts/audio.sh !; pkill picom -SIGUSR1"
     --cmd-media-next  "$SCRIPT_ROOT/audioscripts/audio.sh j"
     --cmd-media-prev  "$SCRIPT_ROOT/audioscripts/audio.sh k"
+    --cmd-mic-mute  "pkill picom -SIGUSR1"
 )
 
 # Run before starting the locker
@@ -61,6 +62,7 @@ postpare_lock() {
     fi
     touch "/tmp/$USER/state/locked"
     device dpms_on screen_off q notify_mode lock # always reset this once we're locking and turn off screen
+    touch "/tmp/$USER/state/screen_off"
     local FENCE
     if [ -e "/tmp/$USER/lock_show_desktop_only" ]; then
         FENCE='LOCKED DESKTOP'
@@ -84,6 +86,7 @@ post_lock() {
     [ -f "/tmp/$USER/state/system_sleeped"  ] && rm "/tmp/$USER/state/system_sleeped"
     [ -f "/tmp/$USER/state/wokeup"          ] && rm "/tmp/$USER/state/wokeup"
     [ -f "/tmp/$USER/state/locked"          ] && rm "/tmp/$USER/state/locked"
+    [ -f "/tmp/$USER/state/locked"          ] && rm "/tmp/$USER/state/screen_off"
     return
 }
 
