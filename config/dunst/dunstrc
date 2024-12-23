@@ -84,10 +84,14 @@
 
 [audio_mdp]
     appname = "mpd"
+    max_icon_size = 80
+    min_icon_size = 80
     override_pause_level = 1
 
 [audio_audio]
     appname = "audio"
+    max_icon_size = 80
+    min_icon_size = 80
     override_pause_level = 1
 
 [generic_bar]
@@ -123,6 +127,8 @@
 [audio_unknown]
     appname= "noxgrim:audio:unknown"
     format = "<b><i>%s</i></b>\n%b\n<i>‏mpd</i>"
+    max_icon_size = 80
+    min_icon_size = 80
     override_pause_level = 1
 
 [urgency_critical]

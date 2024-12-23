@@ -259,78 +259,77 @@ play_all() {
     fi
 }
 clean_output() {
-    local OUT
-    OUT="$(sed 's/%\(..\)/\\x\1/g')"
-    echo -e "$OUT"
-}
-query_playing() {
-    local PREFIX=''
-    if $BLOCKING; then
-        PREFIX='(!) '
-    fi
-    if [ -z "$( mpc current )" ]; then
-        notify -u low "$PREFIX"'No track playing' -a "$PROVIDER"
-    elif [ -z "$( mpc -f '%time%' current )" ]; then # Most probably a radio station
-        notify  -a "$PROVIDER" -- "$PREFIX$( mpc -f '%title%' current)"\
-            "$( mpc -f '%name%' current | clean_html )"
-    else
-        local CURRENT
-        CURRENT="$( mpc -f "%file%" current | clean_output )"
-        local DIR
-        DIR="$( dirname "$CURRENT" )"
-        local ICON_ARG=()
-        check_icon "$MUSIC_DIR/$DIR"
-        if [ -f "$MUSIC_DIR/$DIR/.cover_mpd.png" ]; then
-            ln -sfr "$MUSIC_DIR/$DIR/.cover_mpd.png" "$AU_DIR/current_cover"
-            ICON_ARG=( '-i' "$AU_DIR/current_cover" )
-        fi
-
-        local SUMMARY
-        local BODY
-        local APP
-        if [ -z "$( mpc -f '%title%' current )" ]; then
-            SUMMARY="$( basename "$CURRENT" | sed 's/\.[^.]*$//')"
-            BODY="$DIR"
-            APP='noxgrim:audio:unknown'
-        else
-            SUMMARY="$( mpc -f '%title%' current )"
-            BODY="$( mpc -f '[[%artist% • ][%album%]|[<i>Unknown</i>]]|[<i>Unknown</i>]' \
-                current )"
-        fi
-
-        BODY="$(echo "$BODY" | clean_html)"
-
-        notify -a "$APP" "${ICON_ARG[@]}" -a "$PROVIDER" -- "$PREFIX$SUMMARY" "$BODY"
-    fi
+    printf "$(sed 's/%\(..\)/\\x\1/g;s,[\%],&&,g')"
 }
 clean_html() {
     sed 's/&/&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 }
-check_icon() {
-    (
-        cd "$1" || return
-        local FILES=
-        local UNSORTED=
-        local REST=
+fetch_icon() {
+    rm "$AU_DIR/current_cover" -f
+    if mpc readpicture "$1" > "$AU_DIR/current_cover"; then
+        return
+    elif mpc albumart "$1" > "$AU_DIR/current_cover"; then
+        return
+    else
+        # fallback
+        local FILE
+        FILE="$(clean_output <<< "$1")" DIR="${FILE%/*}"
         local FILE_REGEX='./\(cover\|folder\|titel\|album.*\).\(png\|jpe?g\|bmp\)'
         shopt -s nullglob
-        if [ -f ".cover_mpd.png" ] || [ -f ".no_cover_found" ]; then
+        if [ -f "$DIR/.cover_mpd.png" ]; then
+            ln -sfr "$DIR/.cover_mpd.png" "$AU_DIR/current_cover"
             return
-        elif [ "$(find . -maxdepth 1 -iregex "$FILE_REGEX" | wc -l)" -ge 1 ]; then
-            UNSORTED="$(find . -maxdepth 1 -iregex "$FILE_REGEX" )"
-            readarray -t FILES < <(grep  -iE 'cover.(png|jpe?g)$' <<< "$UNSORTED")
-            readarray -t REST  < <(grep -viE 'cover.(png|jpe?g)$' <<< "$UNSORTED")
-            FILES+=( "${REST[@]}" )
+        elif [ -f "$DIR/.no_cover_found" ]; then
+            return
+        fi
+        local UNSORTED
+        UNSORTED="$(find "$DIR" -maxdepth 1 -iregex "$FILE_REGEX" )"
+        if [ -n "$UNSORTED" ]; then
+            FILE="$(grep  -iEm 1 'cover.(png|jpe?g)$' <<< "$UNSORTED")"
+            [ -z "$FILE" ] && FILE="$(grep  -ivEm 1 'cover.(png|jpe?g)$' <<< "$UNSORTED")"
         else
-            FILES=( *.mp3 *.flac *.wma *.wav *.ogg )
+            FILE="$(find "$DIR" \( -iname '*.mp3' -o -iname '*.ogg' -o -iname '*.flac' -o -iname '*.wav' -o -iname '*.wma' \) -print0 | head -zn1 )"
         fi
-        if ! ffmpeg -i "${FILES[0]}" -vf scale="$ICON_RES" ".cover_mpd.png" &> /dev/null; then
-            touch ".no_cover_found"
+        if ffmpeg -i "$FILE" -vf scale="$ICON_RES" ".cover_mpd.png" &> /dev/null; then
+            ln -sfr "$DIR/.cover_mpd.png" "$AU_DIR/current_cover"
+        else
+            touch "$DIR/.no_cover_found"
         fi
-    )
+    fi
+}
+query_playing() {
+    local PREFIX='' FILE
+    if $BLOCKING; then
+        PREFIX='(!) '
+    fi
+    FILE="$(mpc -f '%file%' current)"
+    if [ -z "$FILE" ]; then
+        notify -u low "$PREFIX"'No track playing' -a "$PROVIDER"
+        return
+    fi
+    fetch_icon "$FILE"
+    local ICON_ARG=()
+    if [ -e "$AU_DIR/current_cover" ]; then
+        ICON_ARG=( '-i' "$AU_DIR/current_cover" )
+    fi
+
+    local SUMMARY
+    local BODY
+    local APP
+    if [ -z "$( mpc -f '[%title%]|[%name%]' current )" ]; then
+        SUMMARY="${FILE##*/}"
+        SUMMARY="${SUMMARY%.*}"
+        BODY="${FILE%/*}"
+        APP='noxgrim:audio:unknown'
+    else
+        SUMMARY="$( mpc -f '[%title%]|[%name%]' current )"
+        BODY="$( mpc -f '[[%artist% • ][%album%]|[<i>Unknown</i>]]|[<i>Unknown</i>]' \
+            current )"
+    fi
+
+    notify -a "$APP" "${ICON_ARG[@]}" -a "$PROVIDER" -- "$PREFIX$SUMMARY" "$(clean_html <<< "$BODY")"
 }
 change_notify() {
-    local LAST=
     if [ -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
         xargs kill -SIGKILL < "$AU_DIR/AUDIO_LOOP_PID"
         notify -u low 'Stopped change notifications!' -a "$PROVIDER"
@@ -343,17 +342,12 @@ change_notify() {
 
         while true; do
             if [ -z "$( mpc -f '%time%' current )" ]; then #Stream
-                sleep "$RADIO_QUERY_RES"
-                if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ] &&\
-                     [ "$( mpc -f '%title%' current )" != "$LAST" ]; then
-                    query_playing
-                    LAST="$( mpc -f '%title%' current )"
-                fi
+                $MPC idle player
             else
                 mpc current --wait &> /dev/null
-                if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ]; then
-                    query_playing
-                fi
+            fi
+            if [ ! -e "$AU_DIR/AUDIO_DO_NOT_QUERY" ]; then
+                query_playing
             fi
 
             if [[ "$( mpc current &>/dev/null )" ==\
@@ -374,8 +368,8 @@ handle_play() {
         (
         systemd-inhibit --why "Playing audio" --what=idle:handle-lid-switch \
             --who audio sleep infinity&
-        touch "$AU_DIR/BLOCKING"
         PID=$!
+        touch "$AU_DIR/BLOCKING"
         while $MPC idle player &>/dev/null; do
             if [ "$(mpc status '%state%')" != 'playing' ]; then
                 break
