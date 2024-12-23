@@ -197,10 +197,12 @@ bindsym $mod+b border toggle
 bindsym $mod+c move position center
 
 bindsym $mod+m exec $mscriptdir/rofi_audio.sh
-bindsym $mod+p exec            passmenu --type
+bindsym $mod+p exec            passmenu -t
 bindsym $mod+Shift+p exec      passmenu
-bindsym $mod+Ctrl+p exec       passmenu --type --choose
-bindsym $mod+Shift+Ctrl+p exec passmenu --choose
+bindsym $mod+Ctrl+p exec       passmenu -t -s
+bindsym $mod+Shift+Ctrl+p exec passmenu    -s
+bindsym $mod+Mod1+p exec       passmenu -t -s 1
+bindsym $mod+Shift+Mod1+p exec passmenu    -s 1
 
 set $device device [+][x][sSlLhHrF][mMnN]❖[dh]❖[se] ❖[rR]
 set $force device.force [SRL[xc]]

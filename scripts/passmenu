@@ -2,55 +2,72 @@
 
 shopt -s nullglob globstar
 
+increment() {
+    if [ -n "$passwordnr" ]; then
+        if [[ "$password" != $(cat "$lastpass") ]] || [[ -n "$(find "$lastpass" -mmin +4 -print)" ]]; then
+            # do not increment count if selected password was acessed less than 5 min ago
+            #shellcheck disable=2016
+            sed -i "$passwordnr"'{s/^\([0-9]*\) \(.*\)$/echo "$((\1+1)) \2"/;e'$'\n}' "$rankfile"
+            return
+        fi
+        echo "$password" > "$lastpass"
+    fi
+}
+
 typeit=false
-if [[ $1 == "--type" ]]; then
+if [[ $1 == "-t" ]]; then
     typeit=true
     shift
 fi
 choose=false
-password_only=false
-if [[ $1 == "--choose" ]]; then
-    choose=true
+select=
+if [[ $1 == "-s" ]]; then
     shift
+    if [[ $1 =~ [0-9]+ ]]; then
+        select=$1
+        shift
+    else
+        choose=true
+    fi
 fi
 
 prefix=${PASSWORD_STORE_DIR-~/.password-store}
 lastcache="/tmp/$USER/nextpass"
+lastpass="/tmp/$USER/lastpass"
 if [[ -f "$lastcache" ]] && ! $choose; then
     password="$(cat "$lastcache")"
 fi
 
 if [[ -z "$password" ]]; then
     rankfile=${XDG_CACHE_DIR-$HOME/.cache}
-    rankfile_tmp="$rankfile/passmenu-1.cache"
     rankfile="$rankfile/passmenu.cache"
     [ -e "$rankfile"  ] || touch "$rankfile"
     password_files=( "$prefix"/**/*.gpg )
     password_files=( "${password_files[@]#"$prefix"/}" )
     password_files=( "${password_files[@]%.gpg}" )
-    printf '%s\n' "${password_files[@]}" |
+    rankfile_tmp="$(printf '%s\n' "${password_files[@]}" |
         sed -f <(sed 's/^\([0-9]\+\) \(.*\)$/s#^\2$#\1 \&#;t/;
             s/^-1 \(.*\)$/s#^\1.*#-1 \1#;t/' < "$rankfile";
             printf 's/^/0 /\n') |
-        sort -nsr > "$rankfile_tmp"
+                sort -nsr)"
 
-    password=$(sed '/^-1 /d;s/^[0-9]* //' < "$rankfile_tmp" | rofi -dmenu -format d -no-custom)
-
-    if [[ -z $password ]]; then
-        mv "$rankfile_tmp" "$rankfile"
+    passwordnr=$(sed '/^-1 /d;s/^[0-9]* //' <<< "$rankfile_tmp" | rofi -dmenu -format d -no-custom)
+    if [[ -z $passwordnr ]]; then
         exit
     fi
+    password=$(sed -n "${passwordnr}s/^[0-9]* //p" <<< "$rankfile_tmp")
 
-    #shellcheck disable=2016
-    password="$(sed -i "$password"'{s/^\([0-9]*\) \(.*\)$/echo "$((\1+1)) \2"/;e'$'\n'';w /dev/stdout'$'\n}' "$rankfile_tmp" | cut -d\  -f2-)"
-    mv "$rankfile_tmp" "$rankfile"
+    echo "$rankfile_tmp" > "$rankfile"
 fi
+
+pass_content="$(pass show "$password")" || exit "$?"
 
 case "$password" in
     ssh/*)
+        #shellcheck disable=2016
         expect - -- \
-        "$(pass show "$password" | sed -n 's,\($HOME\|~\),'"$HOME"',g;2p')" \
-        "$(pass show "$password" | sed -n '1p')" << "EOF"
+        "$(sed -n 's,\($HOME\|~\),'"$HOME"',g;2p' <<< "$pass_content")" \
+        "$(sed -n '1p' <<< "$pass_content")" << "EOF"
         set file [lindex $argv 0]
         set password [lindex $argv 1]
         spawn ssh-add "$file"
@@ -60,30 +77,37 @@ case "$password" in
         wait
         close
 EOF
-    if ! $choose; then
+    if ! $choose && [ -n "$select" ]; then
         if pgrep '\<[s]sh\>' &>/dev/null; then
-            password_only=true
+            select=1
         else
+            increment
             exit
         fi
     fi
     ;;
 esac
 
-line=1
-if [[ -z "$(pass show "$password" | sed -n 1p)" ]]; then
+line=${select-1}
+if [[ -z "$(sed -n "${line}p" <<< "$pass_content" )" ]]; then
     choose=true
 fi
 if $choose; then
-    line=$(pass show "$password" |
-        sed '1{s/.\+/Password/;t};2{s/.\+/Login/;t};/^\s*\([-0-9A-Za-z_ ]*\)\s*: .*/{s//\1/;t};s/^.\+$/?/' |
+    line=$(sed <<< "$pass_content" '
+            1{s/.\+/Password/;t};
+            2{s/.\+/Login/;t};
+            /^\s*\(\([^:]*:[^ ]\)*[^:]*\):\s*$/{s//\1:/;t};
+            /^\s*\(\([^:]*:[^ ]\)*[^:]*\): .*/{s//\1/;t};
+            s/^.\+$/?/' |
         rofi -dmenu -format d -no-custom)
     [ -z "$line" ] && exit
+    [ -f "$lastcache" ] && rm "$lastcache"
+elif [ -n "$select" ]; then
     [ -f "$lastcache" ] && rm "$lastcache"
 elif [[ -e "$lastcache" ]]; then
     line=1
     rm "$lastcache"
-elif ! $password_only && [[ "$(pass show "$password" | wc -l)" -gt 1 ]] && [[ -n "$(pass show "$password" | sed -n 2p)" ]]; then
+elif [[ "$(wc -l <<< "$pass_content")" -gt 1 ]] && [[ -n "$(sed -n 2p <<< "$pass_content")" ]]; then
     line=2
     [ -d "/tmp/$USER" ] || mkdir -p "/tmp/$USER"
     echo "$password" > "$lastcache"
@@ -100,15 +124,16 @@ else
     delay=48 # in ms
     typecmd='\x00type\x00--clearmodifiers\x00--delay\x00'"$delay"'\x00'
     keycmd='\x00sleep\x00'"$(printf 'scale=3;%s/1000\n' "$delay"| bc)"'\x00key\x00--clearmodifiers\x00'
-    pass show "$password" | sed -n "$line"'{s/^\s*\([-0-9A-Za-z_ ]*\)\s*: //;p}' |
+    sed -n "$line"'{s/^\s*\(\([^:]*:[^ ]\)*[^:]*\): \?//;p}' <<< "$pass_content" |
         sed 's/[^`^´~]\+/'"$typecmd"'&/g
              s/\^/'"$keycmd"'asciicircum/g
              s/`/'"$keycmd"'grave/g
              s/´/'"$keycmd"'acute/g
              s/~/'"$keycmd"'asciitilde/g' |
         sed 's/^\x00*//' | sed -z 's/\n$//' |
-        xargs -0 -n 5 xdotool
+        xargs -0rn 5 xdotool
 fi
+increment
 
 lastpassimp=${XDG_CACHE_DIR-$HOME/.cache}/passmenu-importantlast
 if [ -z "$(find "$lastpassimp" -mtime -7 -print)" ]; then
@@ -121,13 +146,12 @@ GETPIN
 BYE
 "
         pinentry_out="$(pinentry <<< "$pinentry_commands" | sed '/^OK/d')"
+        #shellcheck disable=1091
         source "$SCRIPT_ROOT/scripts/notify.sh"
         if grep '^D ' <<< "$pinentry_out" -q; then
             if [ "$(sed -n '/^D /s/^D //p' <<< "$pinentry_out")" == "$(pass show "$imp" | head -n 1)" ]; then
                 continue
             else
-                # sed -n '/^D /s/^D //p' <<< "$pinentry_out"
-                # pass show "$imp" | head -n 1
                 notify 'Password incorrect' 'Will ask next time!' -u critical -a 'passmenu'
             fi
         else
