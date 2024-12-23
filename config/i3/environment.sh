@@ -13,12 +13,12 @@ pgrep -u "$USER" -f 'browser_bridge_[s]erv.py' || "$SCRIPT_ROOT/browser/browser_
 
 eval "$(grep '^SSV_\w*=' "$(which device)")"
 
-OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS+10))"
+OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS))"
 
 xset s "$OFFSEC" 0
 xset dpms "$OFFSEC" "$OFFSEC" "$OFFSEC"
 
-pgrep -u "$USER" xidlehook    || {
+pgrep -u "$USER" xidlelock    || {
   declare -a XIH_ARGS=()
   declare TICK_FREQ=$SSV_TICK_LENGTH MAX="$((60*60-SSV_TICK_LENGTH))"
   for (( i=0; i<MAX; i+=TICK_FREQ )); do

@@ -36,10 +36,10 @@ I3LOCK_ARGS=(
     --custom-key-commands
     --cmd-media-play  "$SCRIPT_ROOT/audioscripts/audio.sh t"
     --cmd-media-pause "$SCRIPT_ROOT/audioscripts/audio.sh t"
-    --cmd-media-stop  "$SCRIPT_ROOT/audioscripts/audio.sh !; pkill picom -SIGUSR1"
+    --cmd-media-stop  "$SCRIPT_ROOT/audioscripts/audio.sh !"
     --cmd-media-next  "$SCRIPT_ROOT/audioscripts/audio.sh j"
     --cmd-media-prev  "$SCRIPT_ROOT/audioscripts/audio.sh k"
-    --cmd-mic-mute  "pkill picom -SIGUSR1"
+    --cmd-mic-mute    "$SCRIPT_ROOT/audioscripts/audio.sh !"
 )
 
 # Run before starting the locker
@@ -52,6 +52,20 @@ prepare_lock() {
     killall rofi rofi-theme-selector dmenu 2>/dev/null || true
 }
 
+try_change_picom() {
+
+    if xset q | grep -q 'Monitor is On'; then
+        sed  '
+        /{{{'"$FENCE"'}}}/,/{{{\/'"$FENCE"'}}}/{
+            /{{{\/\?'"$FENCE"'}}}/b;s/^\(\s*\)\(\s*#\s\)*/\1/
+        }
+        /@include/d' \
+            "$PICOM_CONF" > "$PICOM_LOCK"
+    else
+        return 1
+    fi
+}
+
 # prepare actual locking after locking command executed
 postpare_lock() {
     if [ -f "/tmp/$USER/state/user_suspended" ] || [ -f "/tmp/$USER/state/user_hibernated" ]; then
@@ -61,24 +75,21 @@ postpare_lock() {
         touch "/tmp/$USER/state/system_sleeped"
     fi
     touch "/tmp/$USER/state/locked"
-    device dpms_on screen_off q notify_mode lock # always reset this once we're locking and turn off screen
-    touch "/tmp/$USER/state/screen_off"
+    device dpms_on q notify_mode lock # always reset this once we're locking and turn off screen
     local FENCE
     if [ -e "/tmp/$USER/lock_show_desktop_only" ]; then
         FENCE='LOCKED DESKTOP'
     else
         FENCE='LOCKED'
     fi
-    sed  '
-    /{{{'"$FENCE"'}}}/,/{{{\/'"$FENCE"'}}}/{
-        /{{{\/\?'"$FENCE"'}}}/b;s/^\(\s*\)\(\s*#\s\)*/\1/
-    }
-    /@include/d' \
-        "$PICOM_CONF" > "$PICOM_LOCK"
+    try_change_picom || ( while ! try_change_picom; do sleep 0.5; done; )& disown
+    BG_PICOM="$!"
+    device screen_off
 }
 
 # Run after the locker exits
 post_lock() {
+    kill "$BG_PICOM" || true
     echo '' > "$PICOM_LOCK"
     device q notify_mode restore # restore notification state
     [ -f "/tmp/$USER/state/user_suspended"  ] && rm "/tmp/$USER/state/user_suspended"
@@ -86,7 +97,6 @@ post_lock() {
     [ -f "/tmp/$USER/state/system_sleeped"  ] && rm "/tmp/$USER/state/system_sleeped"
     [ -f "/tmp/$USER/state/wokeup"          ] && rm "/tmp/$USER/state/wokeup"
     [ -f "/tmp/$USER/state/locked"          ] && rm "/tmp/$USER/state/locked"
-    [ -f "/tmp/$USER/state/locked"          ] && rm "/tmp/$USER/state/screen_off"
     return
 }
 

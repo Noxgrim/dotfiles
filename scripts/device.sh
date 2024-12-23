@@ -92,10 +92,6 @@ screen_save_untick() {
     if [ $TICKS -ge $SSV_DIM_TICKS ]; then
         call brightness restore 20&
     fi
-    if [ -f "/tmp/$USER/state/screen_off" ]; then
-        pkill -SIGUSR1 picom
-        rm "/tmp/$USER/state/screen_off"
-    fi
     echo "0" > "$TICK_FILE"
     wait
 }
@@ -133,9 +129,7 @@ screen_save_tick() {
                     -h "int:value:$((25*(SSV_OFF_TICKS-TICKS)))" "${NARGS[@]}"
             fi
         fi
-        if [ $TICKS -ge $SSV_OFF_TICKS ]; then
-            screen_off
-        elif [ $TICKS -ge $SSV_DIM_TICKS ]; then
+        if [ $TICKS -ge $SSV_DIM_TICKS ]; then
             if [ "$(call brightness get 2>&1 | cut -d@ -f2 | sort -n | tail -n1)" -gt 1 ]; then
                 call brightness save set 1 5000&
             fi
