@@ -118,13 +118,16 @@ if ! $typeit; then
     sel="${PASSWORD_STORE_X_SELECTION:-clipboard}"
     pass="$(xclip -o -selection "$sel")"
     #shellcheck disable=2001
-    sed 's/^\s*\([-0-9A-Za-z_ ]*\)\s*: //' <<< "$pass" | xclip -rmlastnl -selection "$sel"
-    unset pass
+    if [ "$line" -gt 2 ]; then
+        sed '/^\s*\(\([^:]*:[^ ]\)*[^:]*: .*\)//';
+    else cat;
+    fi <<< "$pass" | xclip -rmlastnl -selection "$sel"
 else
     delay=48 # in ms
     typecmd='\x00type\x00--clearmodifiers\x00--delay\x00'"$delay"'\x00'
     keycmd='\x00sleep\x00'"$(printf 'scale=3;%s/1000\n' "$delay"| bc)"'\x00key\x00--clearmodifiers\x00'
-    sed -n "$line"'{s/^\s*\(\([^:]*:[^ ]\)*[^:]*\): \?//;p}' <<< "$pass_content" |
+
+    sed -n "$line"'{3,$s/^\s*\(\([^:]*:[^ ]\)*[^:]*\): \?//;p}' <<< "$pass_content" |
         sed 's/[^`^´~]\+/'"$typecmd"'&/g
              s/\^/'"$keycmd"'asciicircum/g
              s/`/'"$keycmd"'grave/g
