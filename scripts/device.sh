@@ -408,7 +408,7 @@ print_possible_commands() {
         sed 's/[{+}]//g;s/|/\n/g' | grep -o '^\w*\s*' | sort
     printf '\n'
 
-    find "$HOME/.device_specific/actions/" "$SCRIPT_ROOT/actions"  -type f -executable -printf %f\\n |\
+    find "$HOME/.device_specific/actions/" "$SCRIPT_ROOT/actions"  -type f -not -iname '.*' -executable -printf %f\\n |\
         sed 's/\.sh$//g;s/^/action /' | sort -u
     printf '\n'
 
