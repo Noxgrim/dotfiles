@@ -719,10 +719,15 @@ while read -r C; do
             else
                 ((ARGS_START++))
             fi
-            [ "$VOLUME" -lt   0 ] && VOLUME=0
-            [ "$VOLUME" -gt 100 ] && VOLUME=100
+            case "$VOLUME" in
+                [+-]*);;
+                *)
+                    [ "$VOLUME" -gt 100 ] && VOLUME=100
+            esac
             $MPC volume "$VOLUME"
-            notify -a 'noxgrim:volume' -u low -h "int:value:$VOLUME"\
+            VOLUME="$(mpc status '%volume%')"
+            VOLUME="${VOLUME## }"
+            notify -a 'noxgrim:volume' -u low -h "int:value:${VOLUME%'%'}"\
                 "$PROVIDER volume " '%'
             ;;
         g)
