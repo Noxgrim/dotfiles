@@ -16,7 +16,7 @@ configuration {
 	display-window: "Window";
 	display-run: "Execute";
 	display-drun: "Activate";
-	kb-clear-line: "Control+c";
+	kb-clear-line: "Alt+c";
 	kb-move-front: "Home";
 	kb-move-end: "End";
 	kb-move-word-back: "Control+Left,Control+H";
