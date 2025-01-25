@@ -373,6 +373,7 @@ case "$1" in
             echo " rotate-no-pack MHDL1 <normal|left|right|inverted>"
             echo " reflect MHDL1 <normal|x|y|xy>"
         } >&2
+        exit 1
 esac
 
 CONNECTED_MONTORS_FILE="/tmp/$USER/connected_montors"
