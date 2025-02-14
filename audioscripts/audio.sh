@@ -221,14 +221,14 @@ del_phrase() {
                 ;;
             ,)
                 COUNT_REL="$DPOS"
-                COUNT_SGN=,
+                COUNT_SGN=-
                 ;;
         esac
         if [ -n "${BASH_REMATCH[3]}" ]; then
-            COUNT=""
+            BASH_REMATCH[3]="${BASH_REMATCH[3]}:"
         fi
-        LINE="$(pos_matching '' "${BASH_REMATCH[4]}" <<< "$DATA")"
-        RES="$LINE-"
+        LINE="$(pos_matching '' "${BASH_REMATCH[3]}${BASH_REMATCH[4]}" <<< "$DATA")"
+        RES="$RES$LINE-"
         COUNT="$OCOUNT" COUNT_REL="$((LINE+1))" COUNT_SGN="$OCOUNT_SGN"
     done < <(grep -o .<<<"$*"|sed -n '$!{/\\/{N;s/..//;H;b};/[^-]/{H;b};s/.//};$ H;x;s/\n\(.\)/\1/gp;s/.*//;x')
     echo "${RES:0:-1}"
