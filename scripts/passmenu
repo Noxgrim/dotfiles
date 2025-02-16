@@ -65,11 +65,13 @@ pass_content="$(pass show "$password")" || exit "$?"
 case "$password" in
     ssh/*)
         #shellcheck disable=2016
-        expect - -- \
-        "$(sed -n 's,\($HOME\|~\),'"$HOME"',g;2p' <<< "$pass_content")" \
-        "$(sed -n '1p' <<< "$pass_content")" << "EOF"
-        set file [lindex $argv 0]
-        set password [lindex $argv 1]
+        expect <(cat << "EOF"
+        set filefp [open [lindex $argv 0] r]
+        set passwordfp [open [lindex $argv 1] r]
+        set file [read $filefp]
+        set password [read $passwordfp]
+        close $filefp
+        close $passwordfp
         spawn ssh-add "$file"
         expect "Enter passphrase for $file:"
         send "$password\n"
@@ -77,8 +79,11 @@ case "$password" in
         wait
         close
 EOF
+) -- \
+        <(sed -n 's,\($HOME\|~\),'"$HOME"',g;2p' <<< "$pass_content" | tr -d '\n') \
+        <(sed -n '1p' <<< "$pass_content" | tr -d '\n')
     if ! $choose && [ -n "$select" ]; then
-        if pgrep '\<[s]sh\>' &>/dev/null; then
+        if pgrep '^ssh$' &>/dev/null; then
             select=1
         else
             increment
