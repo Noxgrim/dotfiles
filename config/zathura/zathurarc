@@ -1,3 +1,5 @@
 map <Space> navigate next
 map <S-Space> navigate previous
-database sqlite
+
+set database sqlite
+set selection-clipboard clipboard
