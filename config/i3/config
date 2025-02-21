@@ -345,7 +345,7 @@ client.background       $color_bgr
 # status bar and status bar controls
 bar {
         status_command i3blocks
-        position top
+        position bottom
         font pango:Source Code Pro for Powerline Nerd Font 9
         tray_output primary
         #tray_output LVDS-1-1
