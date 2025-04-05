@@ -82,7 +82,7 @@ EOF
 ) -- \
         <(sed -n 's,\($HOME\|~\),'"$HOME"',g;2p' <<< "$pass_content" | tr -d '\n') \
         <(sed -n '1p' <<< "$pass_content" | tr -d '\n')
-    if ! $choose && [ -n "$select" ]; then
+    if ! $choose && [ -z "$select" ]; then
         if pgrep '^ssh$' &>/dev/null; then
             select=1
         else
@@ -144,7 +144,7 @@ fi
 increment
 
 lastpassimp=${XDG_CACHE_DIR-$HOME/.cache}/passmenu-importantlast
-if [ -z "$(find "$lastpassimp" -mtime -7 -print)" ]; then
+if [ -z "$(find "$lastpassimp" -mtime -14 -print)" ]; then
     while read -r imp; do
         pinentry_commands="
 SETTITLE Password Reminder
