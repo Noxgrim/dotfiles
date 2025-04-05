@@ -193,8 +193,8 @@ bindsym $mod+Shift+s move container to scratchpad
 # toggle window borders [none > pixel 1 > normal > …]
 bindsym $mod+b border toggle
 
-# center floating window
-bindsym $mod+c move position center
+# center mouse and floating window
+bindsym $mod+c move position center, exec $scriptdir/device.sh mouse_center
 
 bindsym $mod+m exec $mscriptdir/rofi_audio.sh
 bindsym $mod+p exec            passmenu -t

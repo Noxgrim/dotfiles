@@ -1,7 +1,7 @@
 [global]
 
     monitor = 0
-    follow = mouse
+    follow = keyboard
     notification_limit = 5
     indicate_hidden = yes
     sort = yes

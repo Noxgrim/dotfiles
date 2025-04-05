@@ -816,6 +816,14 @@ call() {
                     xinput set-prop "$ID" "Device Enabled" "$SETTING"
                 done
                 ;;
+            mouse_center)
+                {
+                    # thanks, 5hir0kur0
+                    CURRENT_ID="$(xdotool getwindowfocus)"
+                    eval "$(xdotool getwindowgeometry --shell "$CURRENT_ID")"
+                    xdotool mousemove --window "$CURRENT_ID" "$((WIDTH / 2))" "$((HEIGHT / 2))"
+                }
+                ;;
             list_all_commands)
                 print_possible_commands | sed '/\<\(\(output\)\>.*\|volume\)\s\+$/d;/^\s*$/d'
                 ;;
@@ -888,7 +896,7 @@ call() {
             *) {
                 echo "Unknown command: $1"
                 echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 3ARGS|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|keyboard_on|keyboard_off|screen_save_untick}+"
+                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 3ARGS|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|mouse_center|keyboard_on|keyboard_off|screen_save_untick}+"
                 echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
                 echo "Usage: $0 schedule {<command>|'<commands>'}"
                 echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"

@@ -10,6 +10,7 @@ pgrep -u "$USER" redshift-gtk || redshift-gtk -l geoclue2 -t 6500K:2500K -b 1.0:
 pgrep -u "$USER" xss-lock     || xss-lock -l -- "$SCRIPT_ROOT/config/i3/lock.sh" & disown
 pgrep -u "$USER" nm-applet    || nm-applet &
 pgrep -u "$USER" -f 'browser_bridge_[s]erv.py' || "$SCRIPT_ROOT/browser/browser_bridge_serv.py" &
+pgrep -u "$USER" unclutter    || unclutter --timeout 1 --ignore-scrolling --jitter 50 --fork
 
 eval "$(grep '^SSV_\w*=' "$(which device)")"
 
