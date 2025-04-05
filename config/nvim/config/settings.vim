@@ -31,8 +31,6 @@ set listchars=tab:▸\ ,eol:¬,trail:\ ,precedes:↤,extends:↦
 set colorcolumn=81
 set cursorline "cursorcolumn
 
-" Toggle paste mode
-set pastetoggle=<F10>
 
 " Do not redraw when executing macros etc.
 set lazyredraw
@@ -101,6 +99,9 @@ if has('nvim')
     set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
       \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
       \,sm:block-blinkwait175-blinkoff150-blinkon175
+else
+    " Toggle paste mode
+    set pastetoggle=<F10>
 endif
 
 
