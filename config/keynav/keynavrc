@@ -9,51 +9,104 @@ j cut-down
 k cut-up
 h cut-left
 l cut-right
-shift+j move-down
-shift+k move-up
-shift+h move-left
-shift+l move-right
+shift+j move-down 0.5
+shift+k move-up 0.5
+shift+h move-left 0.5
+shift+l move-right 0.5
+ctrl+j move-down 100
+ctrl+k move-up 100
+ctrl+h move-left 100
+ctrl+l move-right 100
+ctrl+shift+j move-down 2
+ctrl+shift+k move-up 2
+ctrl+shift+h move-left 2
+ctrl+shift+l move-right 2
 Down cut-down
 Up cut-up
 Left cut-left
 Right cut-right
-shift+Down move-down
-shift+Up move-up
-shift+Left move-left
-shift+Right move-right
+shift+Down move-down 0.5
+shift+Up move-up 0.5
+shift+Left move-left 0.5
+shift+Right move-right 0.5
+ctrl+down move-down 100
+ctrl+up move-up 100
+ctrl+left move-left 100
+ctrl+right move-right 100
+ctrl+shift+down move-down 2
+ctrl+shift+up move-up 2
+ctrl+shift+left move-left 2
+ctrl+shift+right move-right 2
 
 i windowzoom
+shift+i cursorzoom 100x100
 m warp
 shift+m warp,end
-g grid-nav toggle
+y grid 2x2,grid-nav toggle
+shift+y grid 5x5,grid-nav toggle
+u history-back
 
 space warp,click 1,end
 shift+space warp,doubleclick 1,end
-c warp,click 3
-shift+c warp,double 3
-1 click 1
-shift+1 doubleclick 1
-2 click 3
-shift+2 double 3
-p click 4
-shift+p double 4
-n click 5
-shift+n double 5
 
-d drag 1
-shift+d drag 1 shift
-ctrl+d drag 1 ctrl
-alt+d drag 1 alt
-super+d drag 1 super
-shift+d drag 1 shift
-t drag 3
-shift+t drag 3 shift
-ctrl+t drag 3 ctrl
-alt+t drag 3 alt
-super+t drag 3 super
-shift+t drag 3 shift
+q warp,click 1
+shift+q warp,click 1
+ctrl+q warp,click 1
+alt+q warp,click 1
+super+q warp,click 1
+ctrl+shift+q warp,click 1
+w warp,click 2
+shift+w warp,click 2
+ctrl+w warp,click 2
+alt+w warp,click 2
+super+w warp,click 2
+ctrl+shift+w warp,click 2
+e warp,click 3
+shift+e warp,click 3
+ctrl+e warp,click 3
+alt+e warp,click 3
+super+e warp,click 3
+ctrl+shift+e warp,click 3
+r warp,click 4
+shift+r warp,click 4
+ctrl+r warp,click 4
+alt+r warp,click 4
+super+r warp,click 4
+ctrl+shift+r warp,click 4
+t warp,click 5
+shift+t warp,click 5
+ctrl+t warp,click 5
+alt+t warp,click 5
+super+t warp,click 5
+ctrl+shift+t warp,click 5
 
-u history-back
-
-q record ~/.cache/keynav_macros
-shift+q playback
+a drag 1
+shift+a drag 1 shift
+ctrl+a drag 1 ctrl
+alt+a drag 1 alt
+super+a drag 1 super
+ctrl+shift+a drag 1 ctrl+shift
+s drag 2
+shift+s drag 2 shift
+ctrl+s drag 2 ctrl
+alt+s drag 2 alt
+super+s drag 2 super
+ctrl+shift+s drag 2 ctrl+shift
+d drag 3
+shift+d drag 3 shift
+ctrl+d drag 3 ctrl
+alt+d drag 3 alt
+super+d drag 3 super
+ctrl+shift+d drag 3 ctrl+shift
+f drag 4
+shift+f drag 4 shift
+ctrl+f drag 4 ctrl
+alt+f drag 4 alt
+super+f drag 4 super
+ctrl+shift+f drag 4 ctrl+shift
+g drag 5
+shift+g drag 5 shift
+ctrl+g drag 5 ctrl
+alt+g drag 5 alt
+super+g drag 5 super
+ctrl+shift+g drag 5 ctrl+shift
