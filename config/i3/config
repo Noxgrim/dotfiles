@@ -26,8 +26,8 @@ focus_follows_mouse no
 floating_modifier $mod
 
 # Terminal
-bindsym $mod+Return exec --no-startup-id $i3dir/terminal.sh tmux new -session -As0
-bindsym $mod+Shift+Return exec --no-startup-id $i3dir/terminal.sh
+bindsym $mod+Return exec --no-startup-id $scriptdir/terminal.sh tmux new -session -As0
+bindsym $mod+Shift+Return exec --no-startup-id $scriptdir/terminal.sh
 
 # kill focused window
 bindsym $mod+Shift+q kill
