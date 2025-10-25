@@ -207,9 +207,9 @@ bindsym $mod+Shift+Ctrl+p exec passmenu    -s
 bindsym $mod+Mod1+p exec       passmenu -t -s 1
 bindsym $mod+Shift+Mod1+p exec passmenu    -s 1
 
-set $device device [+][x][sSlLhHrF][mMnN]❖[dh]❖[se] ❖[rR]
-set $force device.force [SRL[xc]]
-set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
+set $device device [+][x][sSlLhHrF][mMnN]❖[dh]❖[se] ❖[rR]
+set $force device.force [SRL[xc]]
+set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
 bindsym $mod+Shift+x mode "$device"
 mode "$device" {
         # power control

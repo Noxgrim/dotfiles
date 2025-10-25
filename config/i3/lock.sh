@@ -92,11 +92,11 @@ post_lock() {
     kill "$BG_PICOM" || true
     echo '' > "$PICOM_LOCK"
     device q notify_mode restore # restore notification state
-    [ -f "/tmp/$USER/state/user_suspended"  ] && rm "/tmp/$USER/state/user_suspended"
-    [ -f "/tmp/$USER/state/user_hibernated" ] && rm "/tmp/$USER/state/user_hibernated"
-    [ -f "/tmp/$USER/state/system_sleeped"  ] && rm "/tmp/$USER/state/system_sleeped"
-    [ -f "/tmp/$USER/state/wokeup"          ] && rm "/tmp/$USER/state/wokeup"
-    [ -f "/tmp/$USER/state/locked"          ] && rm "/tmp/$USER/state/locked"
+    rm -f "/tmp/$USER/state/user_suspended"
+    rm -f "/tmp/$USER/state/user_hibernated"
+    rm -f "/tmp/$USER/state/system_sleeped"
+    rm -f "/tmp/$USER/state/wokeup"
+    rm -f "/tmp/$USER/state/locked"
     return
 }
 
