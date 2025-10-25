@@ -1,41 +1,26 @@
-send() {
-    if pkill -u "$USER" 'xbindkeys'; then
-        # I don't know why I have to sleep here but otherwise it won't work
-        # consistently
-        xdotool sleep 0.2 key --clearmodifiers "$1"
-        xbindkeys
-    fi
-}
+#!/usr/bin/env bash
+set -euo pipefail -x
+IFS=$'\n\t'
 
 case "$1" in
-    close)
-        if [ "$(dunstctl count displayed)" -gt 0 ]; then
-            dunstctl close
-        else
-            send 'alt+space'
-        fi
-        ;;
-    close-all)
-        if [ "$(dunstctl count displayed)" -gt 0 ]; then
-            dunstctl close-all
-        else
-            send 'alt+shift+space'
-        fi
-        ;;
-    history-pop)
-        if [ "$(dunstctl count history)" -gt 0 ]; then
-            dunstctl history-pop
-        else
-            send 'alt+period'
-        fi
-        ;;
-    context)
-        if [ "$(dunstctl count displayed)" -gt 0 ]; then
-            dunstctl context
-        else
-            send 'alt+shift+period'
-        fi
-        ;;
-    *)
-        echo "Expected close, close-all, history-pop, context here"
+  close)
+    if [ "$(dunstctl count displayed)" = 0 ]; then
+      i3-msg focus mode_toggle
+    else
+      dunstctl close
+    fi
+    ;;
+  close-all)
+    if [ "$(dunstctl count displayed)" = 0 ]; then
+      i3-msg floating toggle
+    else
+      dunstctl close-all
+    fi
+    ;;
+  context)
+    dunstctl context
+    ;;
+  history)
+    dunstctl history-pop
+    ;;
 esac

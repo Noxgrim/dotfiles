@@ -22,7 +22,16 @@ font pango:Source Code Pro for Powerline 10
 # some i3 settings
 focus_follows_mouse no
 
-# Use Mouse+$mod to drag floating windows to their wanted position
+# dunst OR toggle tiling / floating
+bindsym $mod+Shift+space exec $scriptdir/dunstctl.sh close-all
+
+# dunst OR change focus between tiling / floating windows
+bindsym $mod+space exec $scriptdir/dunstctl.sh close
+
+# dunst
+bindsym $mod+period       exec $scriptdir/dunstctl.sh history
+bindsym $mod+Shift+period exec $scriptdir/dunstctl.sh context
+
 floating_modifier $mod
 
 # Terminal
@@ -76,12 +85,6 @@ bindsym $mod+f fullscreen
 bindsym $mod+t       layout tabbed
 bindsym $mod+Shift+t layout stacking
 bindsym $mod+e       layout toggle split
-
-# toggle tiling / floating
-bindsym $mod+Shift+space floating toggle
-
-# change focus between tiling / floating windows
-bindsym $mod+space focus mode_toggle
 
 # toggle sticky window (it's like glue, you know?)
 bindsym $mod+g sticky toggle
