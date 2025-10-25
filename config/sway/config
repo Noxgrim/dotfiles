@@ -1,0 +1,457 @@
+# some variables
+set $mod Mod4
+set $ws1   1
+set $ws2   2
+set $ws3   3
+set $ws4   4
+set $ws5   5
+set $ws6   6
+set $ws7   7
+set $ws8   8
+set $ws9   9
+set $ws10 10
+
+set $i3dir $SCRIPT_ROOT/config/sway
+set $hack $SCRIPT_ROOT/config/sway/hacks.sh
+set $i3dirdev $SCRIPT_ROOT/data/current/config/sway
+set $tmpdir /tmp/$USER/sway
+set $scriptdir $SCRIPT_ROOT/scripts
+set $mscriptdir $SCRIPT_ROOT/audioscripts
+
+# Set font (to nothing because we have window title in bar)
+font pango:SauceCodePro Nerd Font Mono 0.001
+
+
+include "input.sway"
+include "output.sway"
+
+
+# some i3 settings
+focus_follows_mouse no
+default_border pixel 3
+
+gaps inner 8
+gaps outer 5
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# Terminal
+bindsym $mod+Return exec --no-startup-id $scriptdir/terminal.sh tmux new -session -As0
+bindsym $mod+Shift+Return exec --no-startup-id $scriptdir/terminal.sh
+
+# kill focused window
+bindsym $mod+Shift+q kill
+
+# start rofi
+bindsym $mod+Shift+d          exec --no-startup-id  rofi -show run
+bindsym $mod+d                exec --no-startup-id  rofi -show drun
+
+bindsym $mod+q                exec --no-startup-id  swayr quit-window
+bindsym $mod+Backspace        exec --no-startup-id  swayr quit-window
+bindsym $mod+Shift+Backspace  exec --no-startup-id  swayr quit-window -k
+
+# change focus
+bindsym $mod+h     focus left
+bindsym $mod+j     focus down
+bindsym $mod+k     focus up
+bindsym $mod+l     focus right
+bindsym $mod+Left  focus left
+bindsym $mod+Down  focus down
+bindsym $mod+Up    focus up
+bindsym $mod+Right focus right
+
+# move focused window
+bindsym $mod+Shift+h     move left
+bindsym $mod+Shift+j     move down
+bindsym $mod+Shift+k     move up
+bindsym $mod+Shift+l     move right
+bindsym $mod+Shift+Left  move left
+bindsym $mod+Shift+Down  move down
+bindsym $mod+Shift+Up    move up
+bindsym $mod+Shift+Right move right
+
+bindsym $mod+w                exec --no-startup-id  swayr switch-window
+bindsym $mod+Shift+w          exec --no-startup-id  swayr steal-window
+bindsym $mod+Mod1+Shift+w     exec --no-startup-id  swayr "move-focused-to"
+bindsym $mod+Tab              exec --no-startup-id  swayr "switch-to-urgent-or-lru-window" --skip-urgent
+bindsym $mod+u                exec --no-startup-id  swayr "switch-to-urgent-or-lru-window"
+bindsym $mod+Shift+Tab        exec --no-startup-id  swayr "swap-focused-with"
+bindsym Mod1+Tab              workspace back_and_forth
+bindsym Mod1+Shift+Tab        move container to workspace back_and_forth
+
+# split in horizontal orientation
+bindsym $mod+Ctrl+l     split h
+bindsym $mod+Ctrl+h     split h
+bindsym $mod+Ctrl+Right split h
+bindsym $mod+Ctrl+Left  split h
+
+# split in vertical orientation
+bindsym $mod+Ctrl+j     split v
+bindsym $mod+Ctrl+k     split v
+bindsym $mod+Ctrl+Down  split v
+bindsym $mod+Ctrl+Up    split v
+
+# enter fullscreen mode for the focused container
+bindsym $mod+f fullscreen
+
+# change container layout (stacked, tabbed, toggle split)
+bindsym $mod+t       layout tabbed
+bindsym $mod+Shift+t layout stacking
+bindsym $mod+e       layout toggle split
+
+# dunst OR toggle tiling / floating
+bindsym $mod+Shift+space exec --no-startup-id $scriptdir/dunstctl.sh close-all
+
+# dunst OR change focus between tiling / floating windows
+bindsym $mod+space exec --no-startup-id $scriptdir/dunstctl.sh close
+
+# dunst
+bindsym $mod+period       exec --no-startup-id $scriptdir/dunstctl.sh history
+bindsym $mod+Shift+period exec --no-startup-id $scriptdir/dunstctl.sh context
+
+# toggle sticky window (it's like glue, you know?)
+bindsym $mod+g sticky toggle
+
+# focus the parent or child container
+bindsym $mod+a       focus parent
+bindsym $mod+Shift+a focus child
+
+# switch to workspace
+bindsym $mod+1   workspace $ws1
+bindsym $mod+2   workspace $ws2
+bindsym $mod+3   workspace $ws3
+bindsym $mod+4   workspace $ws4
+bindsym $mod+5   workspace $ws5
+bindsym $mod+6   workspace $ws6
+bindsym $mod+7   workspace $ws7
+bindsym $mod+8   workspace $ws8
+bindsym $mod+9   workspace $ws9
+bindsym $mod+0   workspace $ws10
+
+# move focused container to workspace
+bindsym $mod+Shift+1   move container to workspace $ws1
+bindsym $mod+Shift+2   move container to workspace $ws2
+bindsym $mod+Shift+3   move container to workspace $ws3
+bindsym $mod+Shift+4   move container to workspace $ws4
+bindsym $mod+Shift+5   move container to workspace $ws5
+bindsym $mod+Shift+6   move container to workspace $ws6
+bindsym $mod+Shift+7   move container to workspace $ws7
+bindsym $mod+Shift+8   move container to workspace $ws8
+bindsym $mod+Shift+9   move container to workspace $ws9
+bindsym $mod+Shift+0   move container to workspace $ws10
+#
+# move focused container to workspace and switch to it
+bindsym $mod+Shift+Ctrl+1   move container to workspace $ws1,           workspace $ws1
+bindsym $mod+Shift+Ctrl+2   move container to workspace $ws2,           workspace $ws2
+bindsym $mod+Shift+Ctrl+3   move container to workspace $ws3,           workspace $ws3
+bindsym $mod+Shift+Ctrl+4   move container to workspace $ws4,           workspace $ws4
+bindsym $mod+Shift+Ctrl+5   move container to workspace $ws5,           workspace $ws5
+bindsym $mod+Shift+Ctrl+6   move container to workspace $ws6,           workspace $ws6
+bindsym $mod+Shift+Ctrl+7   move container to workspace $ws7,           workspace $ws7
+bindsym $mod+Shift+Ctrl+8   move container to workspace $ws8,           workspace $ws8
+bindsym $mod+Shift+Ctrl+9   move container to workspace $ws9,           workspace $ws9
+bindsym $mod+Shift+Ctrl+0   move container to workspace $ws10,          workspace $ws10
+bindsym $mod+Shift+Ctrl+Tab move container to workspace back_and_forth, workspace back_and_forth
+
+# move workspace to different output
+bindsym $mod+Mod1+l     move workspace to output right
+bindsym $mod+Mod1+h     move workspace to output left
+bindsym $mod+Mod1+j     move workspace to output down
+bindsym $mod+Mod1+k     move workspace to output up
+bindsym $mod+Mod1+Right move workspace to output right
+bindsym $mod+Mod1+Left  move workspace to output left
+bindsym $mod+Mod1+Down  move workspace to output down
+bindsym $mod+Mod1+Up    move workspace to output up
+
+# quick output control
+bindsym $mod+Ctrl+Mod1+l           exec $scriptdir/device.sh output rotate . left
+bindsym $mod+Ctrl+Mod1+h           exec $scriptdir/device.sh output rotate . right
+bindsym $mod+Ctrl+Mod1+j           exec $scriptdir/device.sh output rotate . normal
+bindsym $mod+Ctrl+Mod1+k           exec $scriptdir/device.sh output rotate . inverted
+bindsym $mod+Ctrl+Mod1+Right       exec $scriptdir/device.sh output rotate . left
+bindsym $mod+Ctrl+Mod1+Left        exec $scriptdir/device.sh output rotate . right
+bindsym $mod+Ctrl+Mod1+Down        exec $scriptdir/device.sh output rotate . normal
+bindsym $mod+Ctrl+Mod1+Up          exec $scriptdir/device.sh output rotate . inverted
+bindsym $mod+Ctrl+Mod1+Shift+l     exec $scriptdir/device.sh output mirror . normal
+bindsym $mod+Ctrl+Mod1+Shift+h     exec $scriptdir/device.sh output mirror . x
+bindsym $mod+Ctrl+Mod1+Shift+j     exec $scriptdir/device.sh output mirror . normal
+bindsym $mod+Ctrl+Mod1+Shift+k     exec $scriptdir/device.sh output mirror . y
+bindsym $mod+Ctrl+Mod1+Shift+Right exec $scriptdir/device.sh output mirror . normal
+bindsym $mod+Ctrl+Mod1+Shift+Left  exec $scriptdir/device.sh output mirror . x
+bindsym $mod+Ctrl+Mod1+Shift+Down  exec $scriptdir/device.sh output mirror . normal
+bindsym $mod+Ctrl+Mod1+Shift+Up    exec $scriptdir/device.sh output mirror . y
+
+bindsym $mod+Ctrl+Mod1+1 exec $scriptdir/device.sh output toggle 1
+bindsym $mod+Ctrl+Mod1+2 exec $scriptdir/device.sh output toggle 2
+bindsym $mod+Ctrl+Mod1+3 exec $scriptdir/device.sh output toggle 3
+bindsym $mod+Ctrl+Mod1+4 exec $scriptdir/device.sh output toggle 4
+bindsym $mod+Ctrl+Mod1+5 exec $scriptdir/device.sh output toggle 5
+bindsym $mod+Ctrl+Mod1+6 exec $scriptdir/device.sh output toggle 6
+bindsym $mod+Ctrl+Mod1+7 exec $scriptdir/device.sh output toggle 7
+bindsym $mod+Ctrl+Mod1+8 exec $scriptdir/device.sh output toggle 8
+bindsym $mod+Ctrl+Mod1+9 exec $scriptdir/device.sh output toggle 9
+bindsym $mod+Ctrl+Mod1+0 exec $scriptdir/device.sh output toggle 10
+bindsym $mod+Ctrl+Mod1+x exec $scriptdir/device.sh output off    .
+bindsym $mod+Ctrl+Mod1+o exec $scriptdir/device.sh output on     . #This is a little bit nonsensical
+bindsym $mod+Ctrl+Mod1+t exec $scriptdir/device.sh output toggle .
+bindsym $mod+Ctrl+Mod1+b exec $scriptdir/device.sh           brightness reset   '' '' notify
+bindsym $mod+Ctrl+Mod1+r exec $scriptdir/device.sh           brightness restore '' '' notify
+bindsym $mod+Ctrl+Mod1+plus        exec $scriptdir/device.sh brightness inc 10  '' '' notify
+bindsym $mod+Ctrl+Mod1+minus       exec $scriptdir/device.sh brightness dec 10  '' '' notify
+bindsym $mod+Ctrl+Mod1+Shift+plus  exec $scriptdir/device.sh brightness inc  1  '' '' notify
+bindsym $mod+Ctrl+Mod1+Shift+minus exec $scriptdir/device.sh brightness dec  1  '' '' notify
+
+bindsym $mod+Ctrl+Mod1+d       exec $scriptdir/device.sh output default
+bindsym $mod+Ctrl+Mod1+a       exec $scriptdir/device.sh output all-on
+bindsym $mod+Ctrl+Mod1+p       exec $scriptdir/device.sh output primary .
+bindsym $mod+Ctrl+Mod1+w       exec $scriptdir/device.sh wallpaper_arg ''
+bindsym $mod+Ctrl+Mod1+Shift+w exec $scriptdir/device.sh wallpaper
+bindsym $mod+Ctrl+Mod1+Shift+p exec $scriptdir/device.sh output pack
+
+
+# scratch pad
+bindsym $mod+s       scratchpad show
+bindsym $mod+Shift+s move container to scratchpad
+
+
+# toggle window borders [none > pixel 1 > normal > …]
+bindsym $mod+b border pixel
+bindsym $mod+Shift+b border normal
+
+# center mouse and floating window
+bindsym $mod+c move position center, exec $scriptdir/device.sh mouse_center
+bindsym $mod+Shift+c move position center, resize set 43 ppt 57 ppt, exec $scriptdir/device.sh mouse_center
+
+bindsym $mod+m exec $mscriptdir/rofi_audio.sh
+bindsym $mod+p exec            passmenu -t
+bindsym $mod+Shift+p exec      passmenu
+bindsym $mod+Ctrl+p exec       passmenu -t -s
+bindsym $mod+Shift+Ctrl+p exec passmenu    -s
+bindsym $mod+Mod1+p exec       passmenu -t -s 1
+bindsym $mod+Shift+Mod1+p exec passmenu    -s 1
+
+set $device device [+][x][sSlLhHrF][mMnN]❖[dh]❖[se] ❖[r]
+set $force device.force [SRL[xc]]
+set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
+bindsym --locked $mod+Shift+x mode "$device"
+mode "$device" {
+        # power control
+        bindsym Shift+l exec $scriptdir/device.sh logout,          mode "default"
+        bindsym --locked l       exec $scriptdir/device.sh screen_off,      mode "default"
+        bindsym s       exec $scriptdir/device.sh shutdown,        mode "default"
+        bindsym --locked Shift+s exec $scriptdir/device.sh suspend,         mode "default"
+        bindsym --locked h       exec $scriptdir/device.sh hibernate,       mode "default"
+        bindsym --locked Shift+h exec $scriptdir/device.sh hybrid,          mode "default"
+        bindsym r       exec $scriptdir/device.sh reboot,          mode "default"
+
+        bindsym n       exec $scriptdir/device.sh notify,          mode "default"
+        bindsym Shift+n exec $scriptdir/device.sh notify_mode all, mode "default"
+
+        bindsym --locked $mod+s  exec $scriptdir/device.sh screen_off,      mode "default"
+        bindsym $mod+e  exec $scriptdir/device.sh dpms_toggle,     mode "default"
+
+        # mouse
+        bindsym m       exec $scriptdir/device.sh mouse_off,       mode "default"
+        bindsym Shift+m exec $scriptdir/device.sh mouse_on,        mode "default"
+
+        bindsym x       exec $scriptdir/device.sh execute_what,    mode "default"
+
+        # bar
+        bindsym $mod+d  bar mode dock, mode "default"
+        bindsym $mod+h  bar mode hide, mode "default"
+
+        # reload the configuration file or reset sway
+        bindsym $mod+r       reload
+
+
+        bindsym $mod+Shift+s  exec $scriptdir/device.sh schedule_in 1h suspend,   mode "default"
+        bindsym $mod+Ctrl+s   exec $scriptdir/device.sh schedule_in 2h suspend,   mode "default"
+        bindsym $mod+Shift+h  exec $scriptdir/device.sh schedule_in 1h hibernate, mode "default"
+        bindsym $mod+Ctrl+h   exec $scriptdir/device.sh schedule_in 2h hibernate, mode "default"
+
+
+        bindsym Shift+f mode "$force"
+        bindsym plus    mode "$schedule"
+        bindsym --locked Return  mode "default"
+        bindsym --locked Escape  mode "default"
+
+}
+mode "$force" {
+        bindsym Shift+l exec $scriptdir/device.sh logout_force,     mode "default"
+        bindsym Shift+s exec $scriptdir/device.sh shutdown_force,   mode "default"
+        bindsym Shift+r exec $scriptdir/device.sh reboot_force,     mode "default"
+
+        bindsym x  exec killall i3-nagbar,     mode "$device"
+        bindsym c  exec killall i3-nagbar,     mode "$device"
+
+        bindsym Escape mode "$device"
+}
+mode "$schedule" {
+        # power control
+        bindsym Shift+l exec $scriptdir/device.sh schedule "logout",          mode "default"
+        bindsym l       exec $scriptdir/device.sh schedule "screen_off",      mode "default"
+        bindsym s       exec $scriptdir/device.sh schedule "shutdown",        mode "default"
+        bindsym Shift+s exec $scriptdir/device.sh schedule "suspend",         mode "default"
+        bindsym h       exec $scriptdir/device.sh schedule "hibernate",       mode "default"
+        bindsym Shift+h exec $scriptdir/device.sh schedule "hybrid",          mode "default"
+        bindsym r       exec $scriptdir/device.sh schedule "reboot",          mode "default"
+
+        bindsym n       exec $scriptdir/device.sh schedule "notify",          mode "default"
+        bindsym Shift+n exec $scriptdir/device.sh schedule "notify_mode all", mode "default"
+
+        bindsym $mod+s  exec $scriptdir/device.sh schedule "screen_off",      mode "default"
+        bindsym $mod+e  exec $scriptdir/device.sh schedule "dpms_toggle",     mode "default"
+
+        # mouse
+        bindsym m       exec $scriptdir/device.sh schedule "mouse_off",       mode "default"
+        bindsym Shift+m exec $scriptdir/device.sh schedule "mouse_on",        mode "default"
+
+        bindsym plus    exec $scriptdir/device.sh schedule_what,              mode "default"
+        bindsym x       exec $scriptdir/device.sh schedule "execute_what",    mode "default"
+
+        bindsym Return  mode "$device"
+        bindsym Escape  mode "$device"
+}
+
+# rsize mode
+bindsym $mod+r mode "resize"
+mode "resize" {
+        # resizing
+        bindsym h           resize shrink width  10 px or 10 ppt
+        bindsym j           resize grow   height 10 px or 10 ppt
+        bindsym k           resize shrink height 10 px or 10 ppt
+        bindsym l           resize grow   width  10 px or 10 ppt
+        bindsym Left        resize shrink width  10 px or 10 ppt
+        bindsym Down        resize grow   height 10 px or 10 ppt
+        bindsym Up          resize shrink height 10 px or 10 ppt
+        bindsym Right       resize grow   width  10 px or 10 ppt
+
+        # resizing more precisely
+        bindsym Shift+h     resize shrink width   1 px or  1 ppt
+        bindsym Shift+j     resize grow   height  1 px or  1 ppt
+        bindsym Shift+k     resize shrink height  1 px or  1 ppt
+        bindsym Shift+l     resize grow   width   1 px or  1 ppt
+        bindsym Shift+Left  resize shrink width   1 px or  1 ppt
+        bindsym Shift+Down  resize grow   height  1 px or  1 ppt
+        bindsym Shift+Up    resize shrink height  1 px or  1 ppt
+        bindsym Shift+Right resize grow   width   1 px or  1 ppt
+
+        bindsym g           gaps inner all plus 5, gaps outer all plus 5
+        bindsym Shift+g     gaps inner all minus 5, gaps outer all minus 5
+        bindsym i           gaps inner all plus 5
+        bindsym Shift+i     gaps inner all minus 5
+        bindsym o           gaps outer all plus 5
+        bindsym Shift+o     gaps outer all minus 5
+
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+}
+
+# Colors
+set $color_foc_bdr #003d99
+set $color_foc_txt #669fff
+set $color_foc_ind #3e0955
+
+set $color_fia_bdr #001433
+set $color_fia_txt #667a99
+set $color_fia_ind #2a023b
+
+set $color_unf_bdr #000a1a
+set $color_unf_txt #666f7f
+set $color_unf_ind #180122
+
+set $color_urg_bdr #e89200
+set $color_urg_txt #f9e88e
+set $color_urg_ind #ffefa5
+
+set $color_bgr     #ffffff
+
+# class                 border         backgr.        text           indicator
+client.focused          $color_foc_bdr $color_foc_bdr $color_foc_txt $color_foc_ind
+client.focused_inactive $color_fia_bdr $color_fia_bdr $color_fia_txt $color_fia_ind
+client.unfocused        $color_unf_bdr $color_unf_bdr $color_unf_txt $color_unf_ind
+client.urgent           $color_urg_bdr $color_urg_bdr $color_urg_txt $color_urg_ind
+
+client.background       $color_bgr
+
+# status bar and status bar controls
+bar {
+        swaybar_command waybar
+        position bottom
+        font pango:SauceCodePro Nerd Font Mono 9
+        tray_bindsym button1 Activate
+        tray_bindsym button3 ContextMenu
+
+
+        mode hide
+
+        colors {
+            separator              $color_unf_txt
+            background             $color_unf_bdr
+            statusline             $color_foc_txt
+          # class                  border         background    text
+            focused_workspace      $color_foc_txt $color_foc_bdr $color_foc_txt
+            active_workspace       $color_fia_bdr $color_fia_bdr $color_fia_txt
+            inactive_workspace     $color_unf_bdr $color_unf_bdr $color_unf_txt
+            urgent_workspace       $color_urg_txt $color_urg_bdr $color_urg_txt
+            binding_mode           $color_urg_txt $color_urg_bdr $color_urg_txt
+        }
+}
+
+set $mouse mouse [yYaA]→[sdfxc] [jkhl]
+mode "$mouse" {
+    bindsym --to-code y mode default, exec 'wl-kbptr-sway-active-win; swaymsg mode mouse'
+    bindsym --to-code Shift+y mode default, exec 'wl-kbptr; swaymsg mode mouse'
+    bindsym --to-code a mode default, exec 'wl-kbptr-sway-active-win; swaymsg mode mouse'
+    bindsym --to-code Shift+a mode default, exec 'wl-kbptr; swaymsg mode mouse'
+
+    # Mouse move
+    bindsym h seat - cursor move -15 0
+    bindsym j seat - cursor move 0 15
+    bindsym k seat - cursor move 0 -15
+    bindsym l seat - cursor move 15 0
+
+    # Mouse move
+    bindsym shift+h seat - cursor move -1 0
+    bindsym shift+j seat - cursor move 0 1
+    bindsym shift+k seat - cursor move 0 -1
+    bindsym shift+l seat - cursor move 1 0
+
+    # Left button
+    bindsym s seat - cursor press button1
+    bindsym --release s seat - cursor release button1
+
+    # Middle button
+    bindsym d seat - cursor press button2
+    bindsym --release d seat - cursor release button2
+
+    # Right button
+    bindsym f seat - cursor press button3
+    bindsym --release f seat - cursor release button3
+
+    # Scroll up
+    bindsym x seat - cursor press button5, seat - cursor press button5, seat - cursor press button5, seat - cursor press button5, seat - cursor press button5, seat - cursor press button5
+
+    # Scroll donw
+    bindsym c seat - cursor press button4, seat - cursor press button4, seat - cursor press button4, seat - cursor press button4, seat - cursor press button4, seat - cursor press button4
+
+    bindsym Escape exec $scriptdir/device.sh _mouse_mode exit, mode default
+}
+
+bindsym --to-code $mod+y exec "$scriptdir/device.sh _mouse_mode enter; wl-kbptr-sway-active-win -o modes=floating -o mode_floating.source=detect | grep -q . && swaymsg seat - cursor press button1 && swaymsg seat - cursor release button1; $scriptdir/device.sh _mouse_mode exit"
+bindsym --to-code $mod+Shift+y exec $scriptdir/device.sh _mouse_mode enter, mode "$mouse"
+
+
+include "mediactl.sway"
+
+
+# window specific settings
+for_window [app_id="terminal"] border pixel 1
+for_window [app_id="Pinentry"] floating enable
+for_window [app_id="noxgrim_messengers"] move container to scratchpad
+for_window [app_id="Element"] move container to scratchpad
+
+
+# setup environment
+exec_always --no-startup-id $i3dir/environment.sh
