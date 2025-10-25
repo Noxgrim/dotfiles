@@ -18,6 +18,7 @@ BLOCKING=false
 EMPTY_EXECUTE=( 't' )
 
 source "$SCRIPT_ROOT/scripts/notify.sh"
+cd "$MUSIC_DIR" || exit # some commands assume this is the PWD
 
 if [ ! -d "$AU_DIR" ]; then
     mkdir -p "$AU_DIR"
@@ -259,16 +260,16 @@ clean_html() {
 }
 fetch_icon() {
     rm "$AU_DIR/current_cover" -f
-    if mpc readpicture "$1" > "$AU_DIR/current_cover"; then
+    if ! mpc -q readpicture "$1" 2>&1 > "$AU_DIR/current_cover" | grep -Iq .; then
         return
-    elif mpc albumart "$1" > "$AU_DIR/current_cover"; then
+    elif ! mpc -q albumart  "$1" 2>&1 > "$AU_DIR/current_cover" | grep -Iq .; then
         return
     else
         rm "$AU_DIR/current_cover" -f
         # fallback
         local FILE
         FILE="$(clean_output <<< "$1")" DIR="${FILE%/*}"
-        local FILE_REGEX='./\(cover\|folder\|titel\|album.*\).\(png\|jpe?g\|bmp\)'
+        local FILE_REGEX='.*/\(cover\|folder\|titel\|album.*\).\(png\|jpe?g\|bmp\)'
         shopt -s nullglob
         if [ -f "$DIR/.cover_mpd.png" ]; then
             ln -sfr "$DIR/.cover_mpd.png" "$AU_DIR/current_cover"
@@ -279,12 +280,12 @@ fetch_icon() {
         local UNSORTED
         UNSORTED="$(find "$DIR" -maxdepth 1 -iregex "$FILE_REGEX" )"
         if [ -n "$UNSORTED" ]; then
-            FILE="$(grep  -iEm 1 'cover.(png|jpe?g)$' <<< "$UNSORTED")"
-            [ -z "$FILE" ] && FILE="$(grep  -ivEm 1 'cover.(png|jpe?g)$' <<< "$UNSORTED")"
+            FILE="$(grep  -iEm 1 '/cover.(png|jpe?g)$' <<< "$UNSORTED")"
+            [ -z "$FILE" ] && FILE="$(grep  -ivEm 1 '/cover.(png|jpe?g)$' <<< "$UNSORTED")"
         else
-            FILE="$(find "$DIR" \( -iname '*.mp3' -o -iname '*.ogg' -o -iname '*.flac' -o -iname '*.wav' -o -iname '*.wma' \) -print0 | head -zn1 )"
+            FILE="$(find "$DIR" \( -iname '*.mp3' -o -iname '*.ogg' -o -iname '*.flac' -o -iname '*.wav' -o -iname '*.wma' \) -print0 | head -zn1 | tr -d '\0')"
         fi
-        if ffmpeg -i "$FILE" -vf scale="$ICON_RES" ".cover_mpd.png" &> /dev/null; then
+        if ffmpeg -i "$FILE" -vf scale="$ICON_RES" "$DIR/.cover_mpd.png" ; then
             ln -sfr "$DIR/.cover_mpd.png" "$AU_DIR/current_cover"
         else
             touch "$DIR/.no_cover_found"
