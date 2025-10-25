@@ -14,6 +14,12 @@ QUIET=false
 # shellcheck disable=SC1091
 source "$TDIR/notify.sh"
 
+if  [ "$XDG_SESSION_TYPE" = wayland ]; then
+    XORG=false
+else
+    XORG=true
+fi
+
 # the ugliest implementation of join you have ever seen...
 join_comma() {
     printf ', %s' "$@" | cut -c3-
@@ -59,22 +65,34 @@ reset_usb() {
 
 
 should_screen_save() {
+    # 0: yes  1: no
     if [ -e "/tmp/$USER/state/wokeup" ] && [ -e "/tmp/$USER/state/locked" ]; then
         return 0
     fi
     if [ "$(loginctl show-session --property=PreparingForSleep | cut -d= -f2)" == 'yes' ]; then
         return 1
     fi
-    if ! xset q | grep -q "DPMS is Enabled"; then
-        return 1
+    if $XORG; then
+        if ! xset q | grep -q "DPMS is Enabled"; then
+            return 1
+        fi
+        if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin -1 | read -r; then
+            # reset screen saver
+            xset dpms 0 0 0
+            local OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS+10))"
+            xset dpms "$OFFSEC" "$OFFSEC" "$OFFSEC"
+            return 1
+        fi
+    else # WAYLAND
+        if [ -f "/tmp/$USER/ssuspend/custom" ]; then
+            return 1
+        fi
+        if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin -1 | read -r; then
+            # reset screen saver
+            return 1
+        fi
     fi
-    if [ -d "/tmp/$USER/ssuspend" ] && find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin -1 | read -r; then
-        xset dpms 0 0 0
-        local OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS+10))"
-        xset dpms "$OFFSEC" "$OFFSEC" "$OFFSEC"
-        return 1
-    fi
-    find "/tmp/$USER/ssuspend" -mindepth 1 -maxdepth 1 -amin +1 -delete
+    find "/tmp/$USER/ssuspend" -not -iname 'custom' -mindepth 1 -maxdepth 1 -amin +1 -delete
     return 0
 }
 
@@ -93,6 +111,9 @@ screen_save_untick() {
     if [ $TICKS -ge $SSV_DIM_TICKS ]; then
         call brightness restore 20&
     fi
+    if ! $XORG; then
+        swaymsg output '*' power on
+    fi
     echo "0" > "$TICK_FILE"
     wait
 }
@@ -102,7 +123,7 @@ screen_save_tick() {
     local TICK_FILE="/tmp/$USER/ssuspend.tick"
 
     local -i TICKS
-    local WAKEUP_STATE=none WAKEUP_STATE_PROGRESSIVE=noning
+    local WAKEUP_STATE=none WAKEUP_STATE_PROGRESSIVE=nothing
     TICKS="$(cat "$TICK_FILE" || echo 0)"
 
     if should_screen_save; then
@@ -136,6 +157,8 @@ screen_save_tick() {
             fi
             if [ $TICKS -ge $SSV_OFF_TICKS ] && [ -f "/tmp/$USER/state/locked" ] && [ -f "/tmp/$USER/state/wokeup" ]; then
                 call "$WAKEUP_STATE"
+            elif [ $TICKS -ge $SSV_OFF_TICKS ] && ! $XORG; then
+                call screen_off
             fi
         fi
     else
@@ -148,15 +171,22 @@ screen_save_tick() {
 post_wakeup() {
     [ -d '/tmp/'"$USER"'/state' ] || mkdir -p '/tmp/'"$USER"'/state'
     touch '/tmp/'"$USER"'/state/wokeup'
-    xset s reset
-    call reset_usb
-    sleep 1s # reset is async
-    call action reset_xinput
+    if $XORG; then
+        xset s reset
+        call reset_usb
+        sleep 1s # reset is async
+        call action reset_xinput
+    else
+        swaymsg output '*' power on
+    fi
 }
 
 
 # shellcheck disable=SC2317
 close_firefox() {
+    if ! $XORG; then
+        return # we cannot send keys to specific window on Wayland
+    fi
     local WIN_IDS
     WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
     while [ "$WIN_IDS" != ' ' ]; do
@@ -172,6 +202,33 @@ close_firefox() {
 }
 
 listclients() {
+    if "$XORG"; then
+        info() {
+            xwininfo -root -tree -int |\
+                    sed '/^xwininfo:/d;
+                         /^\s*$/d;
+                         /^\s*\(Root\|Parent\) window id:/d;
+                         /child\(ren\)\?:$/d;
+                         :loop
+                           /  -\?[0-9]*x-\?[0-9]*+-\?[0-9]*+-\?[0-9]*  +-\?[0-9]*+-\?[0-9]*$/b end;
+                           N;s/\n//g;
+                           b loop;
+                         :end
+                           s///
+                           s/^\s*//
+                           /^[0-9]* (has no name):/d;
+                           /()$/d;
+                           s/^\s*\([0-9]*\).*(\([^)]*\))$/\1 \2/;'
+        }
+    else
+        info() {
+            swaymsg  -t get_tree |\
+                jq -r '.. | select(.pid?) |
+                "\(.pid) \"\(.app_id //
+                    .window_properties.instance)\" \"\(.app_id //
+                    .window_properties.class)\""'
+        }
+    fi
     if ! ${SHUTDOWN_DATA-false}; then
         # See killapps for documentation
         #shellcheck disable=1091
@@ -199,21 +256,7 @@ listclients() {
         fi
         CLIENTS["${NAME,,}"]=""
         "${1-false}" && echo "$ID \"$A\" \"$B\""
-    done < <(xwininfo -root -tree -int |\
-        sed '/^xwininfo:/d;
-             /^\s*$/d;
-             /^\s*\(Root\|Parent\) window id:/d;
-             /child\(ren\)\?:$/d;
-             :loop
-               /  -\?[0-9]*x-\?[0-9]*+-\?[0-9]*+-\?[0-9]*  +-\?[0-9]*+-\?[0-9]*$/b end;
-               N;s/\n//g;
-               b loop;
-             :end
-               s///
-               s/^\s*//
-               /^[0-9]* (has no name):/d;
-               /()$/d;
-               s/^\s*\([0-9]*\).*(\([^)]*\))$/\1 \2/;')
+    done < <(info)
     "${1-false}" || join_comma "${!CLIENTS[@]}"
 }
 
@@ -235,7 +278,7 @@ killapps() {
     if ! ${SHUTDOWN_DATA-false}; then
         # Should contain a few varibales
         # SHUTDOWN_DATA=true
-        # IGNORELIST_REGEX # array with regex against '"class" "class"' pattern
+        # IGNORELIST_REGEX # array with regex against '"name" "class"' pattern
         #   e.g. '"[^"]*" "i3bar"' (case insensitive)
         # IGNORELIST # asso. array: strings, value always 'true' against pattern
         #   e.g. IGNORELIST['"i3-frame" "i3-frame"']=true (case insensitive)
@@ -253,10 +296,14 @@ killapps() {
     killall "${KILLLIST[@]}"
     sleep '1' # Wait because my system is SO slow
     if clientsrunning; then # there are clients that refuse to die
-        i3-msg mode "device.force [SRL[xc]]"
+        i3-msg mode "device.force [SRL[xc]]"
     fi
-    barpid=""
-    N=0
+    local barpid="" N=0 BAR
+    if $XORG; then
+        BAR='i3-nagbar'
+    else
+        BAR='swaynag'
+    fi
     while clientsrunning; do
         # canceled?
         if [ -n "$barpid" ] && [ ! -e "/proc/$barpid" ]; then
@@ -266,7 +313,7 @@ killapps() {
 
         if [ "$((N%50))" = 0 ]; then
             [ -n "$barpid" ] && kill "$barpid"
-            i3-nagbar -t warning \
+            "$BAR" -t warning \
                 -m "The following clients refused to close: $(join_comma "${!CLIENTS[@]}")" \
                 -B 'Logout' "/bin/bash '$THIS' logout_force" \
                 -B 'Shutdown' "/bin/bash '$THIS' shutdown_force" \
@@ -323,8 +370,12 @@ hybrid() {
 
 screen_off() {
     lock
-    sleep 2 &&
-    xset dpms force off
+    if $XORG; then
+        sleep 2 && xset dpms force off
+    else
+        #### TODO Hmmm
+        sleep 1 && swaymsg output '*' power off
+    fi
 }
 
 notify_mode() {
@@ -715,20 +766,16 @@ call() {
             wallpaper)
                 if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
                     "$HOME/.device_specific/wallpaper_command.sh"
-                elif [ -d "$HOME/Documents/.wallpaper" ]; then
-                    "$SCRIPT_ROOT/scripts/wallpaper_command.sh"
                 else
-                    find "$HOME" -maxdepth 1 -iname '.wallpaper*' -print0 | sort -Rz | xargs -0 feh --bg-scale
+                    "$SCRIPT_ROOT/scripts/wallpaper_command.sh"
                 fi
                 ;;
             wallpaper_arg)
                 shift 1
                 if [ -x "$HOME/.device_specific/wallpaper_command.sh" ]; then
                     "$HOME/.device_specific/wallpaper_command.sh" "$1"
-                elif [ -d "$HOME/Documents/.wallpaper" ]; then
-                    "$SCRIPT_ROOT/scripts/wallpaper_command.sh" "$1"
                 else
-                    find "$HOME" -maxdepth 1 -iname '.wallpaper*'"$1"'*' -print0 | sort -Rz | xargs -0 feh --bg-scale
+                    "$SCRIPT_ROOT/scripts/wallpaper_command.sh" "$1"
                 fi
                 ;;
             volume)
@@ -740,25 +787,51 @@ call() {
                     shift $#
                 fi
                 ;;
-            dpms_off)
+            idle_off|dpms_off)
+                if $XORG; then
                     if xset q | grep -q "DPMS is Enabled"; then
                         notify -u low "Disabled DPMS" -a '[system]'
                     fi
                     xset s off -dpms
+                else
+                    if [ ! -e "/tmp/$USER/ssuspend/custom" ]; then
+                        notify -u low "Disabled Screen Idle" -a '[system]'
+                        [ -d "/tmp/$USER/ssuspend" ] || mkdir -p "/tmp/$USER/ssuspend"
+                        touch "/tmp/$USER/ssuspend/custom"
+                    fi
+                fi
                 ;;
-            dpms_on)
+            idle_on|dpms_on)
+                if $XORG; then
                     if ! xset q | grep -q "DPMS is Enabled"; then
                         notify -u low "Enabled DPMS" -a '[system]'
                     fi
                     xset s on +dpms
-                ;;
-            dpms_toggle)
-                if xset q | grep -q "DPMS is Enabled"; then
-                    xset s off -dpms
-                    notify -u low "Disabled DPMS" -a '[system]'
                 else
-                    xset s on  +dpms
-                    notify -u low "Enabled DPMS" -a '[system]'
+                    if [ -e "/tmp/$USER/ssuspend/custom" ]; then
+                        notify -u low "Enabled Screen Idle" -a '[system]'
+                        rm -f "/tmp/$USER/ssuspend/custom"
+                    fi
+                fi
+                ;;
+            idle_toggle|dpms_toggle)
+                if $XORG; then
+                    if xset q | grep -q "DPMS is Enabled"; then
+                        xset s off -dpms
+                        notify -u low "Disabled DPMS" -a '[system]'
+                    else
+                        xset s on  +dpms
+                        notify -u low "Enabled DPMS" -a '[system]'
+                    fi
+                else
+                    if [ -e "/tmp/$USER/ssuspend/custom" ]; then
+                        notify -u low "Enabled Screen Idle" -a '[system]'
+                        rm -f "/tmp/$USER/ssuspend/custom"
+                    else
+                        notify -u low "Disabled Screen Idle" -a '[system]'
+                        [ -d "/tmp/$USER/ssuspend" ] || mkdir -p "/tmp/$USER/ssuspend"
+                        touch "/tmp/$USER/ssuspend/custom"
+                    fi
                 fi
                 ;;
             keyboard_off)
@@ -769,60 +842,125 @@ call() {
                     shift 1
                 fi
 
-                xinput | grep 'slave\s*keyboard' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-                    xinput set-prop "$ID" "Device Enabled" 0
-                done
+                if $XORG; then
+                    xinput | grep 'slave\s*keyboard' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                        xinput set-prop "$ID" "Device Enabled" 0
+                    done
+                else
+                    swaymsg input type:keyboard events disabled
+                fi
                 ;;
             keyboard_on)
-                xinput | grep 'slave\s*keyboard' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-                    xinput set-prop "$ID" "Device Enabled" 1
-                done
+                if $XORG; then
+                    xinput | grep 'slave\s*keyboard' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                        xinput set-prop "$ID" "Device Enabled" 1
+                    done
+                else
+                    swaymsg input type:keyboard events enabled
+                fi
                 ;;
             mouse_off)
-                local DIR='/tmp/'"$USER"'/'
-                [ -d "$DIR" ] || mkdir -p "$DIR"
-                xdotool getmouselocation --shell > "$DIR/mouse"
-                xdotool mousemove 9001 9001
-                xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-                    xinput set-prop "$ID" "Device Enabled" 0
-                done
+                if $XORG; then
+                    local DIR='/tmp/'"$USER"'/mouse'
+                    [ -d "$DIR" ] || mkdir -p "$DIR"
+                    xdotool getmouselocation --shell > "$DIR/pos"
+                    xdotool mousemove 9001 9001
+                    xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                        xinput set-prop "$ID" "Device Enabled" 0
+                    done
+                else
+                    swaymsg input type:pointer events disabled
+                fi
                 ;;
             mouse_on)
-                local DIR='/tmp/'"$USER"'/'
-                if [ -f "$DIR/mouse" ]; then
-                (
-                    source "$DIR/mouse"
-                    xdotool mousemove "$X" "$Y"
-                )
-                    rm "$DIR/mouse"
+                if $XORG; then
+                    local DIR='/tmp/'"$USER"'/mouse'
+                    if [ -f "$DIR/pos" ]; then
+                    (
+                        source "$DIR/pos"
+                        xdotool mousemove "$X" "$Y"
+                    )
+                        rm "$DIR/pos"
+                    fi
+                    xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                        xinput set-prop "$ID" "Device Enabled" 1
+                    done
+                else
+                    swaymsg input type:pointer events enabled
                 fi
-                xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-                    xinput set-prop "$ID" "Device Enabled" 1
-                done
                 ;;
             mouse_toggle)
-                local DIR='/tmp/'"$USER"'/' SETTING
-                [ -d "$DIR" ] || mkdir -p "$DIR"
-                if [ -f "$DIR/mouse" ]; then
-                (
-                    source "$DIR/mouse"
-                    xdotool mousemove "$X" "$Y"
-                )
-                    rm "$DIR/mouse"
-                    SETTING=1
+                if $XORG; then
+                    local DIR='/tmp/'"$USER"'/mouse' SETTING
+                    [ -d "$DIR" ] || mkdir -p "$DIR"
+                    if [ -f "$DIR/pos" ]; then
+                    (
+                        source "$DIR/pos"
+                        xdotool mousemove "$X" "$Y"
+                    )
+                        rm "$DIR/pos"
+                        SETTING=1
+                    else
+                        SETTING=0
+                    fi
+                    xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
+                        xinput set-prop "$ID" "Device Enabled" "$SETTING"
+                    done
                 else
-                    SETTING=0
+                    swaymsg input type:pointer events toggle enabled disabled
                 fi
-                xinput | grep 'slave\s*pointer' | grep -vi 'virtual' | grep -oP '(?<=id=)\d+' | while read -r ID; do
-                    xinput set-prop "$ID" "Device Enabled" "$SETTING"
-                done
                 ;;
             mouse_center)
                 {
-                    # thanks, 5hir0kur0
-                    CURRENT_ID="$(xdotool getwindowfocus)"
-                    eval "$(xdotool getwindowgeometry --shell "$CURRENT_ID")"
-                    xdotool mousemove --window "$CURRENT_ID" "$((WIDTH / 2))" "$((HEIGHT / 2))"
+                    if $XORG; then
+                        # thanks, 5hir0kur0
+                        CURRENT_ID="$(xdotool getwindowfocus)"
+                        eval "$(xdotool getwindowgeometry --shell "$CURRENT_ID")"
+                        xdotool mousemove --window "$CURRENT_ID" "$((WIDTH / 2))" "$((HEIGHT / 2))"
+                    else
+                        swaymsg -t get_tree |
+                            jq -r '.. | select(.pid? and .focused == true) | .rect |
+                            "\(.x + .width/2) \(.y + .height/2)"' |
+                            xargs -n2 swaymsg seat - cursor set
+                    fi
+                }
+                ;;
+            mouse_typing)
+                if $XORG; then
+                    : # pass, as not needed
+                else
+                    local DIR='/tmp/'"$USER"'/mouse'
+                    [ -d "$DIR" ] || mkdir -p "$IR"
+                    if [ -e "$DIR/typing_off" ]; then
+                        notify -u low "Hiding cursor when typing" -a '[system]'
+                        swaymsg seat - hide_cursor when-typing enable
+                        rm -f "$DIR/typing_off"
+                    else
+                        notify -u low "Showing cursor when typing" -a '[system]'
+                        swaymsg seat - hide_cursor when-typing disable
+                        touch "$DIR/typing_off"
+                    fi
+                fi
+                ;;
+            _mouse_mode)
+                {
+                shift
+                local DIR='/tmp/'"$USER"'/mouse'
+                [ -d "$DIR" ] || mkdir -p "$IR"
+                if $XORG; then
+                    : # pass, as not needed
+                else
+                    case "$1" in
+                        enter)
+                            swaymsg seat - hide_cursor 0
+                            swaymsg seat - hide_cursor when-typing disable
+                            ;;
+                        exit)
+                            swaymsg seat - hide_cursor 5000
+                            [ -e "$DIR/typing_off" ] || swaymsg seat - hide_cursor when-typing enable
+                            ;;
+                    esac
+                fi
                 }
                 ;;
             list_all_commands)
@@ -870,6 +1008,7 @@ call() {
                 post_wakeup
                 ;;
             send_all)
+                $XORG || return
                 shopt -s lastpipe
                 while xbindkeys -k  | sed -n '$ {s/\s*//g;s/Mod2+//;p}' | read -r C; do
                     local F; F="$(xdotool getwindowfocus)"
@@ -897,7 +1036,7 @@ call() {
             *) {
                 echo "Unknown command: $1"
                 echo "Usage: $0 {lock|logout|logout_force|suspend/sleep|hibernate|hybrid|reboot|reboot_force|shutdown|shutdown_force}+"
-                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 3ARGS|dpms_toggle|dpms_on|dpms_off|mouse_toggle|mouse_off|mouse_on|mouse_center|keyboard_on|keyboard_off|screen_save_untick}+"
+                echo "Usage: $0 {notify|notify_mode ARG|screen_off|output 3ARGS|brightness ARGS|brightness_reload|reset_usb|reset_usb_args ARGS|wallpaper|wallpaper_arg ARG|volume 3ARGS|idle_toggle|idle_on|idle_off|mouse_toggle|mouse_off|mouse_on|mouse_center$($XORG || echo '|mouse_typing')|keyboard_on|keyboard_off|screen_save_untick}+"
                 echo "Usage: $0 {list_all_commands|list_clients|count_clients|check_for_backup}+"
                 echo "Usage: $0 schedule {<command>|'<commands>'}"
                 echo "Usage: $0 schedule_at |schedule_in <time> {<command>|'<commands>'|schedule_in <time> <command>%%<command>…}"

@@ -15,7 +15,8 @@ execute() {
     local -a TARGETS __TARGET_USER_ID
     __TARGET_USER_ID="$(id -u "$USER")"
     __SHELL="$(getent passwd "$__TARGET_USER_ID" | cut -d: -f7 | sed 's,.*/,,g;s/^\(.\)/[\1]/')"
-    TARGETS=('[i]3' '[k]smserver' '[t]mux: client' "$__SHELL")
+    # sway itself runs in root scope and is missing vars
+    TARGETS=('[s]waybg' '[i]3' '[k]smserver' '[t]mux: client' "$__SHELL")
     (
     _execute() {
         set -- "${@//"'"/"'\\''"}"; set -- "${@/#/"'"}"; set -- "${@/%/"'"}"
@@ -64,7 +65,7 @@ notify() {
     # shellcheck disable=2031,2317
     _notify_send() {
         case "$__TARGET" in
-            '[i]3'|'[k]smserver')
+            '[i]3'|'[s]waybg'|'[k]smserver')
                 _execute notify-send "$@"
             ;;
             *)
