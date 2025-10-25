@@ -2,6 +2,18 @@
 
 shopt -s nullglob globstar
 export ROFI_ACCENT=47.6 ROFI_ICONS=false
+THIS="$(readlink -f "$(command -v "$0")")" # path to script
+TDIR="$(dirname "$THIS")"
+samelength=true # a little more secure
+source "$TDIR/key_to_code.sh"
+
+if  [ "$XDG_SESSION_TYPE" = wayland ]; then
+    COPY=(wl-copy -n)
+    PASTE=(wl-paste -n)
+else
+    COPY=(xclip -sel c -r)
+    PASTE=(xclip -sel c -o)
+fi
 
 increment() {
     if [ -n "$passwordnr" ]; then
@@ -121,26 +133,15 @@ fi
 
 if ! $typeit; then
     pass show -c"$line" "$password" 2>/dev/null
-    sel="${PASSWORD_STORE_X_SELECTION:-clipboard}"
-    pass="$(xclip -o -selection "$sel")"
+    pass="$("${PASTE[@]}")"
     #shellcheck disable=2001
     if [ "$line" -gt 2 ]; then
         sed '/^\s*\(\([^:]*:[^ ]\)*[^:]*: .*\)//';
     else cat;
-    fi <<< "$pass" | xclip -rmlastnl -selection "$sel"
+    fi <<< "$pass" | "${COPY[@]}"
 else
-    delay=48 # in ms
-    typecmd='\x00type\x00--clearmodifiers\x00--delay\x00'"$delay"'\x00'
-    keycmd='\x00sleep\x00'"$(printf 'scale=3;%s/1000\n' "$delay"| bc)"'\x00key\x00--clearmodifiers\x00'
-
     sed -n "$line"'{3,$s/^\s*\(\([^:]*:[^ ]\)*[^:]*\): \?//;p}' <<< "$pass_content" |
-        sed 's/[^`^´~]\+/'"$typecmd"'&/g
-             s/\^/'"$keycmd"'asciicircum/g
-             s/`/'"$keycmd"'grave/g
-             s/´/'"$keycmd"'acute/g
-             s/~/'"$keycmd"'asciitilde/g' |
-        sed 's/^\x00*//' | sed -z 's/\n$//' |
-        xargs -0rn 5 xdotool
+        stdin_to_ydotool_codes | xargs ydotool key
 fi
 increment
 
