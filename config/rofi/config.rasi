@@ -1,21 +1,14 @@
 configuration {
-	font: "Source Code Pro for Powerline 10";
-	location: 2;
-	padding: 4;
 	fixed-num-lines: false;
 	show-icons: true;
-	sidebar-mode: true;
 	matching: "normal";
-	scrollbar-width: 4;
 	scroll-method: 1;
-	fake-background: "screenshot";
-	color-normal: "#002b37, #819396, #002b37, #003642, #819396";
-	color-urgent: "#002b37, #da4281, #002b37, #003642, #da4281";
-	color-active: "#002b37, #008ed4, #002b37, #003642, #008ed4";
-	color-window: "#002b37, #002b37, #003642";
 	display-window: "Window";
 	display-run: "Execute";
 	display-drun: "Activate";
+	monitor: -1;
+	location: 0;
+
 	kb-clear-line: "Alt+c";
 	kb-move-front: "Home";
 	kb-move-end: "End";
@@ -37,6 +30,5 @@ configuration {
 	kb-mode-complete: "Control+Shift+space";
 	kb-toggle-case-sensitivity: "grave,dead_grave,Control+i";
 	kb-toggle-sort: "Alt+grave,Control+s";
-	monitor: -1;
 }
-@import "/usr/share/rofi/themes/solarized_alternate.rasi"
+@import "rounded-dark.rasi"

@@ -1,7 +1,7 @@
 #! /bin/bash
 
 MPC='mpc -q'
-BROWSER=( rofi -theme solarized -dmenu -i -multi-select -p 'Browse')
+BROWSER=( rofi -dmenu -i -multi-select -p 'Browse')
 AU_DIR="/tmp/$USER/audio_control"
 PROVIDER='mpd'
 MPD_CONF="$HOME/.config/mpd/mpd.conf"

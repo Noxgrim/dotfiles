@@ -7,6 +7,7 @@
 source "$HOME/.device_specific/default_sink.sh"
 source "$SCRIPT_ROOT/scripts/notify.sh"
 
+export ROFI_ACCENT=162.6
 STEP=2
 MAX=100
 
@@ -20,8 +21,8 @@ if [ "${1:?"First should be non-empty!"}" = 'select' ]; then
     fi
 
     readarray -t SINKS < <(pactl list sinks | grep 'device.description\|^\s*Name' | sed 's/^\s*Name: //;s/.*"\(.*\)".*$/\1/')
-    SINK="$(for ((I=1; I < ${#SINKS[@]}; I+=2)); do printf '%s\n' "${SINKS[$I]}"; done | rofi -dmenu -no-custom -i -p\
-            "Select $([ "$2" == 'set' ] && [ "$3" == 'active' ] && echo 'active ' || echo '')sink" -theme solarized)"
+    SINK="$(for ((I=1; I < ${#SINKS[@]}; I+=2)); do printf '%s\n' "${SINKS[$I]}"; done | rofi -dmenu -no-custom -i -p 2>/dev/null\
+            "Select $([ "$2" == 'set' ] && [ "$3" == 'active' ] && echo 'active ' || echo '')sink")"
     [ -z "$SINK" ] && exit
     for ((I=0; I < ${#SINKS[@]}; I+=2)); do
         if [ "${SINKS[$I+1]}" = "$SINK" ]; then
@@ -76,8 +77,8 @@ case "$1" in
             NEW="$2"
         else
             [ -n "$MUTE"  ] && MUTED=' [muted]'
-            NEW="$(rofi -dmenu -p 'Set volume' -theme solarized -lines 1\
-                -mesg "Current volume: $CURRENT%$MUTED, Max: $MAX%"', "[+-]num[%]" or "m[ute]"'"$([ "${OVERDRIVE:-false}" = true ] && echo ' {overdrive mode}')" < /dev/null)"
+            NEW="$(env ROFI_PLACEHOLDER='" [+-]num[%] or m[ute]"' rofi -dmenu -p 'Set volume' -lines 1 2>/dev/null\
+                -mesg "Current volume: $CURRENT%$MUTED, Max: $MAX%"', '"$([ "${OVERDRIVE:-false}" = true ] && echo ' {overdrive mode}')" < /dev/null)"
         fi
 
         [ -z "$NEW" ] && exit 0

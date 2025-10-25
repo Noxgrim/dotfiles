@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export ROFI_ACCENT=92.2 ROFI_ICONS=false
 THIS="$(readlink -f "$(command -v "$0")")" # path to script
 TDIR="$(dirname "$THIS")"
 SUSPEND_ACTION='suspend'
@@ -504,7 +505,7 @@ schedule_cmd() {
     if [ -z "$CMD" ]; then
         CMD="$({ find "$DIR" -type f -printf '%f\n' | grep . && printf '\n'
                  print_possible_commands
-             } | rofi -theme solarized -dmenu -i -async-pre-read 0 -multi⁻select -p "Schedule what" | tr '\n' ' ')"
+             } | rofi -dmenu -i -async-pre-read 0 -multi⁻select -p "Schedule what" 2>/dev/null | tr '\n' ' ')"
          CMD="${CMD## }"
          CMD="${CMD%% }"
          if [ -z "$CMD" ]; then
@@ -516,7 +517,7 @@ schedule_cmd() {
     AT="${3-true}"
 
     if [ -z "$DIRTY_TIME" ]; then
-        DIRTY_TIME="$(rofi -theme solarized -dmenu -i -p "Schedule '$CMD' in")"
+        DIRTY_TIME="$(rofi -dmenu -i -p "Schedule '$CMD' in" 2>/dev/null)"
     fi
 
     if [ "$DIRTY_TIME" != 'cancel' ]; then
@@ -646,7 +647,7 @@ call() {
                 ;;
             execute_what)
                 local CMD
-                CMD="$( print_possible_commands | rofi -theme solarized -dmenu -i -async-pre-read 0 -multi-select -p "Execute device command" | tr '\n' ' ')"
+                CMD="$( print_possible_commands | rofi -dmenu -i -async-pre-read 0 -multi-select -p "Execute device command" 2>/dev/null | tr '\n' ' ')"
                 if [ -z "$CMD" ]; then
                     return
                 fi

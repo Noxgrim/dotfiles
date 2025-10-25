@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 shopt -s nullglob globstar
+export ROFI_ACCENT=47.6 ROFI_ICONS=false
 
 increment() {
     if [ -n "$passwordnr" ]; then

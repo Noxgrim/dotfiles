@@ -50,6 +50,7 @@ export EDITOR=nvim
 # for tenacity
 [ -d /opt/wxgtk-dev/lib ]  && export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/wxgtk-dev/lib"
 # export LD_PRELOAD="$LD_PRELOAD:noxgrim_sssniffer.so"
+export ROFI_ACCENT='276.7'
 
 
 alias ls='eza -b' cat=bat du=dust
