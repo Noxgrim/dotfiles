@@ -64,7 +64,7 @@ if [[ -z "$password" ]]; then
             printf 's/^/0 /\n') |
                 sort -nsr)"
 
-    passwordnr=$(sed '/^-1 /d;s/^[0-9]* //' <<< "$rankfile_tmp" | rofi -dmenu -format d -no-custom)
+    passwordnr=$(sed '/^-1 /d;s/^[0-9]* //' <<< "$rankfile_tmp" | rofi -dmenu -format d -p Password -no-custom)
     if [[ -z $passwordnr ]]; then
         exit
     fi
@@ -117,7 +117,7 @@ if $choose; then
             /^\s*\(\([^:]*:[^ ]\)*[^:]*\):\s*$/{s//\1:/;t};
             /^\s*\(\([^:]*:[^ ]\)*[^:]*\): .*/{s//\1/;t};
             s/^.\+$/?/' |
-        rofi -dmenu -format d -no-custom)
+        rofi -dmenu -format d -no-custom -p 'Select Entry')
     [ -z "$line" ] && exit
     [ -f "$lastcache" ] && rm "$lastcache"
 elif [ -n "$select" ]; then

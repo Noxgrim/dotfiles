@@ -69,7 +69,7 @@ dir_browse() {
             fi
             local RESULT
             RESULT="$(echo "$DIR_LISTING" | "${BROWSER[@]}" -mesg "$( pwd )"\
-                -selected-row "$SEL_LINE" || echo '' )"
+                -selected-row "$SEL_LINE" 2>/dev/null || echo '' )"
 
             if [ -z "$RESULT" ]; then
                 break;
@@ -114,8 +114,7 @@ dir_browse() {
                             fi
                             ALL="$( echo "$ALL" | sed "/^$LINE$/d")"
                         done <<< "$( echo "$ALL" |\
-                            "${BROWSER[@]}" -mesg "Select all but... ($(pwd))"\
-                            || echo '')"
+                            "${BROWSER[@]}" -mesg "Select all but... ($(pwd))" 2>/dev/null|| echo '')"
 
                         while read -r LINE; do
                             echo  "$DIR/$LINE"
@@ -141,7 +140,7 @@ dir_browse() {
     } | sed "s/^$( escape_regex "$MUSIC_DIR/" )//"
 }
 pos_browse() {
-    $MPC playlist -f "$PLAYLIST_FORMAT" | "${BROWSER[@]}" -mesg 'Playlist' -format d
+    $MPC playlist -f "$PLAYLIST_FORMAT" | "${BROWSER[@]}" -mesg 'Playlist' -format d 2>/dev/null
 }
 escape_regex() {
     sed -e 's/[]\/()$*.^|[]/\\&/g' <<< "$1"
@@ -793,7 +792,7 @@ case "$ITEM" in
                     del_phrase "${@:$ARGS_START}" 2> /dev/null
                     ;;
                 browse)
-                    "${BROWSER[@]}" -mesg 'Playlists to '"$ACTION" -format d
+                    "${BROWSER[@]}" -mesg 'Playlists to '"$ACTION" -format d 2>/dev/null
                     ;;
                 *)
                     case "$ACTION" in
@@ -801,7 +800,7 @@ case "$ITEM" in
                             seq "$(wc -l)"
                             ;;
                         add|delete)
-                            "${BROWSER[@]}" -mesg 'Playlists to '"$ACTION" -format d
+                            "${BROWSER[@]}" -mesg 'Playlists to '"$ACTION" -format d 2>/dev/null
                             ;;
                         *)
                             mpc save "${@:$ARGS_START}"
