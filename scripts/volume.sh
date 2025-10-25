@@ -63,6 +63,9 @@ case "$1" in
     raise)
         NEW=$((CURRENT+STEP))
         ;;
+    lower!)
+        OVERDRIVE=true
+        ;&
     lower)
         NEW=$((CURRENT-STEP))
         ;;
@@ -95,7 +98,7 @@ case "$1" in
         {
             echo "Unknown command: ${1:-}"
             echo "Usage:"
-            echo " <select|> <raise|raise!|lower> {num}"
+            echo " <select|> <raise|raise!|lower|lower!> {num}"
             echo " <select|> <set|set!> <mute|[[+-]num]>"
             echo " <select|> mute"
             echo " select <set|unset> active"
