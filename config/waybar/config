@@ -1,0 +1,179 @@
+{
+    "layer": "top",
+    "mode": "hide",
+    "start_hidden": true,
+    "ipc": true,
+    "position": "bottom",
+    "include": [
+        "$SCRIPT_ROOT/data/current/config/waybar/device-sepcific.json"
+    ],
+    "modules-left": [
+        "sway/workspaces",
+        "sway/mode",
+        "sway/window"
+    ],
+    "modules-right": [
+        "image#mpd",
+        "mpd",
+        "group/group-network",
+        "group/group-disk",
+        "memory",
+        "cpu",
+        "battery",
+        "group/group-clock",
+        "group/group-tray"
+    ],
+    "sway/window": {
+        "max-length": 100,
+        "icon": true,
+        "icon-size": 15
+    },
+    "battery": {
+        "format": "{capacity}% {icon}",
+        "format-icons": [
+            "",
+            "",
+            "",
+            "",
+            ""
+        ]
+    },
+    "cpu": {
+        "format": "{usage}%  "
+    },
+    "memory": {
+        "interval": 30,
+        "format": "{percentage}% ",
+        "tooltip-format": "{used:0.1f}G/{total:0.1f}G \n{swapUsed:0.1f}G/{swapTotal:0.1f}G 🗘"
+    },
+    "group/group-network": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "children-class": "not-network",
+            "transition-left-to-right": false
+        },
+        "modules": [
+            "custom/vpn",
+            "network"
+        ]
+    },
+    "custom/vpn": {
+        "format": "{text}",
+        "return-type": "json",
+        "exec": "bash $SCRIPT_ROOT/config/waybar/vpn_module.sh",
+        "on-click": "bash $SCRIPT_ROOT/config/waybar/vpn_module.sh toggle"
+    },
+    "network": {
+        "format": "{ifname}",
+        "format-wifi": "{essid} ({signalStrength}%)  ",
+        "format-ethernet": "{ipaddr}/{cidr}  ",
+        "format-disconnected": "  ",
+        "tooltip-format": "{ifname} via {gwaddr} ",
+        "tooltip-format-wifi": "{ipaddr}/{cidr} ",
+        "tooltip-format-ethernet": "{ifname} ",
+        "tooltip-format-disconnected": "Disconnected",
+        "max-length": 50
+    },
+    "group/group-clock": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "children-class": "not-clock",
+            "transition-left-to-right": false
+        },
+        "modules": [
+            "clock#clock",
+            "clock#datetimejp",
+            "clock#date"
+        ]
+    },
+    "clock#clock": {
+        "interval": 1,
+        "format": "{:%R} ",
+        "format-alt": "{:%A, %F   %T  (%Z)}",
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode": "month",
+            "mode-mon-col": 3,
+            "weeks-pos": "left",
+            "on-scroll": 1,
+            "format": {
+                "months": "<span color='#ffead3'><b>{}</b></span>",
+                "days": "<span color='#ecc6d9'><b>{}</b></span>",
+                "weeks": "<span color='#99ffdd'><b>W{}</b></span>",
+                "weekdays": "<span color='#ffcc66'><b>{}</b></span>",
+                "today": "<span color='#ff6699'><b><u>{}</u></b></span>"
+            }
+        },
+        "actions": {
+            "on-click-right": "mode"
+        }
+    },
+    "clock#datetimejp": {
+        "interval": 1,
+        "format": "{:%R} 🌏\ufe0e",
+        "timezones": [
+            "Asia/Tokyo"
+        ],
+        "format-alt": "{:%A, %F   %T  (%Z)} 🌏\ufe0e",
+        "tooltip-format": "{:%Z}🌏\ufe0e"
+    },
+    "clock#date": {
+        "interval": 1,
+        "format": "{:%F }",
+        "tooltip-format": "{:%A}"
+    },
+    "group/group-tray": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "children-class": "not-tray",
+            "transition-left-to-right": false
+        },
+        "modules": [
+            "custom/traybuffer",
+            "tray"
+        ]
+    },
+    "tray": {
+        "icon-size": 21,
+        "spacing": 10
+    },
+    "custom/traybuffer": {
+        "format": " ",
+        "interval": "once",
+        "hide-empty-text": false,
+        "tooltip": false,
+        "exec": "printf ."
+    },
+    "mpd": {
+        "format": "{stateIcon} {title} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ",
+        "format-disconnected": "Disconnected ",
+        "format-stopped": "{consumeIcon}{randomIcon}{repeatIcon}{singleIcon}Stopped ",
+        "interval": 1,
+        "consume-icons": {
+            "on": " " // Icon shows only when "consume" is on
+        },
+        "random-icons": {
+            "on": " "
+        },
+        "repeat-icons": {
+            "on": " "
+        },
+        "single-icons": {
+            "on": "1 "
+        },
+        "state-icons": {
+            "paused": "",
+            "playing": ""
+        },
+        "tooltip-format": "{consumeIcon}{randomIcon}{repeatIcon}{singleIcon}{artist} - {album} - {title} ({songPosition}/{queueLength})",
+        "tooltip-format-disconnected": "MPD (disconnected)"
+    },
+    "image#mpd": {
+        "size": 25,
+        "exec": "bash -c 'echo /tmp/$USER/audio_control/current_cover'",
+        "interval": 1
+    }
+}

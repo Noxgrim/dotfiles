@@ -265,6 +265,7 @@ fetch_icon() {
     elif mpc albumart "$1" > "$AU_DIR/current_cover"; then
         return
     else
+        rm "$AU_DIR/current_cover" -f
         # fallback
         local FILE
         FILE="$(clean_output <<< "$1")" DIR="${FILE%/*}"
@@ -298,6 +299,7 @@ query_playing() {
     fi
     FILE="$(mpc -f '%file%' current)"
     if [ -z "$FILE" ]; then
+        rm -f "$AU_DIR/current_cover"
         notify -u low "$PREFIX"'No track playing' -a "$PROVIDER"
         return
     fi
@@ -980,6 +982,9 @@ case "$PLAY_ACTION" in
         ;;
     toggle|stop|pause)
         $MPC "$PLAY_ACTION"
+        ;;&
+    stop)
+        rm "$AU_DIR/current_cover"
         ;;
 esac
 if [ "$INFORM" ]; then
