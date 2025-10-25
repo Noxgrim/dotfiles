@@ -244,41 +244,75 @@ function mvln() {
 }
 
 function installbandcamp() {
-    local MINUS_ARTIST NUM_LEN PWD_OLD A BASENAME EXT FILE NEW_NAME ALBUM_ARTIST ALBUM
+    local NUM_LEN NUM_MP3 A N BASENAME FILE NEW_NAME ARTIST ALBUM TEMP
+    TEMP="$(mktemp -d -p "$PWD")"
     for A in "$@"; do
         case "$A" in
-            -*)
-                IFS=- read -r _ MINUS_ARTIST <<< "$A"
-                ;;
-            *)
-                BASENAME="${${A##*/}%.zip}"
-                DIR="$(sed 's,\(\([^-]-\)\{'"${MINUS_ARTIST:-0}"'\}[^-]*\) - ,\1/,' <<< "$BASENAME")"
-                IFS=/ read -r ALBUM_ARTIST ALBUM <<< "$DIR"
-                echo creating "‘$DIR’"
-                mkdir -p "$DIR"
-                PWD_OLD="$PWD"
-                cd "$DIR" || exit 1
-                unzip "$A" > /dev/null
-                find . -type f -not -iname 'cover.*' -print0 | sed -z 's/.*\.//' | uniq -z |\
-                    while read -r -d$'\0' EXT; do
-                        NUM_LEN="$(find . -type f -name "*.$EXT" -print0 | tr -dc '\000' | wc -c | wc -c)"
-                        ((NUM_LEN--))
-                        find . -type f -name "*.$EXT" -print0 | cut -d/ -f2- -z |\
-                        while read -r -d$'\0' FILE; do
-                            NEW_NAME="${FILE#*" - $ALBUM - "}"
-                            if [ "$NEW_NAME" != "$FILE" ]; then
-                                mv -- "$FILE" "$NEW_NAME"
-                            fi
-                            if [[ "$NEW_NAME" =~ ^[0-9] ]]; then
-                                mv -- "$NEW_NAME" "$(printf "%0${NUM_LEN}d. %s" \
-                                  "$(cut -d\  -f1 <<< "$NEW_NAME")" "$(cut -d\  -f2- <<< "$NEW_NAME")")"
-                            fi
-                        done
-                    done
-                cd "$PWD_OLD" || exit
-                ;;
+          *.zip)
+            unzip -qq "$A" -d "$TEMP"
+            ;;
+          *.mp3)
+            BASENAME="${A%.mp3}"
+            if [ -e "$BASENAME.jpeg" ]; then cp "$BASENAME.jpeg" "$TEMP/cover.jpg"
+            elif [ -e "$BASENAME.jpg" ]; then cp "$BASENAME.jpg" "$TEMP/cover.jpg"
+            elif [ -e "$BASENAME.png" ]; then cp "$BASENAME.png" "$TEMP/cover.png"
+            fi
+            cp "$A" "$TEMP"
+            id3 -n 1 -l '%t' "$TEMP/*mp3"
+            ;;
+          *) continue;;
         esac
-    done
+        eval "$(find "$TEMP" -iname '*.mp3' -print0|head -zn1| xargs -ro0 python3\
+          -c 'import mutagen.easyid3 as i; import sys; f=i.Open(sys.argv[1]);\
+              print(f"ARTIST={
+                        (f["albumartist"] if "albumartist" in f.keys() else f["artist"])[0]
+                }\nALBUM={
+                        (f["album"] if "album" in f.keys() else f["title"])[0]
+                }")'|\
+          sed "s/'/'\\\\''/g;s/=/='/;s/$/'/"
+        )"
+        if [ -z "${ARTIST-}" ] || [ -z "${ALBUM-}" ]; then
+          echo "Could not install $A..." 1>&2
+          find "$TEMP" -type f -delete
+          continue
+        fi
+        DIR="$ARTIST/$ALBUM"
+        echo creating "‘$DIR’"
+        mkdir -p "$DIR"
+        ALBUM="${${ALBUM//[:\"\/?|*<>\\]/-}:0:50}"
+        NUM_LEN="$(find "$TEMP" -type f -not -iname 'cover.*' -not -iregex '.*\(png\|jpe?g\|txt\|md\|pdf\)$' -print0 | tr -dc '\0' | wc -m | wc -m)"
+        NUM_MP3="$(find "$TEMP" -type f -iname '*.mp3' -print0 | tr -dc '\0' | wc -m)"
+        ((NUM_LEN--))
+        find "$TEMP" -type f -not -iname 'cover.*' -not -iregex '.*\(png\|jpe?\|md\|pdf\|txt\)' -print0 |\
+          while read -r -d$'\0' FILE; do
+            case "$FILE" in
+              *.mp3)
+                  BASENAME="$(id3 -q %t "$FILE")"
+                  BASENAME="${BASENAME//\//|}"
+                  N="$(id3 -q '%|1|#n' "$FILE")"
+                  mv -- "$FILE" "$(printf "%s/%0${NUM_LEN}d. %s.mp3" "$DIR" "$N" "$BASENAME")"
+                ;;
+              *)
+                NEW_NAME="${FILE#*" - $ALBUM"*" - "}"
+                NEW_NAME="${NEW_NAME//\//|}"
+                if [[ "$NEW_NAME" =~ ^[0-9] ]]; then
+                  mv -- "$FILE" "$DIR/$(printf "%0${NUM_LEN}d. %s" \
+                    "$(cut -d\  -f1 <<< "$NEW_NAME")" "$(cut -d\  -f2- <<< "$NEW_NAME")")"
+                else
+                  mv -- "$FILE" "$DIR/$(printf "%0${NUM_LEN}d. %s" "$((++NUM_MP3))" "$NEW_NAME")"
+                fi
+                ;;
+            esac
+          done
+          mv "$TEMP/cover."* "$DIR"
+          find "$TEMP" -mindepth 1 -maxdepth 1 -printf '%f\0' |\
+            while read -r -d$'\0' FILE; do
+                NEW_NAME="${FILE#*" - $ALBUM"*" - "}"
+                NEW_NAME="${NEW_NAME//\//|}"
+                mv -- "$TEMP/$FILE" "$DIR/X. $NEW_NAME"
+            done
+        done
+        rmdir "$TEMP"
 }
 
 
