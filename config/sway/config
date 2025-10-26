@@ -93,7 +93,7 @@ bindsym $mod+Ctrl+Down  split v
 bindsym $mod+Ctrl+Up    split v
 
 # enter fullscreen mode for the focused container
-bindsym $mod+f fullscreen
+bindsym $mod+f exec $hack fullscreen
 
 # change container layout (stacked, tabbed, toggle split)
 bindsym $mod+t       layout tabbed
@@ -447,7 +447,7 @@ include "mediactl.sway"
 
 
 # window specific settings
-for_window [app_id="terminal"] border pixel 1
+for_window [app_id="terminal_fs"] border none
 for_window [app_id="Pinentry"] floating enable
 for_window [app_id="noxgrim_messengers"] move container to scratchpad
 for_window [app_id="Element"] move container to scratchpad
