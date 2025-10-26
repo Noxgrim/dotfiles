@@ -21,14 +21,20 @@ for F in config/*; do
   ln -nsfr "$F" "$HOME/.$F"
 done
 
+cat > .stignore << EOF
+/home/vim/plugged
+/actions/trigger_backup.sh
+/data/current
+EOF
+ln -nsfr "data/$HOSTNAME" "data/current"
+
+
 [ ! -d "$HOME"/.local/bin ] && mkdir "$HOME"/.local/bin
-for F in bin/*; do
-  ln -Lsfr {,"$HOME/.local/"}"$F"
-done
+ln -nsfr bin "$HOME/.local/dotfiles"
 
-ln -sfr .git-precommit '.git/hooks/pre-commit' # The censorer
+ln -Lsfr .git-precommit '.git/hooks/pre-commit' # The censorer
 
-[ -d "$HOME/.mpd/playlists" ] || mkdir -p "$HOME/.mpd/playlists"
+[ -d "$HOME/Music/.playlists" ] || mkdir -p "$HOME/Music/.playlists"
 
 # backup services
 if ! id backup &>/dev/null; then
@@ -45,19 +51,18 @@ fi
 if [ -n "$(find /sys/class/power_supply -iname 'BAT*' -print -quit)"  ]; then
   sudo cp scripts/{battery,notify}.sh /root
   sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
-  sudo cp systemd/system/battery.{service,timer} /etc/systemd/system
+  sudo cp etc/systemd/system/battery.{service,timer} /etc/systemd/system
   pacman -Qi acpid >/dev/null || sudo pacman -Sy acpid
   sudo systemctl daemon-reload
-  sudo systemctl enable battery.timer
-  sudo systemctl start battery.timer
+  sudo systemctl enable --now battery.timer
   [ -d '/etc/udev/rules.d' ] || sudo mkdir -p '/etc/udev/rules.d'
-  sudo cp -a {,/etc/}udev/rules.d/61-charging.rules
+  sudo cp -a {,/}etc/udev/rules.d/61-charging.rules
 fi
 
 # Setup auto-locking and -hibernation
-install_override 'systemd/logind.conf.d'
-install_override 'systemd/sleep.conf.d'
-install_override 'systemd/system/getty@tty1.service.d'
+install_override 'etc/systemd/logind.conf.d'
+install_override 'etc/systemd/sleep.conf.d'
+install_override 'etc/systemd/system/getty@tty1.service.d'
 # Do we have a backlight?
 sudo cp scripts/{brightness,notify}.sh /root
 sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
@@ -65,18 +70,24 @@ sudo 'scripts/brightness.sh' reload
 if [ -n "$(find /sys/class/backlight -mindepth 1 -iname '*' -print -quit)"  ]; then
   pacman -Qi acpilight >/dev/null || sudo paru -Syu --needed acpilight ddcci-driver-linux-dkms ddcutil
   [ -d '/etc/udev/rules.d' ] || mkdir -p '/etc/udev/rules.d'
-  sudo cp -a {,/etc/}'udev/rules.d/90-backlight.rules'
+  sudo cp -a {,/}'etc/udev/rules.d/90-backlight.rules'
   sudo usermod -aG video "$USER"
   sudo udevadm control --reload
 fi
 
 # Setup device command root service
-sudo cp systemd/system/devicecmd.service /etc/systemd/system
+sudo cp etc/systemd/system/devicecmd.service /etc/systemd/system
 sudo cp scripts/device.service.sh /root
-sudo systemctl enable devicecmd.service
-sudo systemctl start devicecmd.service
+sudo systemctl enable --now devicecmd.service
 
-sudo cp systemd/system/delayed-hibernation.service /etc/systemd/system
+sudo cp etc/systemd/system/delayed-hibernation.service /etc/systemd/system
 sudo killall -HUP systemd-logind
 sudo systemctl daemon-reload
 sudo systemctl enable delayed-hibernation.service
+
+for F in etc/*; do
+  case "$F" in
+    etc/systemd|etc/udev) continue;;
+    *) cp -ra "$F" /etc
+  esac
+done
