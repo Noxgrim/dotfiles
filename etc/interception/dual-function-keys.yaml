@@ -1,0 +1,23 @@
+TIMING:
+  TAP_MILLISEC: 200
+  DOUBLE_TAP_MILLISEC: 0
+
+MAPPINGS:
+  - KEY: KEY_LEFTCTRL
+    TAP: KEY_SYSRQ # mapped to compose using xkb
+    HOLD: KEY_LEFTCTRL
+
+  # rightalt acts as compose when tapped
+  - KEY: KEY_RIGHTALT
+    TAP: KEY_SYSRQ
+    HOLD: KEY_RIGHTALT
+
+  # right ctrl acts as menu when tapped
+  - KEY: KEY_RIGHTCTRL
+    TAP: KEY_COMPOSE # this is the menu key
+    HOLD: KEY_RIGHTCTRL
+
+  # capslock acts as super when tapped, super otherwise
+  - KEY: KEY_CAPSLOCK
+    TAP: KEY_ESC
+    HOLD: KEY_RIGHTMETA
