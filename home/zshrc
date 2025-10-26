@@ -26,7 +26,7 @@ fi
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
   HIST_STAMPS="yyyy-mm-dd"
 # ZSH_CUSTOM=/path/to/new-custom-folder
-plugins=(git vi-mode)
+plugins=(git vi-mode sudo)
 
 # User configuration
 
