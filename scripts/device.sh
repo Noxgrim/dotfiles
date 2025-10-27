@@ -104,8 +104,13 @@ screen_save_untick() {
     TICKS="$(cat "$TICK_FILE" 2>/dev/null || echo 0)"
 
     if [ $TICKS -ge 1 ]; then
-        if [ -f "/tmp/$USER/state/locked" ] && [ -f "/tmp/$USER/state/wokeup" ]; then
-            notify -a noxgrim:generic_bar -u critical ' ' -t 1
+        if [ -f "/tmp/$USER/state/locked" ]; then
+            dbus-send --system --print-reply \
+                --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
+                "org.freedesktop.login1.Session.SetIdleHint" boolean:false
+            if [ -f "/tmp/$USER/state/wokeup" ]; then
+                notify -a noxgrim:generic_bar -u critical ' ' -t 1
+            fi
         fi
     fi
     if [ $TICKS -ge $SSV_DIM_TICKS ]; then
@@ -128,27 +133,32 @@ screen_save_tick() {
 
     if should_screen_save; then
         TICKS="$((TICKS+1))"
-        if [ $TICKS -ge 1 ] && [ -f "/tmp/$USER/state/locked" ] && [ -f "/tmp/$USER/state/wokeup" ]; then
-            if [ -f "/tmp/$USER/state/user_suspended" ]; then
-                WAKEUP_STATE=suspend
-                WAKEUP_STATE_PROGRESSIVE=suspending
-            elif [ -f "/tmp/$USER/state/user_hibernated" ]; then
-                WAKEUP_STATE=hibernate
-                WAKEUP_STATE_PROGRESSIVE=hibernating
-            elif [ -f "/tmp/$USER/state/system_sleeped" ]; then
-                WAKEUP_STATE=suspend
-                WAKEUP_STATE_PROGRESSIVE="system initiated suspending"
-            else
-                WAKEUP_STATE=suspend
-                WAKEUP_STATE_PROGRESSIVE="system(?) initiated suspending"
-            fi
-            if [ "$WAKEUP_STATE" != none ]; then
-                local -a NARGS
-                [ "$TICKS" -gt $SSV_OFF_TICKS ] && NARGS=( -t 1 )
-                reset_usb
-                notify -a noxgrim:generic_bar -u critical 'No input!' \
-                    "${WAKEUP_STATE_PROGRESSIVE^} again in $((SSV_TICK_LENGTH*(SSV_OFF_TICKS-TICKS)))s" \
-                    -h "int:value:$((25*(SSV_OFF_TICKS-TICKS)))" "${NARGS[@]}"
+        if [ $TICKS -ge 1 ] && [ -f "/tmp/$USER/state/locked" ]; then
+            dbus-send --system --print-reply \
+                --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
+                "org.freedesktop.login1.Session.SetIdleHint" boolean:true
+            if [ -f "/tmp/$USER/state/wokeup" ]; then
+                if [ -f "/tmp/$USER/state/user_suspended" ]; then
+                    WAKEUP_STATE=suspend
+                    WAKEUP_STATE_PROGRESSIVE=suspending
+                elif [ -f "/tmp/$USER/state/user_hibernated" ]; then
+                    WAKEUP_STATE=hibernate
+                    WAKEUP_STATE_PROGRESSIVE=hibernating
+                elif [ -f "/tmp/$USER/state/system_sleeped" ]; then
+                    WAKEUP_STATE=suspend
+                    WAKEUP_STATE_PROGRESSIVE="system initiated suspending"
+                else
+                    WAKEUP_STATE=suspend
+                    WAKEUP_STATE_PROGRESSIVE="system(?) initiated suspending"
+                fi
+                if [ "$WAKEUP_STATE" != none ]; then
+                    local -a NARGS
+                    [ "$TICKS" -gt $SSV_OFF_TICKS ] && NARGS=( -t 1 )
+                    reset_usb
+                    notify -a noxgrim:generic_bar -u critical 'No input!' \
+                        "${WAKEUP_STATE_PROGRESSIVE^} again in $((SSV_TICK_LENGTH*(SSV_OFF_TICKS-TICKS)))s" \
+                        -h "int:value:$((25*(SSV_OFF_TICKS-TICKS)))" "${NARGS[@]}"
+                fi
             fi
         fi
         if [ $TICKS -ge $SSV_DIM_TICKS ]; then
@@ -182,7 +192,7 @@ post_wakeup() {
 }
 
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 close_firefox() {
     if ! $XORG; then
         return # we cannot send keys to specific window on Wayland
