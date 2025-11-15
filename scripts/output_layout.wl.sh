@@ -251,7 +251,7 @@ while [ "$#" != 0 ]; do
             if [ -z "${TARGETS:+z}" ]; then
                 TARGETS=()
                 for N in "${SOURCES[@]}"; do
-                    [ "${X[$N]}" == "${X[$2]}" ] && [ "${Y[$N]}" == "${Y[$2]}" ] && \
+                    "${ACTIVE[$N]}"  && [ "${X[$N]}" == "${X[$2]}" ] && [ "${Y[$N]}" == "${Y[$2]}" ] && \
                         TARGETS+=("$N")
                 done
             fi
