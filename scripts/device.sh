@@ -628,7 +628,7 @@ schedule_cmd() {
     elif $INTRUSIVE && [ "$SECS" -le 300 ]; then
         REMINDER_SET_URG=normal
     fi
-    notify -u "$REMINDER_SET_URG" "$(printf "Schulded '%s' in %d:%02d:%02d" "$CMD" "$H" "$M" "$S")" "($DATE)" -a '[system]'
+    notify -u "$REMINDER_SET_URG" "$(printf "Scheduled '%s' in %d:%02d:%02d" "$CMD" "$H" "$M" "$S")" "($DATE)" -a '[system]'
     if [ "$AT" = true ]; then
         if [ "$((SECS-300))" -gt 0 ]; then
             schedule_systemd "$((SECS-300))" "$UNIT_NAME-5" run notify -u "$REMINDER_5_URG" "5 minutes" "until scheduled '$CMD'" -a '[system]'
