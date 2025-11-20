@@ -234,6 +234,7 @@ bindsym $mod+Shift+Mod1+p exec passmenu    -s 1
 set $device device [+][x][sSlLhHrF][mMnN]❖[dh]❖[se] ❖[r]
 set $force device.force [SRL[xc]]
 set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
+set $resize resize [jkhl][JKHL][iIoOgG]
 bindsym --locked $mod+Shift+x mode "$device"
 mode "$device" {
         # power control
@@ -315,8 +316,8 @@ mode "$schedule" {
 }
 
 # rsize mode
-bindsym $mod+r mode "resize"
-mode "resize" {
+bindsym $mod+r mode "$resize"
+mode "$resize" {
         # resizing
         bindsym h           resize shrink width  10 px or 10 ppt
         bindsym j           resize grow   height 10 px or 10 ppt
@@ -337,12 +338,12 @@ mode "resize" {
         bindsym Shift+Up    resize shrink height  1 px or  1 ppt
         bindsym Shift+Right resize grow   width   1 px or  1 ppt
 
-        bindsym g           gaps inner all plus 5, gaps outer all plus 5
-        bindsym Shift+g     gaps inner all minus 5, gaps outer all minus 5
-        bindsym i           gaps inner all plus 5
-        bindsym Shift+i     gaps inner all minus 5
-        bindsym o           gaps outer all plus 5
-        bindsym Shift+o     gaps outer all minus 5
+        bindsym g           gaps inner current plus 5,  gaps outer current plus 5
+        bindsym Shift+g     gaps inner current minus 5, gaps outer current minus 5
+        bindsym i           gaps inner current plus 5
+        bindsym Shift+i     gaps inner current minus 5
+        bindsym o           gaps outer current plus 5
+        bindsym Shift+o     gaps outer current minus 5
 
         bindsym Return mode "default"
         bindsym Escape mode "default"
