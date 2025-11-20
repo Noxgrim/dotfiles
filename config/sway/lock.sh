@@ -50,10 +50,10 @@ prepare_lock() {
 postpare_lock() {
     dbus-send --system --print-reply \
         --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
-              "org.freedesktop.login1.Session.SetLockedHint" boolean:true
+              "org.freedesktop.login1.Session.SetLockedHint" boolean:true || true
     dbus-send --system --print-reply \
         --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
-              "org.freedesktop.login1.Session.SetIdleHint" boolean:true
+              "org.freedesktop.login1.Session.SetIdleHint" boolean:true || true
     if [ -f "/tmp/$USER/state/user_suspended" ] || [ -f "/tmp/$USER/state/user_hibernated" ]; then
         mpc pause -q
     elif [ "$(loginctl show-session --property=PreparingForSleep | cut -d= -f2)" == 'yes' ] || [ -f "/tmp/$USER/state/wokeup" ]; then
@@ -74,10 +74,10 @@ post_lock() {
     rm -f "/tmp/$USER/state/locked"
     dbus-send --system --print-reply \
         --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
-              "org.freedesktop.login1.Session.SetLockedHint" boolean:false
+              "org.freedesktop.login1.Session.SetLockedHint" boolean:false || true
     dbus-send --system --print-reply \
         --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
-        "org.freedesktop.login1.Session.SetIdleHint" boolean:false
+        "org.freedesktop.login1.Session.SetIdleHint" boolean:false || true
     return
 }
 

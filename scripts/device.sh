@@ -107,7 +107,7 @@ screen_save_untick() {
         if [ -f "/tmp/$USER/state/locked" ]; then
             dbus-send --system --print-reply \
                 --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
-                "org.freedesktop.login1.Session.SetIdleHint" boolean:false
+                "org.freedesktop.login1.Session.SetIdleHint" boolean:false || true
             if [ -f "/tmp/$USER/state/wokeup" ]; then
                 notify -a noxgrim:generic_bar -u critical ' ' -t 1
             fi
@@ -136,7 +136,7 @@ screen_save_tick() {
         if [ $TICKS -ge 1 ] && [ -f "/tmp/$USER/state/locked" ]; then
             dbus-send --system --print-reply \
                 --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
-                "org.freedesktop.login1.Session.SetIdleHint" boolean:true
+                "org.freedesktop.login1.Session.SetIdleHint" boolean:true || true
             if [ -f "/tmp/$USER/state/wokeup" ]; then
                 if [ -f "/tmp/$USER/state/user_suspended" ]; then
                     WAKEUP_STATE=suspend
@@ -188,6 +188,9 @@ post_wakeup() {
         call action reset_xinput
     else
         swaymsg output '*' power on
+        dbus-send --system --print-reply \
+            --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
+            "org.freedesktop.login1.Session.SetIdleHint" boolean:false || true
     fi
 }
 
