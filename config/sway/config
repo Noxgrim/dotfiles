@@ -350,21 +350,21 @@ mode "$resize" {
 }
 
 # Colors
-set $color_foc_bdr #003d99
-set $color_foc_txt #669fff
-set $color_foc_ind #3e0955
+set $color_foc_bdr #5b599c
+set $color_foc_txt #918ee8
+set $color_foc_ind #4f4e88
 
-set $color_fia_bdr #001433
-set $color_fia_txt #667a99
-set $color_fia_ind #2a023b
+set $color_fia_bdr #35345b
+set $color_fia_txt #6a67ad
+set $color_fia_ind #2f2e50
 
-set $color_unf_bdr #000a1a
-set $color_unf_txt #666f7f
-set $color_unf_ind #180122
+set $color_unf_bdr #262541
+set $color_unf_txt #6764a8
+set $color_unf_ind #2c2b4b
 
-set $color_urg_bdr #e89200
-set $color_urg_txt #f9e88e
-set $color_urg_ind #ffefa5
+set $color_urg_bdr #e56e90
+set $color_urg_txt #e59eb2
+set $color_urg_ind #ffefe0
 
 set $color_bgr     #ffffff
 

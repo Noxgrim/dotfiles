@@ -12,25 +12,25 @@ SWAYLOCK_ARGS=(
     -F
     -c 000000
     --indicator-radius 60
-    --inside-color      ffffff00
-    --ring-color        00000000
-    --inside-ver-color   003d991f
-    --inside-clear-color 003d991f
+    --inside-color       ffffff00
+    --ring-color         00000000
+    --inside-ver-color   d868881f # normal bg
+    --inside-clear-color d868881f # normal bg
     --text-clear-color   00000000
     --ring-clear-color   00000000
     --ring-ver-color     00000000
-    --text-ver-color       669fff
+    --text-ver-color     918ee8   # normal fg
     # --verif-text        '…'
-    --inside-wrong-color e892002f
+    --inside-wrong-color e56e902f # urgent bg
     --ring-wrong-color   00000000
-    --text-wrong-color       f9e88e
+    --text-wrong-color   e59eb2   # urgent fg
     # --wrong-text        '!'
     # --noinput-text      ""
     # --lock-text         ""
     # --lockfailed-text   'failed'
     --line-uses-ring
-    --key-hl-color       003d99
-    --bs-hl-color        000a1a
+    --key-hl-color       5b599c # normal bg
+    --bs-hl-color        262541 # low bg
     --separator-color   00000000
 )
 SWAYLOCK_OFFSET_FIX='+2+0'
