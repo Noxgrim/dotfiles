@@ -89,6 +89,7 @@ button:hover {
 #mode {
     background-color: #bcafff;
     box-shadow: inset 0 -3px #918ee8;
+    padding: 0 10px;
 }
 
 #clock,
@@ -103,7 +104,6 @@ button:hover {
 #wireplumber,
 #custom-media,
 #tray,
-#mode,
 #idle_inhibitor,
 #scratchpad,
 #power-profiles-daemon,
@@ -133,20 +133,19 @@ button:hover {
 }
 
 #battery {
-    background-color: #ffffff;
-    color: #000000;
+    background-color: #CFCFFF;
+    color: #9595cc;
 }
 
-#battery.charging, #battery.plugged {
-    color: #ffffff;
+#battery.plugged {
     background-color: #CFCFFF;
     color: #9595cc;
 }
 
 @keyframes blink {
     to {
-        background-color: #ffffff;
-        color: #000000;
+        background-color: #b46060;
+        color: #F49595;
     }
 }
 #battery.warning:not(.charging) {
@@ -161,6 +160,22 @@ button:hover {
     animation-name: blink;
     animation-duration: 0.5s;
     animation-timing-function: steps(12);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+@keyframes pulse {
+    to {
+        background-color: #babae6;
+        color: #8282b3;
+    }
+}
+#battery.charging {
+    background-color: #CFCFFF;
+    color: #9595cc;
+    animation-name: pulse;
+    animation-duration: 2s;
+    animation-timing-function: steps(120);
     animation-iteration-count: infinite;
     animation-direction: alternate;
 }

@@ -30,6 +30,8 @@
     },
     "battery": {
         "format": "{capacity}% {icon}",
+        "format-charging": "{capacity}%  {icon}",
+        "format-full": "{icon}",
         "format-icons": [
             "",
             "",
@@ -37,6 +39,7 @@
             "",
             ""
         ],
+        "tooltip-format": "{power}W ({timeTo})",
         "states": {
             "warning": 20,
             "critical": 10
