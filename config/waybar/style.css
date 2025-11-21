@@ -78,12 +78,13 @@ button:hover {
 
 #workspaces button.focused {
     background-color: #9f9cff;
-    box-shadow: inset 0 -3px #b7b3ff;
+    box-shadow: inset 0 -3px #dddcff;
 }
 
 #workspaces button.urgent {
     background-color: #e56e90;
-    color: #e59eb2;
+    color: #fcc5d4;
+    box-shadow: inset 0 -3px #fcc5d4;
 }
 
 #mode {
