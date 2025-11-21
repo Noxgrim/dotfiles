@@ -176,7 +176,7 @@ button:hover {
     color: #9595cc;
     animation-name: pulse;
     animation-duration: 2s;
-    animation-timing-function: steps(120);
+    animation-timing-function: steps(48);
     animation-iteration-count: infinite;
     animation-direction: alternate;
 }
