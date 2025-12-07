@@ -34,7 +34,8 @@ SWAYLOCK_ARGS=(
     --separator-color   00000000
 )
 SWAYLOCK_OFFSET_FIX='+2+0'
-CENTER="$HOME/Pictures/.lock/center.110.png"
+VAR=x # VARIANT
+CENTER="$HOME/Pictures/.lock/center.110.${VAR}.png"
 
 # Run before starting the locker
 pre_lock() {
@@ -123,16 +124,16 @@ getcache() {
     while IFS=':' read -r OUT RES FILE; do
         {
             HASH="$(md5sum <<< "$FILE" | cut -c1-32)"
-            if [ ! -f "$CACHE/${HASH}@${RES}.jpg" ]; then
+            if [ ! -f "$CACHE/${VAR}@${HASH}@${RES}.jpg" ]; then
                 IFS=x read -r WIDTH HEIGHT <<< "$RES"
                 if [ "$HEIGHT" -gt "$WIDTH" ]; then
                     TARGET="$PTARGET"
                 else
                     TARGET="$LTARGET"
                 fi
-                magick \( "$FILE" -geometry "$TARGET^" -gravity center -crop "$TARGET+0+0" -modulate "$DESATURATE" -blur "$BLUR" -scale "$RES" \) \( "$CENTER" \) -geometry "$SWAYLOCK_OFFSET_FIX" -composite "$CACHE/${HASH}@${RES}.jpg"
+                magick \( "$FILE" -geometry "$TARGET^" -gravity center -crop "$TARGET+0+0" -modulate "$DESATURATE" -blur "$BLUR" -scale "$RES" \) \( "$CENTER" \) -geometry "$SWAYLOCK_OFFSET_FIX" -composite "$CACHE/${VAR}@${HASH}@${RES}.jpg"
             fi
-            printf -- '-i\n%s:%s\n' "$OUT" "$CACHE/${HASH}@${RES}.jpg"
+            printf -- '-i\n%s:%s\n' "$OUT" "$CACHE/${VAR}@${HASH}@${RES}.jpg"
         }&
     done <<< "$FILES"
     wait
