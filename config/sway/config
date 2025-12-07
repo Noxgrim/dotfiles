@@ -452,7 +452,7 @@ for_window [app_id="terminal_fs"] border none
 for_window [app_id="Pinentry"] floating enable
 for_window [app_id="noxgrim_messengers"] move container to scratchpad
 for_window [app_id="Element"] move container to scratchpad
-
+no_focus [class="PenTablet" floating]
 
 # setup environment
 exec_always --no-startup-id $i3dir/environment.sh
