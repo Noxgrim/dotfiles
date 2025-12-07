@@ -35,9 +35,9 @@ init() {
         ISPOWER=\"\(.power//false)\"\n
         ISX=\"\(.rect?.x?)\"\n
         ISY=\"\(.rect?.y?)\"\n
-        ISW=\"\(.rect?.width?)\"\n
-        ISH=\"\(.rect?.height?)\"\n
-        ISMODE=\"\(.current_mode?.width?)x\(.current_mode?.height?)\"\n
+        ISW=\"\(.rect?.width // 0)\"\n
+        ISH=\"\(.rect?.height // 0)\"\n
+        ISMODE=\"\(.current_mode?.width // 0)x\(.current_mode?.height // 0)\"\n
         ISTRANSFORM=\"\(.transform//"normal")\"\n
         ISFOCUSED=\"\(.focused//false)\"\n
         ISFOCUSEDWS=\"\(.current_workspace//"")\"\n
@@ -222,7 +222,7 @@ while [ "$#" != 0 ]; do
                 ACTIVE["$2"]=false
                 POWER["$2"]=false
                 LASTOFF="$2"
-                : $((--NUM_ACTIVE))
+                ((--NUM_ACTIVE))
             else
                 ACTIVE["$2"]=true
                 POWER["$2"]=true
