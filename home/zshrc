@@ -30,6 +30,7 @@ plugins=(git vi-mode sudo)
 
 # User configuration
 
+export NODE_OPTIONS='--no-experimental-webstorage' # short term fix
 export MPD_HOST="$(grep -Po '(?<=^password ")[^@]*' "$SCRIPT_ROOT/config/mpd/password.conf")@localhost"
 export MANPATH="/usr/local/man:$MANPATH"
 export GOPATH="$HOME/.cache/go"
