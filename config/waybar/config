@@ -93,6 +93,7 @@
         },
         "modules": [
             "clock#clock",
+            "custom/weather",
             "clock#datetimejp",
             "clock#date"
         ]
@@ -132,6 +133,15 @@
         "interval": 1,
         "format": "{:%F }",
         "tooltip-format": "{:%A}"
+    },
+    "custom/weather": {
+        "exec": "bash $SCRIPT_ROOT/config/waybar/wttr.in.sh",
+        "return-type": "json",
+        "format": " {} ",
+        "tooltip": true,
+        "interval": 1800,
+        "signal": 8,
+        "on-click": "pkill -SIGRTMIN+8 waybar"
     },
     "group/group-tray": {
         "orientation": "inherit",

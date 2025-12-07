@@ -128,7 +128,7 @@ button:hover {
     margin-right: 0;
 }
 
-#clock {
+#clock, #custom-weather {
     background-color: #BAC3FF;
     color: #7c85bf;
 }
