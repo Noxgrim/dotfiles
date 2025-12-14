@@ -322,3 +322,5 @@ function daysspanning() {
   local DAYS="$(((($(date -d"${2-00:00}" +%s))-($(date -d"${1?"Need date."}" +%s))+60*60*12)/(60*60*24)))"
   printf '%s\n' "$((${DAYS#-}+1))"
 }
+
+[[ ! -f ~/.config/p10k/config.zsh ]] || source ~/.config/p10k/config.zsh
