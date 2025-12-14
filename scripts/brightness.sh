@@ -88,7 +88,7 @@ _select() {
     printf '%s\t%s\t(%s)\t%s\n' "$MNO" "$SEL" "$ID" "$LINE_NO"
   done < "$DIR/data")"
   if [ $# = 0 ]; then
-    sed "$(sort -n <<< "$INPUT" | rofi 2>/dev/null -dmenu -multi-select -no-custom -p 'Brightness control: ' -display-columns 1,3 \
+    sed "$(sort -n <<< "$INPUT" | rofi 2>/dev/null -dmenu -multi-select -no-custom -p 'Brightness control' -display-columns 1,3 \
       -a "$(sort -n <<< "$INPUT" | cut -f2 | grep 1 -n | cut -d: -f1 | while read -r I; do echo "$((I-1))"; done | tr '\n' ,)" | \
       cut -f4 | tr '\n' ';' | sed 's/;/p;/g')" "$DIR/data" -n > "$DIR/selected"
   else

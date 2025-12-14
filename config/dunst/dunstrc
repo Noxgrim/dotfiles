@@ -16,7 +16,7 @@
     show_indicators = yes
     sticky_history = yes
     history_length = 200
-    dmenu = dmenu -p dunst:
+    dmenu = dmenu -p dunst
     browser = /usr/bin/xdg-open
     always_run_script = true
     ignore_dbusclose = false

@@ -386,7 +386,6 @@ screen_off() {
     if $XORG; then
         sleep 2 && xset dpms force off
     else
-        #### TODO Hmmm
         sleep 1 && swaymsg output '*' power off
     fi
 }
