@@ -3,6 +3,7 @@ home/vim/*
 !home/vim/colors/
 config/mpd/password.conf
 config/picom/lock.conf
+config/tmux/plugins
 data
 .stignore
 .stfolder/
