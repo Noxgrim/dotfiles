@@ -1,8 +1,14 @@
 # All the brightness
-bindsym --locked XF86MonBrightnessUp                  exec $scriptdir/brightness.sh inc 10 '' '' notify
-bindsym --locked XF86MonBrightnessDown                exec $scriptdir/brightness.sh dec 10 '' '' notify
-bindsym --locked Shift+XF86MonBrightnessUp            exec $scriptdir/brightness.sh inc  1 '' '' notify
-bindsym --locked Shift+XF86MonBrightnessDown          exec $scriptdir/brightness.sh dec  1 '' '' notify
+bindsym --locked XF86MonBrightnessUp                  exec $scriptdir/brightness.sh inc 10  '' '' notify
+bindsym --locked XF86MonBrightnessDown                exec $scriptdir/brightness.sh dec 10  '' '' notify
+bindsym --locked Shift+XF86MonBrightnessUp            exec $scriptdir/brightness.sh inc  1  '' '' notify
+bindsym --locked Shift+XF86MonBrightnessDown          exec $scriptdir/brightness.sh dec  1  '' '' notify
+bindsym --locked $mod+Ctrl+Mod1+b                     exec $scriptdir/brightness.sh reset   '' '' notify
+bindsym --locked $mod+Ctrl+Mod1+r                     exec $scriptdir/brightness.sh restore '' '' notify
+bindsym --locked $mod+Ctrl+Mod1+plus                  exec $scriptdir/brightness.sh inc 10  '' '' notify
+bindsym --locked $mod+Ctrl+Mod1+minus                 exec $scriptdir/brightness.sh dec 10  '' '' notify
+bindsym --locked $mod+Ctrl+Mod1+Shift+plus            exec $scriptdir/brightness.sh inc  1  '' '' notify
+bindsym --locked $mod+Ctrl+Mod1+Shift+minus           exec $scriptdir/brightness.sh dec  1  '' '' notify
 # So mutch volume control Ctrl:Audio Alt:Active Shift:Overdrive
 bindsym --locked XF86AudioRaiseVolume                 exec $scriptdir/volume.sh raise 5
 bindsym --locked XF86AudioLowerVolume                 exec $scriptdir/volume.sh lower 5
