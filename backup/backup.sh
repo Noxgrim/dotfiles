@@ -154,10 +154,10 @@ message_skip() {
         COUNTER=""
     fi
     if $ENABLE_NOTIFCATION_ACTIONS && $ALLOW_SUSPEND && [ ! -f "$SUSPEND_F" ]; then
-        NOTIFY_ARGS+=( -A 'S=Suspend backup' )
+        NOTIFY_ARGS+=( -A 'S,Suspend backup' )
     fi
     if $ENABLE_NOTIFCATION_ACTIONS && $ALLOW_DISABLE && [ ! -f "$DISABLE_F" ]; then
-        NOTIFY_ARGS+=( -A 'D=Disable backup' )
+        NOTIFY_ARGS+=( -A 'D,Disable backup' )
     fi
     if [ ! -O "$DISABLE_F" ] && [ -n "$URG" ]; then
         local FULL_BODY="$BODY$COUNTER$EXTRA" ACTION=''

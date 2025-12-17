@@ -25,8 +25,6 @@ pgrep -uf "$USER" 'swayrd'    || swayrd&
 
 eval "$(grep '^SSV_\w*=' "$(which device)")"
 
-OFFSEC="$((SSV_TICK_LENGTH*SSV_OFF_TICKS))"
-
 
 pgrep -u "$USER" swayidle    || {
   swayidle -w before-sleep "$SCRIPT_ROOT/config/sway/lock.sh   lock" \
@@ -48,15 +46,24 @@ pgrep -u "$USER" swayidle    || {
     fi
   done
   swayidle "${XIH_ARGS[@]}" &
-  "$SCRIPT_ROOT/customlibs/swayidle-noinhibit" -I \
-    timeout 1 \
-    'true' \
-    resume 'swaymsg output "*" power on' \
-    timeout 3540 \
-    'notify-send -u critical -a "[system]" "Inactivity" "Forcing screen off in 60s"' \
-    resume 'notify-send -u critical -a "[system]" "Inactivity" "Forcing screen off in 60s" -t 1' \
+  XIH_ARGS=(
+    -I
+    timeout 1
+    'true'
+    resume 'swaymsg output "*" power on'
+  )
+  for (( i=3540; i<3600; i++ )); do
+      XIH_ARGS+=(
+        timeout "$i"
+        'source '"'$SCRIPT_ROOT/scripts/notify.sh'"'; notify -n inactive -R inactive -u critical -a "[system]" "Inactivity" "Forcing screen off in '$((3600-i))'s"'
+      )
+      [ "$i" = 3540 ] && XIH_ARGS+=(
+        resume 'source '"'$SCRIPT_ROOT/scripts/notify.sh'"'; notify -k inactive'
+      )
+  done
+  "$SCRIPT_ROOT/customlibs/swayidle-noinhibit" "${XIH_ARGS[@]}" \
     timeout 3600 \
-    'notify-send -u critical -a "[system]" "Inactivity" "Forcing screen off in 60s" -t 1 && device screen_off' \
+    'source '"'$SCRIPT_ROOT/scripts/notify.sh'"'; notify -k inactive && device screen_off' \
     \
     timeout 3900 \
     'device suspend' \

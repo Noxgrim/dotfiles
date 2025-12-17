@@ -109,7 +109,7 @@ screen_save_untick() {
                 --dest=org.freedesktop.login1 /org/freedesktop/login1/session/auto \
                 "org.freedesktop.login1.Session.SetIdleHint" boolean:false || true
             if [ -f "/tmp/$USER/state/wokeup" ]; then
-                notify -a noxgrim:generic_bar -u critical ' ' -t 1
+                notify -k ssvnoinput
             fi
         fi
     fi
@@ -152,12 +152,15 @@ screen_save_tick() {
                     WAKEUP_STATE_PROGRESSIVE="system(?) initiated suspending"
                 fi
                 if [ "$WAKEUP_STATE" != none ]; then
-                    local -a NARGS
-                    [ "$TICKS" -gt $SSV_OFF_TICKS ] && NARGS=( -t 1 )
+
                     reset_usb
-                    notify -a noxgrim:generic_bar -u critical 'No input!' \
-                        "${WAKEUP_STATE_PROGRESSIVE^} again in $((SSV_TICK_LENGTH*(SSV_OFF_TICKS-TICKS)))s" \
-                        -h "int:value:$((25*(SSV_OFF_TICKS-TICKS)))" "${NARGS[@]}"
+                    if [ "$TICKS" -gt $SSV_OFF_TICKS ]; then
+                        notify -k ssvnoinput
+                    else
+                        notify -n ssvnoinput -a noxgrim:generic_bar -u critical 'No input!' \
+                            "${WAKEUP_STATE_PROGRESSIVE^} again in $((SSV_TICK_LENGTH*(SSV_OFF_TICKS-TICKS)))s" \
+                            -h "int:value:$((25*(SSV_OFF_TICKS-TICKS)))"
+                    fi
                 fi
             fi
         fi

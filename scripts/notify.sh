@@ -62,11 +62,51 @@ execute() {
 notify() {
     # shellcheck disable=2034
     local _notify_send
-    # shellcheck disable=2031,2317
+    # shellcheck disable=2031,2317,2329
     _notify_send() {
         case "$__TARGET" in
             '[i]3'|'[s]waybg'|'[k]smserver')
-                _execute notify-send "$@"
+                local NAME_FILE
+                local -a ARGS=()
+                while [ $# -gt 0 ]; do
+                    case "$1" in
+                        -n|--name)
+                            NAME_FILE="/tmp/$USER/notifications/$2"
+                            NAME_FILE="'${NAME_FILE//"'"/"'\\\\''"}'"
+                            NAME_FILE="${NAME_FILE//,/\\,}"
+                            shift
+                            ;;
+                        -R|--replace-name)
+                            if [ -e  "/tmp/$USER/notifications/$2" ]; then
+                                ARGS+=("--replace=$(<"/tmp/$USER/notifications/$2")")
+                            else
+                                echo "No such named notification: $2" >&2
+                            fi
+                            shift
+                            ;;
+                        -k|--close-name)
+                            if [ -e  "/tmp/$USER/notifications/$2" ]; then
+                                ARGS+=("--close=$(<"/tmp/$USER/notifications/$2")")
+                                rm -r "/tmp/$USER/notifications/$2"
+                            else
+                                echo "No such named notification: $2" >&2
+                            fi
+                            shift
+                            ;;
+                        *)
+                            ARGS+=("$1")
+                    esac
+                    shift
+                done
+                if [ -n "$NAME_FILE" ]; then
+                    [ -d "/tmp/$USER/notifications" ] || mkdir -p "/tmp/$USER/notifications"
+                    _execute dunstify -p "${ARGS[@]}" | sed -n "!{1p}; 1s,.*,echo & > ${NAME_FILE//&/\\&},;1e"
+                else
+                    _execute dunstify "${ARGS[@]}"
+                fi
+                __RET=$?
+
+                # _execute dunstify "${@}"
             ;;
             *)
                 __RET=0
