@@ -50,7 +50,8 @@ fi
 # Do we have a battery?
 if [ -n "$(find /sys/class/power_supply -iname 'BAT*' -print -quit)"  ]; then
   sudo cp scripts/{battery,notify}.sh /root
-  sudo sed -i 's,\$(id -u "\$USER"),1000,g' /root/notify.sh # send messages to user
+  sudo sed -i 's,\$(id -u "\$USER"),'"$(id -u)"',g' /root/notify.sh # send messages to user
+  sudo sed -i 's,\$USER,'"$USER"',g' /root/battery.sh # send messages to user
   sudo cp etc/systemd/system/battery.{service,timer} /etc/systemd/system
   pacman -Qi acpid >/dev/null || sudo pacman -Sy acpid
   sudo systemctl daemon-reload
