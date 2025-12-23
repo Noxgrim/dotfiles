@@ -66,7 +66,7 @@ notify() {
     _notify_send() {
         case "$__TARGET" in
             '[i]3'|'[s]waybg'|'[k]smserver')
-                local NAME_FILE
+                local NAME_FILE=
                 local -a ARGS=()
                 while [ $# -gt 0 ]; do
                     case "$1" in
