@@ -52,12 +52,13 @@ pgrep -u "$USER" swayidle    || {
     'true'
     resume 'swaymsg output "*" power on'
   )
-  for (( i=3540; i<3600; i++ )); do
+  SECS=3540
+  for (( i=SECS; i<3600; i++ )); do
       XIH_ARGS+=(
         timeout "$i"
         'source '"'$SCRIPT_ROOT/scripts/notify.sh'"'; notify -n inactive -R inactive -u critical -a "[system]" "Inactivity" "Forcing screen off in '$((3600-i))'s"'
       )
-      [ "$i" = 3540 ] && XIH_ARGS+=(
+      [ "$i" = "$SECS" ] && XIH_ARGS+=(
         resume 'source '"'$SCRIPT_ROOT/scripts/notify.sh'"'; notify -k inactive'
       )
   done
