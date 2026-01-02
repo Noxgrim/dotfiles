@@ -8,6 +8,7 @@ call plug#begin('~/.vim/plugged')
 
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
+" Plug 'uhs-robert/oasis.nvim'
 Plug 'joshdick/onedark.vim'
 Plug 'justinmk/vim-sneak'
 
@@ -60,6 +61,8 @@ if ! exists('g:is_manpage') || ! g:is_manpage
     Plug 'junegunn/vim-emoji'
     Plug 'vim-utilities/emoji-syntax'
     Plug 'petrisch/vim-ifc'
+    Plug 'ap/vim-css-color'
+    Plug 'dpelle/vim-LanguageTool'
 endif
 call plug#end()
 
