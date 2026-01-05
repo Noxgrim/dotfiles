@@ -116,9 +116,9 @@ wait_unlock() {
 }
 
 getcache() {
-    local CACHE FILES HASH PTARGET
-    readonly PTARGET="$(sed 's/^\([^x]*\)x\(.*\)/\2x\1/' <<< "$LTARGET")"
-    readonly CACHE="${XDG_CACHE_DIR-"$HOME/.cache"}/lock"
+    local CACHE FILES HASH TWIDTH THEIGHT
+    IFS=x read -r TWIDTH _ <<< "$LTARGET"
+    readonly CACHE="${XDG_CACHE_DIR-"$HOME/.cache"}/lock" TWIDTH
     [ -d "$CACHE" ] || mkdir -p "$CACHE"
     FILES="$(swww query | sed 's/^: \([^:]*\): \([^,]*\)[^/]*\(.*\)/\1:\2:\3/')"
     while IFS=':' read -r OUT RES FILE; do
@@ -126,12 +126,20 @@ getcache() {
             HASH="$(md5sum <<< "$FILE" | cut -c1-32)"
             if [ ! -f "$CACHE/${VAR}@${HASH}@${RES}.jpg" ]; then
                 IFS=x read -r WIDTH HEIGHT <<< "$RES"
+                THEIGHT="$(bc -l <<< "$TWIDTH/($WIDTH/$HEIGHT)")"
                 if [ "$HEIGHT" -gt "$WIDTH" ]; then
-                    TARGET="$PTARGET"
+                    TARGET="${THEIGHT}x${TWIDTH}"
                 else
-                    TARGET="$LTARGET"
+                    TARGET="${TWIDTH}x${THEIGHT}"
                 fi
-                magick \( "$FILE" -geometry "$TARGET^" -gravity center -crop "$TARGET+0+0" -modulate "$DESATURATE" -blur "$BLUR" -scale "$RES" \) \( "$CENTER" \) -geometry "$SWAYLOCK_OFFSET_FIX" -composite "$CACHE/${VAR}@${HASH}@${RES}.jpg"
+                # scale each image to a similar resolution (regarding aspect ratio)
+                # to ensure similar blurring independent of input image size, then
+                # crop it as swww would do
+                # finally scale it up to output size and combine with center image
+                # with slight offset as the circle in swaylock does not seem to
+                # be entirely centered
+                magick \( "$FILE" -geometry "$TARGET^" -gravity center -crop "$TARGET+0+0" -modulate "$DESATURATE" -blur "$BLUR" -scale "$RES" \) \
+                    \( "$CENTER" \) -geometry "$SWAYLOCK_OFFSET_FIX" -composite "$CACHE/${VAR}@${HASH}@${RES}.jpg"
             fi
             printf -- '-i\n%s:%s\n' "$OUT" "$CACHE/${VAR}@${HASH}@${RES}.jpg"
         }&
