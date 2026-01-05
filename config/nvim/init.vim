@@ -8,7 +8,7 @@ source $HOME/.config/nvim/config/functions.vim
 
 source $HOME/.config/nvim/plug-config/vimplug.vim
 let g:noxgrim_coc_extensions = [
-            \ 'coc-clangd', 'coc-git', 'coc-java', 'coc-pyright', 'coc-json',
+            \ 'coc-clangd', 'coc-git', 'coc-pyright', 'coc-json',
             \ 'coc-rust-analyzer', 'coc-sh', 'coc-snippets', 'coc-tsserver', 'coc-vimlsp',
             \ 'coc-vimtex', 'coc-ltex', 'coc-yank' ]
 
