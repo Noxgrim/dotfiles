@@ -34,7 +34,7 @@ SWAYLOCK_ARGS=(
     --separator-color   00000000
 )
 SWAYLOCK_OFFSET_FIX='+2+0'
-VAR=x # VARIANT
+VAR=b # VARIANT
 CENTER="$HOME/Pictures/.lock/center.110.${VAR}.png"
 
 # Run before starting the locker
