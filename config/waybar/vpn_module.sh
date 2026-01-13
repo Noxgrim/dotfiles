@@ -18,24 +18,27 @@ HAS_OPENVPN="$(command -v openvpn3 &>/dev/null && [ -n "${OPENVPN_CONFIG-}" ] &&
 
 
 mullvad_status() {
-  mullvad status -j listen | while read -r INFO; do
-    eval "$(jq -r '"STATE=\"\(.state)\"\n
-                    COUNTRY=\"\(.details?.location?.country?)\"\n
-                    CITY=\"\(.details?.location?.city?)\""' <<< "$INFO")"
-    case "$STATE" in
-      connected)
-        printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_CON" 'Mullvad: '"$COUNTRY ($CITY)"
-        ;;
-      disconnected)
-        printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_DIS" "No VPN"
-        ;;
-      disconnecting|connecting)
-        printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_PRO" "Mullvad: $STATE"
-        ;;
-      *)
-        printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_UNK" "Mullvad: $STATE"
-        ;;
-    esac
+  while [ "$(ps -o ppid= $$)" != 1 ]; do
+    # loop as long as we are not reparented because waybar was restarted
+    mullvad status -j listen | while read -r INFO; do
+      eval "$(jq -r '"STATE=\"\(.state)\"\n
+                      COUNTRY=\"\(.details?.location?.country?)\"\n
+                      CITY=\"\(.details?.location?.city?)\""' <<< "$INFO")"
+      case "$STATE" in
+        connected)
+          printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_CON" 'Mullvad: '"$COUNTRY ($CITY)"
+          ;;
+        disconnected)
+          printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_DIS" "No VPN"
+          ;;
+        disconnecting|connecting)
+          printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_PRO" "Mullvad: $STATE"
+          ;;
+        *)
+          printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_UNK" "Mullvad: $STATE"
+          ;;
+      esac
+    done || true
   done
 }
 mullvad_toggle() {
@@ -47,6 +50,9 @@ mullvad_toggle() {
       mullvad connect
       ;;
   esac
+}
+mullvad_kill() {
+  pkill -f 'mullvad status -j listen'
 }
 
 openvpn_status() {
@@ -63,7 +69,9 @@ openvpn_status() {
   else
     printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_DIS" "No VPN"
   fi
-  while :; do
+  while [ "$(ps -o ppid= $$)" != 1 ]; do
+    # loop as long as we are not reparented because waybar was restarted
+
     # we have to read it like that because otherwise noting is read util EOF :shrug:
     openvpn3 log -c "$OPENVPN_CONFIG" |\
       while read -r LINE; do
@@ -110,7 +118,7 @@ openvpn_status() {
             printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_UNK"  "OpenVPN: $STATUS ($OPENVPN_CONFIG)"
             ;;
         esac
-      done
+      done || true
     done
 }
 openvpn_toggle() {
@@ -119,6 +127,9 @@ openvpn_toggle() {
   else
     openvpn3 session-start -c "$OPENVPN_CONFIG"
   fi
+}
+openvpn_kill() {
+  pkill -f 'openvpn3 log -c '"$OPENVPN_CONFIG"
 }
 
 case "${1-}" in
@@ -129,10 +140,19 @@ case "${1-}" in
       openvpn_toggle
     fi
     ;;
+  restart)
+    if $HAS_MULLVAD; then
+      mullvad_kill
+    elif $HAS_OPENVPN; then
+      openvpn_kill
+    fi
+    ;;
   *)
     if $HAS_MULLVAD; then
+      mullvad_kill
       mullvad_status
     elif $HAS_OPENVPN; then
+      openvpn_kill
       openvpn_status
     else
       printf '{"text": "%s", "tooltip": "%s"}\n' "$SYM_DIS" "No VPN service found"

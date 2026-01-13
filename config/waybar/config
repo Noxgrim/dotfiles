@@ -72,7 +72,7 @@
         "return-type": "json",
         "exec": "bash $SCRIPT_ROOT/config/waybar/vpn_module.sh",
         "on-click": "bash $SCRIPT_ROOT/config/waybar/vpn_module.sh toggle",
-        "on-click-middle": "pkill -f \"bash $SCRIPT_ROOT/config/waybar/vpn_module.sh\" | sed s,^,-, | xargs kill -TERM"
+        "on-click-middle": "bash $SCRIPT_ROOT/config/waybar/vpn_module.sh restart"
     },
     "network": {
         "format": "{ifname}",
