@@ -39,12 +39,6 @@ pgrep -u "$USER" swayidle    || {
       timeout "$((i+TICK_FREQ))"
       'device screen_save_tick&disown'
     )
-    if [[ "$i" = 0 ]]; then
-      XIH_ARGS+=(
-        resume
-        'device screen_save_untick&disown'
-      )
-    fi
   done
   swayidle "${XIH_ARGS[@]}" &
   XIH_ARGS=(
