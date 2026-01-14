@@ -184,6 +184,7 @@ screen_save_tick() {
 post_wakeup() {
     [ -d '/tmp/'"$USER"'/state' ] || mkdir -p '/tmp/'"$USER"'/state'
     touch '/tmp/'"$USER"'/state/wokeup'
+    call screen_save_untick
     if $XORG; then
         xset s reset
         call reset_usb

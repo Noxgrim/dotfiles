@@ -29,7 +29,8 @@ eval "$(grep '^SSV_\w*=' "$(which device)")"
 pgrep -u "$USER" swayidle    || {
   swayidle -w before-sleep "$SCRIPT_ROOT/config/sway/lock.sh   lock" \
                       lock "$SCRIPT_ROOT/config/sway/lock.sh   lock" \
-                    unlock "$SCRIPT_ROOT/config/sway/lock.sh unlock"&
+                    unlock "$SCRIPT_ROOT/config/sway/lock.sh unlock" \
+              after-resume "device post_wakeup"&
 
   declare -a XIH_ARGS=()
   declare TICK_FREQ=$SSV_TICK_LENGTH MAX="$((60*60-SSV_TICK_LENGTH))"
@@ -48,9 +49,12 @@ pgrep -u "$USER" swayidle    || {
   swayidle "${XIH_ARGS[@]}" &
   XIH_ARGS=(
     -I
-    timeout 1
+    timeout 0.1
     'true'
     resume 'swaymsg output "*" power on'
+    timeout 5
+    'true'
+    resume 'device screen_save_untick&disown'
   )
   SECS=3540
   for (( i=SECS; i<3600; i++ )); do
