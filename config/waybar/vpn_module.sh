@@ -52,7 +52,7 @@ mullvad_toggle() {
   esac
 }
 mullvad_kill() {
-  pkill -f 'mullvad status -j listen'
+  pkill -f 'mullvad status -j listen' || true
 }
 
 openvpn_status() {
@@ -129,7 +129,7 @@ openvpn_toggle() {
   fi
 }
 openvpn_kill() {
-  pkill -f 'openvpn3 log -c '"$OPENVPN_CONFIG"
+  pkill -f 'openvpn3 log -c '"$OPENVPN_CONFIG" || true
 }
 
 case "${1-}" in
