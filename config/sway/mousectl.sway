@@ -1,0 +1,113 @@
+set $mouse mouse [yYaA]→[sdf[WER]xc] [jkhl]
+set $mousedrag1 dragmouse.left [yYaA]→[w] [jkhl]
+set $mousedrag2 dragmouse.middle [yYaA]→[e] [jkhl]
+set $mousedrag3 dragmouse.right [yYaA]→[r] [jkhl]
+
+mode "$mouse" {
+    bindsym --to-code y mode default, exec 'wl-kbptr-sway-active-win; swaymsg mode '$mouse
+    bindsym --to-code Shift+y mode default, exec 'wl-kbptr; swaymsg mode '$mouse
+    bindsym --to-code a mode default, exec 'wl-kbptr-sway-active-win -o modes=floating -o mode_floating.source=detect; swaymsg mode '$mouse
+    bindsym --to-code Shift+a mode default, exec 'wl-kbptr -o modes=floating -o mode_floating.source=detect; swaymsg mode '$mouse
+
+    # Mouse move
+    bindsym h exec --no-startup-id 'ydotool mousemove -- -15 0'
+    bindsym j exec --no-startup-id 'ydotool mousemove -- 0 15'
+    bindsym k exec --no-startup-id 'ydotool mousemove -- 0 -15'
+    bindsym l exec --no-startup-id 'ydotool mousemove -- 15 0'
+    # Mouse move fine
+    bindsym Shift+h exec --no-startup-id 'ydotool mousemove -- -1 0'
+    bindsym Shift+j exec --no-startup-id 'ydotool mousemove -- 0 1'
+    bindsym Shift+k exec --no-startup-id 'ydotool mousemove -- 0 -1'
+    bindsym Shift+l exec --no-startup-id 'ydotool mousemove -- 1 0'
+
+
+    # Left button
+    bindsym s exec --no-startup-id 'ydotool click C0'
+    bindsym Shift+w exec --no-startup-id "$i3dir/mousedrag.sh" record, mode "$mousedrag1"
+
+    # Middle button
+    bindsym d exec --no-startup-id 'ydotool click C1'
+    bindsym Shift+e exec --no-startup-id "$i3dir/mousedrag.sh" record, mode "$mousedrag2"
+
+    # Right button
+    bindsym f exec --no-startup-id 'ydotool click C2'
+    bindsym Shift+r exec --no-startup-id "$i3dir/mousedrag.sh" record, mode "$mousedrag3"
+
+    # Scroll up and down
+    bindsym x exec --no-startup-id 'ydotool mousemove -w -- 0 +5'
+    bindsym c exec --no-startup-id 'ydotool mousemove -w -- 0 -5'
+
+    bindsym Escape exec $scriptdir/device.sh _mouse_mode exit, mode default
+}
+
+mode "$mousedrag1" {
+    bindsym --to-code y mode default, exec 'wl-kbptr-sway-active-win'
+    bindsym --to-code Shift+y mode default, exec 'wl-kbptr'
+    bindsym --to-code a mode default, exec 'wl-kbptr-sway-active-win -o modes=floating -o mode_floating.source=detect'
+    bindsym --to-code Shift+a mode default, exec 'wl-kbptr -o modes=floating -o mode_floating.source=detect'
+
+    # Mouse move
+    bindsym h exec --no-startup-id 'ydotool mousemove -- -15 0'
+    bindsym j exec --no-startup-id 'ydotool mousemove -- 0 15'
+    bindsym k exec --no-startup-id 'ydotool mousemove -- 0 -15'
+    bindsym l exec --no-startup-id 'ydotool mousemove -- 15 0'
+    # Mouse move fine
+    bindsym Shift+h exec --no-startup-id 'ydotool mousemove -- -1 0'
+    bindsym Shift+j exec --no-startup-id 'ydotool mousemove -- 0 1'
+    bindsym Shift+k exec --no-startup-id 'ydotool mousemove -- 0 -1'
+    bindsym Shift+l exec --no-startup-id 'ydotool mousemove -- 1 0'
+
+    # Left button
+    bindsym w exec --no-startup-id "$i3dir/mousedrag.sh" perform 1, mode "$mouse"
+
+    bindsym Escape exec "$i3dir/mousedrag.sh cancel;$scriptdir/device.sh _mouse_mode exit", mode default
+}
+mode "$mousedrag2" {
+    bindsym --to-code y mode default, exec 'wl-kbptr-sway-active-win'
+    bindsym --to-code Shift+y mode default, exec 'wl-kbptr'
+    bindsym --to-code a mode default, exec 'wl-kbptr-sway-active-win -o modes=floating -o mode_floating.source=detect'
+    bindsym --to-code Shift+a mode default, exec 'wl-kbptr -o modes=floating -o mode_floating.source=detect'
+
+    # Mouse move
+    bindsym h exec --no-startup-id 'ydotool mousemove -- -15 0'
+    bindsym j exec --no-startup-id 'ydotool mousemove -- 0 15'
+    bindsym k exec --no-startup-id 'ydotool mousemove -- 0 -15'
+    bindsym l exec --no-startup-id 'ydotool mousemove -- 15 0'
+    # Mouse move fine
+    bindsym Shift+h exec --no-startup-id 'ydotool mousemove -- -1 0'
+    bindsym Shift+j exec --no-startup-id 'ydotool mousemove -- 0 1'
+    bindsym Shift+k exec --no-startup-id 'ydotool mousemove -- 0 -1'
+    bindsym Shift+l exec --no-startup-id 'ydotool mousemove -- 1 0'
+
+    # Middle button
+    bindsym e exec --no-startup-id "$i3dir/mousedrag.sh" perform 2, mode "$mouse"
+
+    bindsym Escape exec "$i3dir/mousedrag.sh cancel;$scriptdir/device.sh _mouse_mode exit", mode default
+}
+mode "$mousedrag3" {
+    bindsym --to-code y mode default, exec 'wl-kbptr-sway-active-win'
+    bindsym --to-code Shift+y mode default, exec 'wl-kbptr'
+    bindsym --to-code a mode default, exec 'wl-kbptr-sway-active-win -o modes=floating -o mode_floating.source=detect'
+    bindsym --to-code Shift+a mode default, exec 'wl-kbptr -o modes=floating -o mode_floating.source=detect'
+
+    # Mouse move
+    bindsym h exec --no-startup-id 'ydotool mousemove -- -15 0'
+    bindsym j exec --no-startup-id 'ydotool mousemove -- 0 15'
+    bindsym k exec --no-startup-id 'ydotool mousemove -- 0 -15'
+    bindsym l exec --no-startup-id 'ydotool mousemove -- 15 0'
+    # Mouse move fine
+    bindsym Shift+h exec --no-startup-id 'ydotool mousemove -- -1 0'
+    bindsym Shift+j exec --no-startup-id 'ydotool mousemove -- 0 1'
+    bindsym Shift+k exec --no-startup-id 'ydotool mousemove -- 0 -1'
+    bindsym Shift+l exec --no-startup-id 'ydotool mousemove -- 1 0'
+
+    # Right button
+    bindsym e exec --no-startup-id "$i3dir/mousedrag.sh" perform 3, mode "$mouse"
+
+    bindsym Escape exec "$i3dir/mousedrag.sh cancel;$scriptdir/device.sh _mouse_mode exit", mode default
+}
+
+bindsym --to-code $mod+y exec "$scriptdir/device.sh _mouse_mode enter; wl-kbptr-sway-active-win -o modes=floating -o mode_floating.source=detect | grep -q . && ydotool click C0; $scriptdir/device.sh _mouse_mode exit"
+bindsym --to-code $mod+Shift+y exec $scriptdir/device.sh _mouse_mode enter, mode "$mouse"
+
+# vim: ft=swayconfig

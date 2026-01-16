@@ -5,6 +5,8 @@ config/mpd/password.conf
 config/picom/lock.conf
 config/tmux/plugins
 data
+customlibs/
+externallibs/
 .stignore
 .stfolder/
 

@@ -962,7 +962,7 @@ call() {
                 {
                 shift
                 local DIR='/tmp/'"$USER"'/mouse'
-                [ -d "$DIR" ] || mkdir -p "$IR"
+                [ -d "$DIR" ] || mkdir -p "$DIR"
                 if $XORG; then
                     : # pass, as not needed
                 else

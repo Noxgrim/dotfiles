@@ -394,49 +394,7 @@ bar {
         }
 }
 
-set $mouse mouse [yYaA]→[sdfxc] [jkhl]
-mode "$mouse" {
-    bindsym --to-code y mode default, exec 'wl-kbptr-sway-active-win; swaymsg mode mouse'
-    bindsym --to-code Shift+y mode default, exec 'wl-kbptr; swaymsg mode mouse'
-    bindsym --to-code a mode default, exec 'wl-kbptr-sway-active-win; swaymsg mode mouse'
-    bindsym --to-code Shift+a mode default, exec 'wl-kbptr; swaymsg mode mouse'
-
-    # Mouse move
-    bindsym h seat - cursor move -15 0
-    bindsym j seat - cursor move 0 15
-    bindsym k seat - cursor move 0 -15
-    bindsym l seat - cursor move 15 0
-
-    # Mouse move
-    bindsym shift+h seat - cursor move -1 0
-    bindsym shift+j seat - cursor move 0 1
-    bindsym shift+k seat - cursor move 0 -1
-    bindsym shift+l seat - cursor move 1 0
-
-    # Left button
-    bindsym s seat - cursor press button1
-    bindsym --release s seat - cursor release button1
-
-    # Middle button
-    bindsym d seat - cursor press button2
-    bindsym --release d seat - cursor release button2
-
-    # Right button
-    bindsym f seat - cursor press button3
-    bindsym --release f seat - cursor release button3
-
-    # Scroll up
-    bindsym x seat - cursor press button5, seat - cursor press button5, seat - cursor press button5, seat - cursor press button5, seat - cursor press button5, seat - cursor press button5
-
-    # Scroll donw
-    bindsym c seat - cursor press button4, seat - cursor press button4, seat - cursor press button4, seat - cursor press button4, seat - cursor press button4, seat - cursor press button4
-
-    bindsym Escape exec $scriptdir/device.sh _mouse_mode exit, mode default
-}
-
-bindsym --to-code $mod+y exec "$scriptdir/device.sh _mouse_mode enter; wl-kbptr-sway-active-win -o modes=floating -o mode_floating.source=detect | grep -q . && swaymsg seat - cursor press button1 && swaymsg seat - cursor release button1; $scriptdir/device.sh _mouse_mode exit"
-bindsym --to-code $mod+Shift+y exec $scriptdir/device.sh _mouse_mode enter, mode "$mouse"
-
+include "mousectl.sway"
 
 include "mediactl.sway"
 
