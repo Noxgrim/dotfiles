@@ -43,7 +43,7 @@ pgrep -u "$USER" swayidle    || {
   swayidle "${XIH_ARGS[@]}" &
   XIH_ARGS=(
     -I
-    timeout 0.1
+    timeout 0.75
     'true'
     resume 'swaymsg output "*" power on'
     timeout 5
