@@ -37,7 +37,7 @@ gaps outer 5
 floating_modifier $mod
 
 # Terminal
-bindsym $mod+Return exec --no-startup-id $scriptdir/terminal.sh tmux new -session -As0
+bindsym $mod+Return exec --no-startup-id $scriptdir/terminal.sh tmux new-session -As0
 bindsym $mod+Shift+Return exec --no-startup-id $scriptdir/terminal.sh
 
 # kill focused window
