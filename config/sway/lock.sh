@@ -120,7 +120,8 @@ getcache() {
     IFS=x read -r TWIDTH _ <<< "$LTARGET"
     readonly CACHE="${XDG_CACHE_DIR-"$HOME/.cache"}/lock" TWIDTH
     [ -d "$CACHE" ] || mkdir -p "$CACHE"
-    FILES="$(swww query | sed 's/^: \([^:]*\): \([^,]*\)[^/]*\(.*\)/\1:\2:\3/')"
+    FILES="$(swww query | sed 's/^: \([^:]*\): \([^,]*\)[^/]*\(.*\)/\1:\2:\3/;
+                             1s/^[^:]*:[^:]*\(.*\)$/:'"$LTARGET"'\1\n&/')"
     while IFS=':' read -r OUT RES FILE; do
         {
             HASH="$(md5sum <<< "$FILE" | cut -c1-32)"
