@@ -18,9 +18,9 @@ swaymsg seat - hide_cursor when-typing enable
 systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY
 dbus-update-activation-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY
 POLKIT_AGENT='/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1'
-pgrep -uf "$USER" "$POLKIT_AGENT"    || "$POLKIT_AGENT" &
-pgrep -uf "$USER" 'xdg-desktop-portal'    || /usr/lib/xdg-desktop-portal -r&
-pgrep -uf "$USER" 'swayrd'    || swayrd&
+pgrep -fu "$USER" "$POLKIT_AGENT"    || "$POLKIT_AGENT" &
+pgrep -fu "$USER" 'xdg-desktop-portal'    || /usr/lib/xdg-desktop-portal -r&
+pgrep  -u "$USER" 'swayrd'    || swayrd&
 
 
 eval "$(grep '^SSV_\w*=' "$(which device)")"
