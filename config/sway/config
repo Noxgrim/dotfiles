@@ -73,7 +73,7 @@ bindsym $mod+Shift+Right move right
 
 bindsym $mod+w                exec --no-startup-id  swayr switch-window
 bindsym $mod+Shift+w          exec --no-startup-id  swayr steal-window
-bindsym $mod+Mod1+Shift+w     exec --no-startup-id  swayr "move-focused-to"
+bindsym $mod+Ctrl+w           exec --no-startup-id  swayr "move-focused-to"
 bindsym $mod+Tab              exec --no-startup-id  swayr "switch-to-urgent-or-lru-window" --skip-urgent
 bindsym $mod+u                exec --no-startup-id  swayr "switch-to-urgent-or-lru-window"
 bindsym $mod+Shift+Tab        exec --no-startup-id  swayr "swap-focused-with"
