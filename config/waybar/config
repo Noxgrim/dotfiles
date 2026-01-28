@@ -24,7 +24,7 @@
         "group/group-tray"
     ],
     "sway/window": {
-        "max-length": 100,
+        "expand": true,
         "icon": true,
         "icon-size": 15
     },
