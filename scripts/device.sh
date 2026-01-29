@@ -199,18 +199,33 @@ post_wakeup() {
 }
 
 
+# Send explicit close request to librewolf/firefox to allow for multi-window
+# sessions to be closed correctly
 # shellcheck disable=SC2329
 close_firefox() {
-    if ! $XORG; then
-        return # we cannot send keys to specific window on Wayland
-    fi
     local WIN_IDS
+    if ! $XORG; then
+        (
+            source "$SCRIPT_ROOT/scripts/key_to_code.sh"
+            pgrep -x 'librewolf|firefox' | while read -r PID; do
+                WIN_IDS="$(swaymsg  -t get_tree |\
+                    jq -r '.. | select(.pid?) | select(.pid=='"$PID"') | .id' | head -n1)"
+                swaymsg "[con_id=$WIN_IDS]" focus
+                sleep 0.01
+                multi_key_ydotool '<C>+q' | xargs ydotool key
+            done
+            while pgrep -x 'librewolf|firefox' &>/dev/null; do
+                sleep 0.2 # Wait for instances to close
+                break
+            done
+        )
+    fi
     WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
     while [ "$WIN_IDS" != ' ' ]; do
         for ID in $WIN_IDS; do
             if xprop -id "$ID" | grep -q '^WM_STATE(WM_STATE):'; then
                 xdotool key --clearmodifiers --window "$ID" ctrl+q
-                sleep 0.5 # Wait for FF instance to close
+                sleep 0.5 # Wait for instance to close
                 break
             fi
         done
