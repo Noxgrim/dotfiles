@@ -1,13 +1,13 @@
 #! /bin/bash
 [ -d  "/tmp/$USER" ] || mkdir -p "/tmp/$USER"
-if [ -e "/tmp/$USER/sway/startup" ]; then
-  device wallpaper brightness_reload
-  rm -f "/tmp/$USER/sway/startup"
-fi
 
 # shellcheck disable=1091
 source "$SCRIPT_ROOT/data/shared/local_env.sh"
 pgrep -u "$USER" swww-daemon  || swww-daemon 2>/dev/null &
+if [ -e "/tmp/$USER/sway/startup" ]; then
+  device wallpaper brightness_reload&
+  rm -f "/tmp/$USER/sway/startup"
+fi
 pgrep -u "$USER" dunst        || env ROFI_ACCENT=187.5 dunst &
 pgrep -u "$USER" -f gammastep-indicator || gammastep-indicator -l "$GEO_LON:$GEO_LAT" -t 6500K:2500K -b 1.0:0.7 &
 pgrep -u "$USER" nm-applet    || nm-applet &
