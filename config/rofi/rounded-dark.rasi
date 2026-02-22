@@ -124,11 +124,12 @@ element-text selected normal, element-text selected active, element-text selecte
 }
 
 element-icon {
-    size:           1em;
+    size:   env(ROFI_ICON_SIZE, 1em);
     vertical-align: 0.5;
     enabled: env(ROFI_ICONS, true);
 }
 
 element-text {
     text-color: inherit;
+    vertical-align: 0.5;
 }

@@ -1,0 +1,13 @@
+@import "config.rasi"
+configuration {
+	kb-remove-to-eol: "";
+	kb-accept-entry: "Control+m,Return,KP_Enter";
+	kb-move-char-back: "Control+b";
+	kb-move-char-forward: "Control+f";
+	kb-row-down: "Down,Control+n,Control+j";
+	kb-row-up: "Up,Control+p,Control+k";
+	kb-row-left: "Left,Control+Page_Up,Control+h";
+	kb-row-right: "Right,Control+Page_Down,Control+l";
+}
+
+@import "rounded-dark-pictures.rasi"

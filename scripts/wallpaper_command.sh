@@ -1,11 +1,17 @@
-#! /bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+export ROFI_ICONS=true ROFI_ACCENT=249.2
+
+DIR="$HOME/Documents/.wallpaper"
+FEH="$HOME/.fehbg"
 if  [ "$XDG_SESSION_TYPE" = wayland ]; then
     # damn compatibility obsession
     feh2swww() {
         local q
-        q="$(swww query)"
+        q="$(swww query | sort -t: -k2,2)"
         paste <(tr<<<"$q" '\n' '\0'|sed -z 's/[^:]*: \([^:]*\).*/\n\1/')\
-              <(tr<"$HOME/.fehbg" '\n' '\0'|sed -zn "/^#/d;s/[^']*'//;s/' '/\\x00/g;s/'\\\\''/'/g;s/'\\s*$//
+              <(tr<"$FEH" '\n' '\0'|sed -zn "/^#/d;s/[^']*'//;s/' '/\\x00/g;s/'\\\\''/'/g;s/'\\s*$//
                         $(sed 'cp;'<<<"$q"|tr -d '\n')" |\
                 sed -z 's/\n$//')\
             -z -d: |\
@@ -17,52 +23,160 @@ if  [ "$XDG_SESSION_TYPE" = wayland ]; then
         files=( "${files[@]//"'"/"'\\''"}" )
         files=( "${files[@]/#/"'"}" )
         files=( "${files[@]/%/"'"}" )
-        cat > "$HOME/.fehbg" << EOF
+        local IFS=' '
+        cat > "$FEH" << EOF
 #!/bin/sh
 feh --no-fehbg --bg-scale ${files[*]}
 EOF
         feh2swww
     }
+    monitornamewidth() {
+        # @s for length fadding
+        swww query | sed 's/^: .\([^:]*\).*/@@\1/;s/./x/g' | sort | tail -n1 | wc -m
+    }
+    fetchmonitorstate() {
+        awk 'BEGIN {FS=OFS="\t"} FNR==NR{a[$1]=$3;b[$1]=$2;next} {print $1,a[$2]==""?"(External image)":a[$2],b[$2]==""?$2:b[$2]}'\
+            <(paste <(sed '1d;s,\([^,]*\).*,'"$DIR/"'\1,' "$DIR/.metadata"|xargs readlink -f) \
+                    <(sed '1d;s/\\n/ /g;s|\(^[^,]*\),\([^,]*,[^a-zA-Z0-9]\)*\([^,]*\),.*|'"$DIR/"'\1\t\2\3|' "$DIR/.metadata")) \
+            <(swww query | sed 's/^: \([^:]*\):[^/]*\(.*\)/\1\t\2/' | \
+              sort -t$'\t' -k1,1)
+    }
+    insertwallpaper() {
+        swww img -t wave -o "$1" "$3"
+        local old="${2//"'"/"'\\''"}" new="${3//"'"/"'\\''"}"
+        old="${old/#/"'"}" new="${new/#/"'"}"
+        old="${old/%/"'"}" new="${new/%/"'"}"
+        sed "s/ $(sed 's/./[&]/g' <<< "$old")/ $(sed 's/[&/\]/\\&/g' <<< "$new")/g" \
+            -i "$FEH"
+    }
 else
     setwallpaper() {
         xargs -0 feh --bg-scale
     }
+    monitornamewidth() {
+        # @s for length fadding
+        xrandr --listactivemonitors | sed '1d;s/^.*  ./@@/;s/./x/g' | sort | tail -n1 | wc -m
+    }
+    fetchmonitorstate() {
+        local q
+        q="$(xrandr --listactivemonitors | sed '1d;s/^.*  //')"
+        awk 'BEGIN {FS=OFS="\t"} FNR==NR{a[$1]=$2;next} {print $1,a[$2],$2}'\
+            <(sed '1d;s/\\n/ /g;s|\(^[^,]*\),\([^,]*,[^a-zA-Z0-9]\)*\([^,]*\),.*|'"$DIR/"'\1\t\2\3|' "$DIR/.metadata") \
+            <(paste - <<<"$q" <(tr<"$FEH" '\n' '\0'|
+                  sed -zn "/^#/d;s/[^']*'//;s/' '/\\x00/g;s/'\\\\''/'/g;s/'\\s*$//
+                                $(sed 'cp;'<<<"$q"|tr -d '\n')" | sed -z 's/\n$//' \
+                                | tr '\0' '\n' | head -n "$(wc -l <<< "$q")") \
+                                | sort -t$'\t' -k1,1)
+    }
+    insertwallpaper() {
+        local old="${2//"'"/"'\\''"}" new="${3//"'"/"'\\''"}"
+        old="${old/#/"'"}" new="${new/#/"'"}"
+        old="${old/%/"'"}" new="${new/%/"'"}"
+        sed "s/ $(sed 's/./[&]/g' <<< "$old")/ $(sed 's/[&/\]/\\&/g' <<< "$new")/g" \
+            -i "$FEH"
+        "$FEH"
+    }
 fi
 if [ -z "${1+O}" ]; then
     # no arg
-    if grep -q "00[^']*'"'\|^# locked' "$HOME/.fehbg"; then
+    if grep -q "00[^']*'"'\|^# pinned' "$FEH"; then
         if $XORG; then
-            "$HOME/.fehbg"
+            "$FEH"
         else
             feh2swww
         fi
     else
-        find "$HOME/Documents/.wallpaper" \( -type f -o -xtype f \) -print0 | \
-            grep -zv '\(^\|/\)00' | sort -zR | setwallpaper
+        find "$DIR" \( -type f -o -xtype f \) -print0 | \
+            grep -zv '\(^\|/\)\(\.\|00\)[^/]*$' | sort -zR | setwallpaper
     fi
-else
-    LOCK=false
+    return
+fi
+case "$1" in
+    --select|-s)
+        while :; do
+            if grep -q '^# pinned' "$FEH"; then
+                PINKEY=unpin PINPHRASE='Unpin wallpapers' PINICON="$DIR/.icon-unpin"
+            else
+                PINKEY=pin   PINPHRASE='Pin wallpapers'   PINICON="$DIR/.icon-pin"
+            fi
+            # main menu
+            KEY="$({
+                fetchmonitorstate | sed 's/^[^\t]*\t/&&/;s,\t\(/.*$\),\t\1\x00icon\x1f\1,'
+                cat << EOF | tr '\001' '\0'
+@group		Multi-select pool	$(printf '\x01icon\x1f%s' "$DIR/.icon-group")
+@$PINKEY		$PINPHRASE	$(printf '\x01icon\x1f%s' "$PINICON")
+EOF
+                } | env ROFI_ICON_SIZE=2em rofi -dmenu -display-column-separator $'\t' -display-columns 2,3 \
+                    -no-custom -p 'Wallpaper' \
+                    -theme-str "element-text {tab-stops: [$(monitornamewidth)ch];}" | cut -f1,3-4 || echo @exit)"
+            case "$KEY" in
+                @exit)
+                    exit 0
+                    ;;
+                @pin*)
+                    grep -q '^# pinned' "$FEH" || echo '# pinned' >> "$FEH"
+                    ;;
+                @unpin*)
+                    sed '/^# pinned/d' -i "$FEH"
+                    ;;
+                @group*)
+                    sed '1d;s,^,'"$DIR/"',;s,\\n,\x1c,g;s/\([^,]*\).*/&\x00icon\x1f\1/;
+                         s|\(^[^,]*\),\([^,]*,[^a-zA-Z0-9]\)*\([^,]*\)|\1,\2\3</span>|' \
+                        "$DIR/.metadata" | tr '\034\n' '\n\034' | \
+                        env ROFI_PLACEHOLDER="\" Multi-Select\"" \
+                        rofi -dmenu -show-icons -config config-pictures -scroll-method 0 \
+                        -display-columns 2 -display-column-separator ',(?=\w)' -sep $'\034' -i \
+                        -no-custom -p 'Wallpaper' -multi-select \
+                        -ballot-unselected-str '<span>' -ballot-selected-str '<span alpha="20%">' \
+                        -markup-rows | cut -d, -f1 | tr '\n' '\0' | sort -zR | setwallpaper || true
+                    ;;
+                *)
+                    case "$KEY" in
+                        *$'\t(External image)\t'*)
+                            SELECTION="${KEY/$'\t('/ (currently “}"
+                            SELECTION="${SELECTION/$')\t'/” (}))"
+                            ;;
+                        *)
+                            SELECTION="${KEY/$'\t'/ (currently “}"
+                            SELECTION="${SELECTION%$'\t'*}”)"
+                            ;;
+                    esac
+                    SELECTION="$(sed '1d;s,^,'"$DIR/"',;s,\\n,\x1c,g;s/\([^,]*\).*/&\x00icon\x1f\1/' \
+                        "$DIR/.metadata" | tr '\034\n' '\n\034' | \
+                        env ROFI_PLACEHOLDER="\" $SELECTION\"" \
+                        rofi -dmenu -show-icons -config config-pictures -scroll-method 0 \
+                        -display-columns 2 -display-column-separator ',(?=\w)' -sep $'\034' -i \
+                        -no-custom -p 'Wallpaper' | head -n1 | cut -d, -f1 || echo '')"
+                    if [ -n "$SELECTION" ]; then
+                        insertwallpaper "${KEY%%$'\t'*}" "${KEY##*$'\t'}" "$SELECTION"
+                    fi
+                    ;;
+            esac
+        done
+        ;;
+    *)
+    PIN=false
     # normal arg
     case "$1" in
         !)
-            LOCK=true
+            PIN=true
             ;;
         '?!')
-            LOCK=true
+            PIN=true
             ;&
         '')
             # empty arg
-            find "$HOME/Documents/.wallpaper" \( -type f -o -xtype f \) -print0 | \
-                grep -zv '\(^\|/\)00' | sort -zR | setwallpaper
+            find "$DIR" \( -type f -o -xtype f \) -print0 | \
+                grep -zv '\(^\|/\)\(\.\|00\)[^/]*$' | sort -zR | setwallpaper
             ;;
         *!)
-            LOCK=true
+            PIN=true
             set -- "${1%!}"
             ;&
         *)
-            find "$HOME/Documents/.wallpaper" \( -type f -o -xtype f \) -print0 | \
-                grep -zE "($1)" | sort -zR  | setwallpaper
+            find "$DIR" \( -type f -o -xtype f \) -print0 | \
+                grep -zv '\(^\|/\)\.[^/]*$' | grep -zE "($1)" | sort -zR  | setwallpaper
             ;;
     esac
-    "$LOCK" && echo '# locked' >> "$HOME/.fehbg"
-fi
+    "$PIN" && echo '# pinned' >> "$FEH"
+esac
