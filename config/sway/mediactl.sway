@@ -49,9 +49,23 @@ bindsym --locked XF86AudioPlay                        exec $mscriptdir/audio.sh 
 bindsym --locked Shift+XF86AudioPlay                  exec $mscriptdir/audio.sh      -c '!t'
 bindsym --locked XF86AudioStop                        exec $mscriptdir/audio.sh      -c h
 bindsym --locked Shift+XF86AudioStop                  exec $mscriptdir/audio.sh      -c '!'
+bindsym --locked XF86AudioNext                        exec $mscriptdir/audio.sh      -c j
+bindsym --locked XF86AudioPrev                        exec $mscriptdir/audio.sh      -c K
+bindsym --locked Ctrl+XF86AudioPlay                   exec playerctl play-pause
+bindsym --locked Ctrl+XF86AudioPause                  exec playerctl play-pause
+bindsym --locked Ctrl+XF86AudioStop                   exec playerctl stop
+bindsym --locked Ctrl+XF86AudioNext                   exec playerctl next
+bindsym --locked Ctrl+XF86AudioPrev                   exec playerctl previous
 bindsym --locked $mod+XF86AudioPause                  exec $mscriptdir/audio.sh      -c t
 bindsym --locked $mod+XF86AudioPlay                   exec $mscriptdir/audio.sh      -c t
 bindsym --locked $mod+Shift+XF86AudioPlay             exec $mscriptdir/audio.sh      -c '!t'
 bindsym --locked $mod+XF86AudioStop                   exec $mscriptdir/audio.sh      -c h
 bindsym --locked $mod+Shift+XF86AudioStop             exec $mscriptdir/audio.sh      -c '!'
+bindsym --locked $mod+XF86AudioNext                   exec $mscriptdir/audio.sh      -c j
+bindsym --locked $mod+XF86AudioPrev                   exec $mscriptdir/audio.sh      -c K
+bindsym --locked $mod+Ctrl+XF86AudioPlay              exec playerctl play-pause
+bindsym --locked $mod+Ctrl+XF86AudioPause             exec playerctl play-pause
+bindsym --locked $mod+Ctrl+XF86AudioStop              exec playerctl stop
+bindsym --locked $mod+Ctrl+XF86AudioNext              exec playerctl next
+bindsym --locked $mod+Ctrl+XF86AudioPrev              exec playerctl previous
 # vim: ft=swayconfig

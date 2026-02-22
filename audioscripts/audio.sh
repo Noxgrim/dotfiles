@@ -15,6 +15,7 @@ PLAYLIST_SEARCH_FORMAT='[[[%title%][ %album%][ %artist%]]|[%name%]|[%file%]]'
 FIND_AUDIO_EXTENSIONS=( -iname "*.mp3" -o -iname "*.flac" -o -iname "*.wma" -o -iname "*.wav" -o -iname "*.ogg" )
 FUZZY=true
 BLOCKING=false
+CDPREV_SECS=3
 EMPTY_EXECUTE=( 't' )
 
 source "$SCRIPT_ROOT/scripts/notify.sh"
@@ -445,6 +446,8 @@ Commands:
     accepts <count> (but ignores '.'), can be used multiple times
   j mpc next
     accepts <count> (but ignores '.'), can be used multiple times
+  K mpc cdprev
+    acts like 'k' but causes cdprev-like behavior if used at least once
   r mpc repeat
   x mpc shuffle
   X mpc random
@@ -462,7 +465,6 @@ Commands:
      also be displayed if automatic notifications are disabled
   i mpc status
   # mpc stats
-  K kill PROVIDER (executed immediately)
   y mpc update --wait
   Q toggle the automatic displaying of a notification if the p, t, h, B, j, k
      commands are used
@@ -580,11 +582,12 @@ esac
 if [ ! "$( pgrep "$PROVIDER" )" ] && [ ! "$AUTOSTART" ]; then
     echo "$PROVIDER_NAME not running!"
     exit 1
-elif [ ! "$( pgrep "$PROVIDER" )" ]; then
+elif ! pgrep "^$PROVIDER\$" --quiet; then
     notify "Starting $PROVIDER_NAME!" -a 'audio'
     case "$PROVIDER" in
         mpd)
             systemctl --user restart mpd.service
+            systemctl --user restart mpd-mpris.service
             ;;
         mopidy)
             mopidy &> "$AU_DIR/mopidy.log"& disown
@@ -643,7 +646,7 @@ while read -r C; do
             ;&
         B)
             PLAY_ACTION=${PLAY_ACTION:-pause}
-            if [ "$(mpc status '%state')" != stopped ] ||\
+            if [ "$(mpc status '%state%')" != stopped ] ||\
                  [ ! -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
                 QUERY=1
             fi
@@ -651,6 +654,9 @@ while read -r C; do
         '!')
             BLOCKING=true
             ;;
+        K)
+            CDPREV=true
+            ;&
         k)
             DIRECTION=-1
             ;&
@@ -685,13 +691,6 @@ while read -r C; do
             ;;
         C)
             change_notify
-            ;;
-        K)
-            if [ -f "$AU_DIR/AUDIO_LOOP_PID" ]; then
-                change_notify
-            fi
-            kill "$(pgrep "$PROVIDER")" && echo "Killed $PROVIDER_NAME!"
-            exit 0
             ;;
         y)
             UPDATE=1
@@ -936,6 +935,12 @@ fi
 if [ "${SHIFT:-0}" != 0 ]; then
     POS="$(mpc status '%songpos%')"
     LENGTH="$(mpc status '%length%')"
+    if "${CDPREV-false}" && [ "$SHIFT" -lt 0 ]; then
+        PROGRESS=$(mpc status  '%currenttime%'  | sed 's/:/*60+/g' | bc)
+        if [ "$PROGRESS" -ge "$CDPREV_SECS" ]; then
+            SHIFT="$((SHIFT+1))" # may end up being 0 which replays current song
+        fi
+    fi
     POS="$((POS+SHIFT))"
     [ $POS -lt 1 ] && POS=1
     [ $POS -gt "$LENGTH" ] && POS="$LENGTH"

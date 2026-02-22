@@ -9,6 +9,7 @@ if [ -e "/tmp/$USER/sway/startup" ]; then
   rm -f "/tmp/$USER/sway/startup"
 fi
 pgrep -u "$USER" dunst        || env ROFI_ACCENT=187.5 dunst &
+pgrep -u "$USER" playerctld   || playerctld daemon &
 pgrep -u "$USER" -f gammastep-indicator || gammastep-indicator -l "$GEO_LON:$GEO_LAT" -t 6500K:2500K -b 1.0:0.7 &
 pgrep -u "$USER" nm-applet    || nm-applet &
 pgrep -u "$USER" -f 'browser_bridge_[s]erv.py' || "$SCRIPT_ROOT/browser/browser_bridge_serv.py" &
