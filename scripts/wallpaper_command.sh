@@ -4,6 +4,7 @@ IFS=$'\n\t'
 export ROFI_ICONS=true ROFI_ACCENT=249.2
 
 DIR="$HOME/Documents/.wallpaper"
+ASSETS="$SCRIPT_ROOT/assets/wallpaper"
 FEH="$HOME/.fehbg"
 if  [ "$XDG_SESSION_TYPE" = wayland ]; then
     # damn compatibility obsession
@@ -95,15 +96,15 @@ case "$1" in
     --select|-s)
         while :; do
             if grep -q '^# pinned' "$FEH"; then
-                PINKEY=unpin PINPHRASE='Unpin wallpapers' PINICON="$DIR/.icon-unpin"
+                PINKEY=unpin PINPHRASE='Unpin wallpapers' PINICON="$ASSETS/icon-unpin"
             else
-                PINKEY=pin   PINPHRASE='Pin wallpapers'   PINICON="$DIR/.icon-pin"
+                PINKEY=pin   PINPHRASE='Pin wallpapers'   PINICON="$ASSETS/icon-pin"
             fi
             # main menu
             KEY="$({
                 fetchmonitorstate | sed 's/^[^\t]*\t/&&/;s,\t\(/.*$\),\t\1\x00icon\x1f\1,'
                 cat << EOF | tr '\001' '\0'
-@group		Multi-select pool	$(printf '\x01icon\x1f%s' "$DIR/.icon-group")
+@group		Multi-select a pool	$(printf '\x01icon\x1f%s' "$ASSETS/icon-group")
 @$PINKEY		$PINPHRASE	$(printf '\x01icon\x1f%s' "$PINICON")
 EOF
                 } | env ROFI_ICON_SIZE=2em rofi -dmenu -display-column-separator $'\t' -display-columns 2,3 \
@@ -141,12 +142,37 @@ EOF
                             SELECTION="${SELECTION%$'\t'*}”)"
                             ;;
                     esac
-                    SELECTION="$(sed '1d;s,^,'"$DIR/"',;s,\\n,\x1c,g;s/\([^,]*\).*/&\x00icon\x1f\1/' \
-                        "$DIR/.metadata" | tr '\034\n' '\n\034' | \
-                        env ROFI_PLACEHOLDER="\" $SELECTION\"" \
+                    SELECTION="$({
+                        sed '1d;s,^,'"$DIR/"',;s,\\n,\x1c,g;s/\([^,]*\).*/&\x00icon\x1f\1/' \
+                        "$DIR/.metadata" | tr '\034\n' '\n\034';
+                        cat << EOF | tr '\001\n' '\0\034'
+@random,<i>Random</i>,shuffle$(printf '\x01icon\x1f%s' "$ASSETS/icon-random")
+@browse,<i>Browse</i>,select external$(printf '\x01icon\x1f%s' "$ASSETS/icon-browse")
+EOF
+                        } | env ROFI_PLACEHOLDER="\" $SELECTION\"" \
                         rofi -dmenu -show-icons -config config-pictures -scroll-method 0 \
-                        -display-columns 2 -display-column-separator ',(?=\w)' -sep $'\034' -i \
-                        -no-custom -p 'Wallpaper' | head -n1 | cut -d, -f1 || echo '')"
+                        -display-columns 2 -display-column-separator ',(?=\w|<)' -sep $'\034' -i \
+                        -no-custom -p 'Wallpaper' -markup-rows | head -n1 | cut -d, -f1 || echo '')"
+                    case "$SELECTION" in
+                        @random)
+                            # do not select a 00 wallpaper or one of the currently actives
+                            SELECTION="$(fetchmonitorstate | cut -d$'\t' -f1 |\
+                                sort - <(cut -d, -f1 "$DIR/.metadata")|uniq -u|grep -v '^\(/.*|00.*\)'|\
+                                shuf -n1|sed 's,^,'"$DIR/,")"
+                            ;;
+                        @browse)
+                            while SELECTION="$(ROFI_ICON_SIZE=2em rofi -modes filebrowser -show filebrowser\
+                                -filebrowser-cancel-returns-1 true -filebrowser-command printf)"; do
+                                SELECTION="$(readlink -f "$SELECTION")" || continue
+                                case "$(file --mime-type -b "$SELECTION")" in
+                                    image/*)
+                                        break
+                                        ;;
+                                    *)
+                                        echo >&2 'Unsupported file type. Select again.'
+                                esac
+                            done
+                    esac
                     if [ -n "$SELECTION" ]; then
                         insertwallpaper "${KEY%%$'\t'*}" "${KEY##*$'\t'}" "$SELECTION"
                     fi
