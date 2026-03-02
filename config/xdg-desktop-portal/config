@@ -1,0 +1,3 @@
+[screencast]
+exec_before=device notify_mode !lock
+exec_after=device notify_mode !lock
