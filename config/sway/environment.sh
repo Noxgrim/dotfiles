@@ -3,7 +3,7 @@
 
 # shellcheck disable=1091
 source "$SCRIPT_ROOT/data/shared/local_env.sh"
-pgrep -u "$USER" swww-daemon  || swww-daemon 2>/dev/null &
+pgrep -u "$USER" awww-daemon  || awww-daemon 2>/dev/null &
 if [ -e "/tmp/$USER/sway/startup" ]; then
   device wallpaper brightness_reload&
   rm -f "/tmp/$USER/sway/startup"

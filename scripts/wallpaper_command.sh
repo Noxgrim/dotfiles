@@ -8,16 +8,16 @@ ASSETS="$SCRIPT_ROOT/assets/wallpaper"
 FEH="$HOME/.fehbg"
 if  [ "$XDG_SESSION_TYPE" = wayland ]; then
     # damn compatibility obsession
-    feh2swww() {
+    feh2awww() {
         local q
-        q="$(swww query | sort -t: -k2,2)"
+        q="$(awww query | sort -t: -k2,2)"
         paste <(tr<<<"$q" '\n' '\0'|sed -z 's/[^:]*: \([^:]*\).*/\n\1/')\
               <(tr<"$FEH" '\n' '\0'|sed -zn "/^#/d;s/[^']*'//;s/' '/\\x00/g;s/'\\\\''/'/g;s/'\\s*$//
                         $(sed 'cp;'<<<"$q"|tr -d '\n')" |\
                 sed -z 's/\n$//')\
             -z -d: |\
             sed -nz '/^[^\n]/q;s/^\n//;s/^\([^:]*\):/-o\x00\1\x00/p' |\
-            xargs -0n3 swww img -t wave
+            xargs -0n3 awww img -t wave
     }
     setwallpaper() {
         readarray -d $'\x00' files
@@ -29,21 +29,21 @@ if  [ "$XDG_SESSION_TYPE" = wayland ]; then
 #!/bin/sh
 feh --no-fehbg --bg-scale ${files[*]}
 EOF
-        feh2swww
+        feh2awww
     }
     monitornamewidth() {
         # @s for length fadding
-        swww query | sed 's/^: .\([^:]*\).*/@@\1/;s/./x/g' | sort | tail -n1 | wc -m
+        awww query | sed 's/^: .\([^:]*\).*/@@\1/;s/./x/g' | sort | tail -n1 | wc -m
     }
     fetchmonitorstate() {
         awk 'BEGIN {FS=OFS="\t"} FNR==NR{a[$1]=$3;b[$1]=$2;next} {print $1,a[$2]==""?"(External image)":a[$2],b[$2]==""?$2:b[$2]}'\
             <(paste <(sed '1d;s,\([^,]*\).*,'"$DIR/"'\1,' "$DIR/.metadata"|xargs readlink -f) \
                     <(sed '1d;s/\\n/ /g;s|\(^[^,]*\),\([^,]*,[^a-zA-Z0-9]\)*\([^,]*\),.*|'"$DIR/"'\1\t\2\3|' "$DIR/.metadata")) \
-            <(swww query | sed 's/^: \([^:]*\):[^/]*\(.*\)/\1\t\2/' | \
+            <(awww query | sed 's/^: \([^:]*\):[^/]*\(.*\)/\1\t\2/' | \
               sort -t$'\t' -k1,1)
     }
     insertwallpaper() {
-        swww img -t wave -o "$1" "$3"
+        awww img -t wave -o "$1" "$3"
         local old="${2//"'"/"'\\''"}" new="${3//"'"/"'\\''"}"
         old="${old/#/"'"}" new="${new/#/"'"}"
         old="${old/%/"'"}" new="${new/%/"'"}"
@@ -84,7 +84,7 @@ if [ -z "${1+O}" ]; then
         if $XORG; then
             "$FEH"
         else
-            feh2swww
+            feh2awww
         fi
     else
         find "$DIR" \( -type f -o -xtype f \) -print0 | \

@@ -120,7 +120,7 @@ getcache() {
     IFS=x read -r TWIDTH _ <<< "$LTARGET"
     readonly CACHE="${XDG_CACHE_DIR-"$HOME/.cache"}/lock" TWIDTH
     [ -d "$CACHE" ] || mkdir -p "$CACHE"
-    FILES="$(swww query | sed 's/^: \([^:]*\): \([^,]*\)[^/]*\(.*\)/\1:\2:\3/;
+    FILES="$(awww query | sed 's/^: \([^:]*\): \([^,]*\)[^/]*\(.*\)/\1:\2:\3/;
                              1s/^[^:]*:[^:]*\(.*\)$/:'"$LTARGET"'\1\n&/')"
     while IFS=':' read -r OUT RES FILE; do
         {
@@ -135,7 +135,7 @@ getcache() {
                 fi
                 # scale each image to a similar resolution (regarding aspect ratio)
                 # to ensure similar blurring independent of input image size, then
-                # crop it as swww would do
+                # crop it as awww would do
                 # finally scale it up to output size and combine with center image
                 # with slight offset as the circle in swaylock does not seem to
                 # be entirely centered
