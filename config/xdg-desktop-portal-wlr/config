@@ -1,0 +1,5 @@
+[screencast]
+exec_before=$HOME/.local/bin/dotfiles/device notify_mode lock
+exec_after=$HOME/.local/bin/dotfiles/device notify_mode all
+chooser_type=dmenu
+chooser_cmd=env ROFI_WIDTH=1000 ROFI_ACCENT=36.0 rofi -dmenu -i -p 'Screen share'
