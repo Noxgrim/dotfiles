@@ -139,7 +139,7 @@ getcache() {
                 # finally scale it up to output size and combine with center image
                 # with slight offset as the circle in swaylock does not seem to
                 # be entirely centered
-                magick \( "$FILE" -geometry "$TARGET^" -gravity center -crop "$TARGET+0+0" -modulate "$DESATURATE" -blur "$BLUR" -scale "$RES" \) \
+                magick \( "$FILE"'[0]' -geometry "$TARGET^" -gravity center -crop "$TARGET+0+0" -modulate "$DESATURATE" -blur "$BLUR" -scale "$RES" \) \
                     \( "$CENTER" \) -geometry "$SWAYLOCK_OFFSET_FIX" -composite "$CACHE/${VAR}@${HASH}@${RES}.jpg"
             fi
             printf -- '-i\n%s:%s\n' "$OUT" "$CACHE/${VAR}@${HASH}@${RES}.jpg"
