@@ -121,15 +121,15 @@ EOF
                     sed '/^# pinned/d' -i "$FEH"
                     ;;
                 @group*)
-                    sed '1d;s,^,'"$DIR/"',;s,\\n,\x1c,g;s/\([^,]*\).*/&\x00icon\x1f\1/;
-                         s|\(^[^,]*\),\([^,]*,[^a-zA-Z0-9]\)*\([^,]*\)|\1,\2\3</span>|' \
+                    sed '1d;s,^,'"$DIR/"',;s,\\n,\x1c,g;s/\([^,]*\).*/&\x00icon\x1f\1/' \
                         "$DIR/.metadata" | tr '\034\n' '\n\034' | \
-                        env ROFI_PLACEHOLDER="\" Multi-Select\"" \
+                        env ROFI_PLACEHOLDER='" Multi-Select"' \
                         rofi -dmenu -show-icons -config config-pictures -scroll-method 0 \
                         -display-columns 2 -display-column-separator ',(?=\w)' -sep $'\034' -i \
                         -no-custom -p 'Wallpaper' -multi-select \
-                        -ballot-unselected-str '<span>' -ballot-selected-str '<span alpha="20%">' \
-                        -markup-rows | cut -d, -f1 | tr '\n' '\0' | sort -zR | setwallpaper || true
+                        -ballot-unselected-str $'\t' -ballot-selected-str $'●\t' \
+                        -theme-str "element-text {tab-stops: [1.5ch];}" \
+                        | cut -d, -f1 | tr '\n' '\0' | sort -zR | setwallpaper || true
                     ;;
                 *)
                     case "$KEY" in
