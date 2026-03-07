@@ -16,8 +16,8 @@ pgrep -u "$USER" -f 'browser_bridge_[s]erv.py' || "$SCRIPT_ROOT/browser/browser_
 swaymsg seat - hide_cursor 5000
 swaymsg seat - hide_cursor when-typing enable
 
-systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP
-dbus-update-activation-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP
+systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP SCRIPT_ROOT SWAYSOCK I3SOCK
+dbus-update-activation-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP SCRIPT_ROOT SWAYSOCK I3SOCK
 POLKIT_AGENT='/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1'
 pgrep -fu "$USER" "$POLKIT_AGENT"    || "$POLKIT_AGENT" &
 pgrep -fu "$USER" 'xdg-desktop-portal'    || /usr/lib/xdg-desktop-portal -r&
