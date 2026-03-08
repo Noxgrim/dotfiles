@@ -241,8 +241,8 @@ mode "$device" {
         bindsym --locked Shift+h exec $scriptdir/device.sh hybrid,          mode "default"
         bindsym r       exec $scriptdir/device.sh reboot,          mode "default"
 
-        bindsym n       exec $scriptdir/device.sh notify,          mode "default"
-        bindsym Shift+n exec $scriptdir/device.sh notify_mode all, mode "default"
+        bindsym n       exec $scriptdir/device.sh notify,            mode "default"
+        bindsym Shift+n exec $scriptdir/device.sh notify_mode reset, mode "default"
 
         bindsym --locked $mod+s  exec $scriptdir/device.sh screen_off,      mode "default"
         bindsym $mod+e  exec $scriptdir/device.sh dpms_toggle,     mode "default"

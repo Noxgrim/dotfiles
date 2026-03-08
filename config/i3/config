@@ -213,25 +213,25 @@ set $schedule device.schedule [+][x][sSlLhHr][mMnN]❖[se]
 bindsym $mod+Shift+x mode "$device"
 mode "$device" {
         # power control
-        bindsym Shift+l exec $scriptdir/device.sh logout,          mode "default"
-        bindsym l       exec $scriptdir/device.sh screen_off,      mode "default"
-        bindsym s       exec $scriptdir/device.sh shutdown,        mode "default"
-        bindsym Shift+s exec $scriptdir/device.sh suspend,         mode "default"
-        bindsym h       exec $scriptdir/device.sh hibernate,       mode "default"
-        bindsym Shift+h exec $scriptdir/device.sh hybrid,          mode "default"
-        bindsym r       exec $scriptdir/device.sh reboot,          mode "default"
+        bindsym Shift+l exec $scriptdir/device.sh logout,            mode "default"
+        bindsym l       exec $scriptdir/device.sh screen_off,        mode "default"
+        bindsym s       exec $scriptdir/device.sh shutdown,          mode "default"
+        bindsym Shift+s exec $scriptdir/device.sh suspend,           mode "default"
+        bindsym h       exec $scriptdir/device.sh hibernate,         mode "default"
+        bindsym Shift+h exec $scriptdir/device.sh hybrid,            mode "default"
+        bindsym r       exec $scriptdir/device.sh reboot,            mode "default"
 
-        bindsym n       exec $scriptdir/device.sh notify,          mode "default"
-        bindsym Shift+n exec $scriptdir/device.sh notify_mode all, mode "default"
+        bindsym n       exec $scriptdir/device.sh notify,            mode "default"
+        bindsym Shift+n exec $scriptdir/device.sh notify_mode reset, mode "default"
 
-        bindsym $mod+s  exec $scriptdir/device.sh screen_off,      mode "default"
-        bindsym $mod+e  exec $scriptdir/device.sh dpms_toggle,     mode "default"
+        bindsym $mod+s  exec $scriptdir/device.sh screen_off,        mode "default"
+        bindsym $mod+e  exec $scriptdir/device.sh dpms_toggle,       mode "default"
 
         # mouse
-        bindsym m       exec $scriptdir/device.sh mouse_off,       mode "default"
-        bindsym Shift+m exec $scriptdir/device.sh mouse_on,        mode "default"
+        bindsym m       exec $scriptdir/device.sh mouse_off,         mode "default"
+        bindsym Shift+m exec $scriptdir/device.sh mouse_on,          mode "default"
 
-        bindsym x       exec $scriptdir/device.sh execute_what,    mode "default"
+        bindsym x       exec $scriptdir/device.sh execute_what,      mode "default"
 
         # bar
         bindsym $mod+d  bar mode dock, mode "default"

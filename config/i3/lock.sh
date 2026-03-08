@@ -75,7 +75,7 @@ postpare_lock() {
         touch "/tmp/$USER/state/system_sleeped"
     fi
     touch "/tmp/$USER/state/locked"
-    device dpms_on q notify_mode lock # always reset this once we're locking and turn off screen
+    device dpms_on q notify_mode -lock # always reset this once we're locking and turn off screen
     local FENCE
     if [ -e "/tmp/$USER/lock_show_desktop_only" ]; then
         FENCE='LOCKED DESKTOP'
@@ -91,7 +91,7 @@ postpare_lock() {
 post_lock() {
     kill "$BG_PICOM" || true
     echo '' > "$PICOM_LOCK"
-    device q notify_mode restore # restore notification state
+    device q notify_mode +lock # restore notification state
     rm -f "/tmp/$USER/state/user_suspended"
     rm -f "/tmp/$USER/state/user_hibernated"
     rm -f "/tmp/$USER/state/system_sleeped"

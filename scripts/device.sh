@@ -410,79 +410,54 @@ screen_off() {
 }
 
 notify_mode() {
-    local -i LEVEL OLD_LEVEL USED_LEVEL
-    local MODE
+    local LEVEL SET FILE="/tmp/$USER/notify_mode" QUERY=false
     [ -d "/tmp/$USER" ] || mkdir -p "/tmp/$USER"
-    OLD_LEVEL="$(< "/tmp/$USER/notify_mode")"
-    LEVEL="$(dunstctl get-pause-level)"
 
     case "${1-toggle}" in
-        restore)
-            dunstctl set-pause-level "$OLD_LEVEL"
-            USED_LEVEL=$OLD_LEVEL
+        reset)
+            printf '' > "$FILE"
+            LEVEL='0 all'
             ;;
-        all)
-            dunstctl set-pause-level   0
+        toggle)
+            set -- '!off'
+            ;&
+        [-+!]lock|[-+!]focus|[-+!]present|[-+!]off|[-+!]FORCE_OFF!)
+            case "${1#?}" in
+                lock)       LEVEL='001 lock';;
+                focus)      LEVEL='050 focus';;
+                present)    LEVEL='075 presentation';;
+                off)        LEVEL='095 off';;
+                FORCE_OFF!) LEVEL='100 completely off';;
+            esac
+            case "$1" in
+                +*) grep -qF "$LEVEL" "$FILE" || echo "$LEVEL" >> "$FILE";;
+                -*) sed "/^$LEVEL/d" -i "$FILE";;
+                !*) grep -qF "$LEVEL" "$FILE" && sed "/^$LEVEL/d" -i "$FILE" || echo "$LEVEL" >> "$FILE"
+            esac
             ;;
-        lock)
-            dunstctl set-pause-level   1
-            ;;
-        !lock)
-            if [ $LEVEL -lt 1 ]; then
-                dunstctl set-pause-level  1
-            elif [ $LEVEL == 1 ]; then
-                dunstctl set-pause-level   0
-            fi
-            ;;
-        focus)
-            dunstctl set-pause-level  50
-            ;;
-        !focus)
-            if [ $LEVEL -lt 50 ]; then
-                dunstctl set-pause-level  50
-            elif [ $LEVEL == 50 ]; then
-                dunstctl set-pause-level   0
-            fi
-            ;;
-        off)
-            dunstctl set-pause-level  95
-            ;;
-        toggle|!off)
-            if [ $LEVEL -lt 95 ]; then
-                dunstctl set-pause-level  95
-            else
-                dunstctl set-pause-level   0
-            fi
-            ;;
-        FORCE_OFF!)
-            dunstctl set-pause-level 100
+        query)
+            QUERY=true
+            LEVEL=''
             ;;
         usage)
-            for arg in focus off all toggle '!focus' 'lock' '!lock' 'FORCE_OFF'; do
-                echo "$arg"
-            done
+            printf '%s\n' toggle {+,-,\!}{lock,focus,present,off,FORCE_OFF} reset query
             return 0
             ;;
         *)
             echo "Unknown notify mode: $1" >&2 && return 1
             ;;
     esac
-    if ! $QUIET; then
-        USED_LEVEL="$(dunstctl get-pause-level)"
-        if [ $USED_LEVEL    ==   0 ]; then
-            MODE="all"
-        elif [ $USED_LEVEL -le   1 ]; then
-            MODE="lock"
-        elif [ $USED_LEVEL -le  50 ]; then
-            MODE="focus"
-        elif [ $USED_LEVEL -le  95 ]; then
-            MODE="off"
+    SET="$(sort -n "$FILE" | tail -n1 | sed 's/^0*//')"
+    [ -z "$SET" ] && SET='0 all'
+    $QUERY || dunstctl set-pause-level "${SET%% *}"
+    if ! $QUIET || $QUERY; then
+        if [ "${SET%% *}" -gt "${LEVEL%% *}" ] && grep -qF "$LEVEL" "$FILE"; then
+            notify -a 'noxgrim:notification_mode' -u low \
+                "Notification mode “${SET#* }” (“${LEVEL#* }” was overruled)"
         else
-            MODE="completely off"
+            notify -a 'noxgrim:notification_mode' -u low "Notification mode “${SET#* }”"
         fi
-        notify -a 'noxgrim:notification_mode' -u low "Notification mode “$MODE”"
     fi
-    echo "$LEVEL" > "/tmp/$USER/notify_mode"
 }
 
 print_possible_commands() {

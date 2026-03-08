@@ -62,12 +62,12 @@ postpare_lock() {
         touch "/tmp/$USER/state/system_sleeped"
     fi
     touch "/tmp/$USER/state/locked"
-    device dpms_on q notify_mode all screen_off # always reset this once we're locking and turn off screen
+    device dpms_on q notify_mode +lock screen_off # always reset this once we're locking and turn off screen
 }
 
 # Run after the locker exits
 post_lock() {
-    device q notify_mode all # restore notification state
+    device q notify_mode -lock # restore notification state
     rm -f "/tmp/$USER/state/user_suspended"
     rm -f "/tmp/$USER/state/user_hibernated"
     rm -f "/tmp/$USER/state/system_sleeped"
