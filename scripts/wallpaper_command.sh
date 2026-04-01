@@ -32,7 +32,7 @@ EOF
         feh2awww
     }
     monitornamewidth() {
-        # @s for length fadding
+        # @s to add to the character count
         awww query | sed 's/^: .\([^:]*\).*/@@\1/;s/./x/g' | sort | tail -n1 | wc -m
     }
     fetchmonitorstate() {
@@ -55,7 +55,7 @@ else
         xargs -0 feh --bg-scale
     }
     monitornamewidth() {
-        # @s for length fadding
+        # @s to add to the character count
         xrandr --listactivemonitors | sed '1d;s/^.*  ./@@/;s/./x/g' | sort | tail -n1 | wc -m
     }
     fetchmonitorstate() {
