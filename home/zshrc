@@ -76,6 +76,7 @@ alias r='ranger'
 alias v='nvim'
 alias dps='docker ps | less -S'
 alias blocking='systemd-inhibit --why "Blocking execution" --what=idle:sleep:handle-lid-switch'
+alias pavucontrol='ncpamixer'
 # uni stuff
 alias pk-cc='\gcc -std=c99 -g -Wall -Wextra -Wpedantic -Wbad-function-cast -Wconversion -Wwrite-strings -Wstrict-prototypes'
 function makesmallmkv() {
