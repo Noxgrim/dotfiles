@@ -128,7 +128,7 @@ button:hover {
     margin-right: 0;
 }
 
-#clock, #custom-weather {
+#clock, #custom-weather, #custom-inhibit {
     background-color: #BAC3FF;
     color: #7c85bf;
 }

@@ -20,6 +20,7 @@
         "memory",
         "cpu",
         "battery",
+        "custom/inhibit",
         "group/group-clock",
         "group/group-tray"
     ],
@@ -134,6 +135,17 @@
         "interval": 1,
         "format": "{:%F }",
         "tooltip-format": "{:%A}"
+    },
+    "custom/inhibit": {
+        "exec": "bash $SCRIPT_ROOT/config/waybar/inhibit.sh",
+        "return-type": "json",
+        "format": " {} ",
+        "hide-empty-text": true,
+        "tooltip": true,
+        "interval": 5,
+        "signal": 9,
+        "on-click": "$SCRIPT_ROOT/scripts/device.sh idle_toggle",
+        "on-middle-click": "pkill -SIGRTMIN+9 waybar"
     },
     "custom/weather": {
         "exec": "bash $SCRIPT_ROOT/config/waybar/wttr.in.sh",

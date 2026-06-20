@@ -805,6 +805,7 @@ call() {
                         [ -d "/tmp/$USER/ssuspend" ] || mkdir -p "/tmp/$USER/ssuspend"
                         touch "/tmp/$USER/ssuspend/custom"
                     fi
+                    pkill -SIGRTMIN+9 waybar
                 fi
                 ;;
             idle_on|dpms_on)
@@ -818,6 +819,7 @@ call() {
                         notify -u low "Enabled Screen Idle" -a '[system]'
                         rm -f "/tmp/$USER/ssuspend/custom"
                     fi
+                    pkill -SIGRTMIN+9 waybar
                 fi
                 ;;
             idle_toggle|dpms_toggle)
@@ -838,6 +840,7 @@ call() {
                         [ -d "/tmp/$USER/ssuspend" ] || mkdir -p "/tmp/$USER/ssuspend"
                         touch "/tmp/$USER/ssuspend/custom"
                     fi
+                    pkill -SIGRTMIN+9 waybar
                 fi
                 ;;
             keyboard_off)

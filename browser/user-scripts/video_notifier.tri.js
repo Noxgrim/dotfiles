@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Notifier “Backend”
 // @namespace    http://tridactyl.xyz/
-// @version      80
+// @version      81
 // @description  Receive messages about video notifications from the local website and make changes to local file system
 // @author       Noxgrim
 // @match        *://*/*
@@ -27,9 +27,9 @@
                     return;
                 }
                 if (event.data.create) {
-                    tri.excmds.exclaim_quiet(`touch "${dir}/browser.${name}"`);
+                    tri.excmds.exclaim_quiet(`printf '%s' '${window.location.toString().replace("'", "'\\''")}' > "${dir}/browser.${name}"; pkill -SIGRTMIN+9 waybar || true`);
                 } else {
-                    tri.excmds.exclaim_quiet(`rm "${dir}/browser.${name}" || true`);
+                    tri.excmds.exclaim_quiet(`rm "${dir}/browser.${name}" || true; pkill -SIGRTMIN+9 waybar || true`);
                 }
             }
         } else {

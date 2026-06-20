@@ -296,7 +296,7 @@ fetch_icon() {
 query_playing() {
     local PREFIX='' FILE
     if $BLOCKING; then
-        PREFIX='(!) '
+        PREFIX='󰛐  '
     fi
     FILE="$(mpc -f '%file%' current)"
     if [ -z "$FILE" ]; then
@@ -367,6 +367,7 @@ handle_play() {
             --who audio sleep infinity&
         PID=$!
         touch "$AU_DIR/BLOCKING"
+        pkill -SIGRTMIN+9 waybar
         while $MPC idle player &>/dev/null; do
             if [ "$(mpc status '%state%')" != 'playing' ]; then
                 break
@@ -374,6 +375,7 @@ handle_play() {
         done
         kill $PID || true
         rm -f "$AU_DIR/BLOCKING"
+        pkill -SIGRTMIN+9 waybar
     )& disown
     else
         BLOCKING=false
