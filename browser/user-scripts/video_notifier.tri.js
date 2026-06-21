@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Notifier “Backend”
 // @namespace    http://tridactyl.xyz/
-// @version      81
+// @version      82
 // @description  Receive messages about video notifications from the local website and make changes to local file system
 // @author       Noxgrim
 // @match        *://*/*
@@ -15,6 +15,7 @@
     'use strict';
 
     const dir = "/tmp/$USER/ssuspend"
+    const ping = "pkill -SIGRTMIN+9 waybar || true";
     tri.excmds.exclaim_quiet(`[ -d "${dir}" ] || mkdir -p "${dir}"`);
 
     window.addEventListener('message', (event) => {
@@ -26,10 +27,13 @@
                     console.error(`ssuspend.i: uuid doesn't match expectations! ${name}`);
                     return;
                 }
+                const file = `"${dir}/browser.${name}"`;
                 if (event.data.create) {
-                    tri.excmds.exclaim_quiet(`printf '%s' '${window.location.toString().replace("'", "'\\''")}' > "${dir}/browser.${name}"; pkill -SIGRTMIN+9 waybar || true`);
+                    const content = `printf '%s' '${window.location.toString().replace("'", "'\\''")}'`;
+                    const exe = `[ -e ${file} ] || { ${content} > ${file}; ${ping}; }; touch ${file}`;
+                    tri.excmds.exclaim_quiet(exe);
                 } else {
-                    tri.excmds.exclaim_quiet(`rm "${dir}/browser.${name}" || true; pkill -SIGRTMIN+9 waybar || true`);
+                    tri.excmds.exclaim_quiet(`rm ${file} || true; ${ping}`);
                 }
             }
         } else {

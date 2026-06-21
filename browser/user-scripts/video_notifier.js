@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Notifier Frontend
 // @namespace    http://tampermonkey.net/
-// @version      82
+// @version      83
 // @description  Send a message to another (tridactyl) script if a video about the playback state of videos
 // @author       Noxgrim
 // @match        *://*/*
@@ -146,7 +146,7 @@
     window.addEventListener('beforeunload', (_) => write(false), false);
     window.addEventListener('unload', (_) => write(false), false);
     window.addEventListener('pagehide', (_) => write(false), false);
-    // bubble up any messages to the top whilst checking that it came from on eof our iframes
+    // bubble up any messages to the top whilst checking that it came from one of our iframes
     if (window.top !== window.self) {
         window.addEventListener('message', (event) => {
             if ([...document.querySelectorAll('iframe')]
@@ -159,7 +159,7 @@
         })
     };
     observer.observe(document, {childList: true, subtree: true});
-    // ping everey 60 seconds as a kind of heartbeat
-    setInterval(checkVideos, 60 * 1000, null);
+    // ping everey 55 seconds as a kind of heartbeat
+    setInterval(checkVideos, 55 * 1000, null);
     console.debug(`ssuspend.w: loaded video notify worker loaded for frame ${window.location} (${name})`);
 })();

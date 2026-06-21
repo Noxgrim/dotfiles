@@ -92,7 +92,7 @@ should_screen_save() {
             return 1
         fi
     fi
-    find "/tmp/$USER/ssuspend" -not -iname 'custom' -mindepth 1 -maxdepth 1 -amin +1 -delete
+    find "/tmp/$USER/ssuspend" -not -iname 'custom' -mindepth 1 -maxdepth 1 -amin +2 -delete
     return 0
 }
 

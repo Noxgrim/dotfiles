@@ -35,7 +35,7 @@ if [ -n "$swayblock" ]; then
   reason="$reason\\n$ICON_HARD  $swayblock"
 fi
 
-if find "$DIR/ssuspend" -mindepth 1 -maxdepth 1 -iname 'browser*' | read -r _; then
+if find "$DIR/ssuspend" -mindepth 1 -maxdepth 1 -iname 'browser*' -amin -1 | read -r; then
   level="$ICON_HARD"
   reason="$reason\\n$ICON_HARD  "'Playing video (browser)'
 fi
