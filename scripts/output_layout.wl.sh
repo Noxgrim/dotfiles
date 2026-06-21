@@ -73,7 +73,7 @@ init() {
                     /transform/s/\s*[^ ]*\s*\([^ ]*\).*/ISTRANSFORM="\1"/p
                 }' "$FILE")"
             if [ -z "${ISMODE-}" ]; then
-                eval "$(jq -r '
+                eval "$(jq -r '"
                 ISMODE=\"\(.modes[0].width)x\(.modes[0].height)\"\n
                 ISW=\"\(.modes[0].width)\"\n
                 ISH=\"\(.modes[0].height)\"\n
@@ -128,7 +128,7 @@ init_defaults() {
                 /disable/s/ISACTIVE="false"/p
             }' "$SWAYCFG")"
         if [ -z "${ISMODE-}" ]; then
-            eval "$(jq -r '
+            eval "$(jq -r '"
             ISMODE=\"\(.modes[0].width)x\(.modes[0].height)\"\n
             ISW=\"\(.modes[0].width)\"\n
             ISH=\"\(.modes[0].height)\"\n
