@@ -211,26 +211,26 @@ close_firefox() {
                 WIN_IDS="$(swaymsg  -t get_tree |\
                     jq -r '.. | select(.pid?) | select(.pid=='"$PID"') | .id' | head -n1)"
                 swaymsg "[con_id=$WIN_IDS]" focus
-                sleep 0.01
+                sleep 0.05
                 multi_key_ydotool '<C>+q' | xargs ydotool key
             done
             while pgrep -x 'librewolf|firefox' &>/dev/null; do
-                sleep 0.2 # Wait for instances to close
-                break
+                sleep 0.5 # Wait for instances to close
             done
         )
-    fi
-    WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
-    while [ "$WIN_IDS" != ' ' ]; do
-        for ID in $WIN_IDS; do
-            if xprop -id "$ID" | grep -q '^WM_STATE(WM_STATE):'; then
-                xdotool key --clearmodifiers --window "$ID" ctrl+q
-                sleep 0.5 # Wait for instance to close
-                break
-            fi
-        done
+    else
         WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
-    done
+        while [ "$WIN_IDS" != ' ' ]; do
+            for ID in $WIN_IDS; do
+                if xprop -id "$ID" | grep -q '^WM_STATE(WM_STATE):'; then
+                    xdotool key --clearmodifiers --window "$ID" ctrl+q
+                    sleep 0.5 # Wait for instance to close
+                    break
+                fi
+            done
+            WIN_IDS="$(xdotool search --class "librewolf") $(xdotool search --class "firefox")"
+        done
+    fi
 }
 
 listclients() {
